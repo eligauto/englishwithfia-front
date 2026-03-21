@@ -15,7 +15,9 @@ export interface TestimonialItem {
   id: string;
   name: string;
   quote: string;
-  level: string;
+  level?: string;
+  since?: string;
+  origin?: string;
   avatarUrl?: string;
 }
 

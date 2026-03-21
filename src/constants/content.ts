@@ -84,30 +84,61 @@ export const SERVICES: ServiceItem[] = [
   },
 ];
 
+// TODO: cuando haya backend, reemplazar con GET /api/testimonials
 export const TESTIMONIALS: TestimonialItem[] = [
   {
     id: '1',
-    name: 'Valentina G.',
+    name: 'Juan Pablo Rozic',
     quote:
-      'Gracias a Fia salí de mi zona de confort y hoy puedo tener conversaciones largas en inglés. ¡La recomiendo un montón!',
-    level: 'Intermedio',
-    avatarUrl: 'https://picsum.photos/seed/testimonial-1/100/100',
+      '¡Excelente servicio! Las clases me parecen muy enriquecedoras, sobretodo ahora con el Club Level your English Up donde tenemos muchos momentos para debatir e intercambiar ideas usando el idioma. ¡Se arman grupos de gente muy buena onda!',
+    since: 'Estudiante hace 3 años',
+    origin: 'Argentina',
+    avatarUrl: 'https://picsum.photos/seed/testimonial-jprozic/100/100',
   },
   {
     id: '2',
-    name: 'Martín R.',
+    name: 'Fabricio Fazio',
     quote:
-      'En 3 meses mejoré más que en años de clases grupales. El enfoque personalizado hace toda la diferencia.',
-    level: 'Principiante',
-    avatarUrl: 'https://picsum.photos/seed/testimonial-2/100/100',
+      'Hacía años que buscaba un espacio para aprender y mejorar mi inglés como el que ofreces vos, Fia! Encantado con todo, además el acompañamiento que das y la paciencia que tenés no tiene precio.',
+    since: 'Estudiante hace 2 años',
+    origin: 'Argentina',
+    avatarUrl: 'https://picsum.photos/seed/testimonial-ffazio/100/100',
   },
   {
     id: '3',
-    name: 'Camila S.',
+    name: 'Sonia Rivara',
     quote:
-      'Aprobé el FCE con distinción. Fia tiene una paciencia increíble y explica todo con mucha claridad.',
-    level: 'Examen FCE',
-    avatarUrl: 'https://picsum.photos/seed/testimonial-3/100/100',
+      'Fia, gracias por tanta paciencia para enseñarme y que me anime a hablar más. Este año volví a viajar y me di cuenta de cuánto había avanzado porque no necesité usar el traductor! Me encantan las clases y amo los juegos que nos ayudan a seguir aprendiendo.',
+    since: 'Estudiante hace 3 años',
+    origin: 'Argentina',
+    avatarUrl: 'https://picsum.photos/seed/testimonial-srivara/100/100',
+  },
+  {
+    id: '4',
+    name: 'Candela Fasanini',
+    quote:
+      'Me siento muy cómoda con las clases, me gusta el contenido que vemos y me siento cómoda con vos como profesora. Me ayuda a soltarme para hablar en inglés.',
+    since: 'Estudiante hace 5 meses',
+    origin: 'Argentina',
+    avatarUrl: 'https://picsum.photos/seed/testimonial-cfasanini/100/100',
+  },
+  {
+    id: '5',
+    name: 'Guadalupe Ferreyra',
+    quote:
+      'Me encantan las clases, es una de las primeras veces que me siento muy cómoda, que puedo darme cuenta la capacidad de entendimiento porque conversamos siempre en inglés. Siempre creí que había estudiado muchos años y no había aprendido nada, y me estás ayudando mucho a soltarme y poder animarme a conversar más.',
+    since: 'Estudiante hace 6 meses',
+    origin: 'Argentina',
+    avatarUrl: 'https://picsum.photos/seed/testimonial-gferreyra/100/100',
+  },
+  {
+    id: '6',
+    name: 'Candela Veliz',
+    quote:
+      'Estoy re contenta con las clases; encontré un espacio donde practicar y aprender, disfrutando. Fia me está ayudando a dominar mucho más el inglés, y a sentirme con más confianza. ¡Gracias!',
+    since: 'Estudiante hace seis meses',
+    origin: 'Argentina',
+    avatarUrl: 'https://picsum.photos/seed/testimonial-cveliz/100/100',
   },
 ];
 
