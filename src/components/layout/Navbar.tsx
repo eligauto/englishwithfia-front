@@ -32,7 +32,7 @@ export function Navbar() {
           {/* CTA Desktop */}
           <a
             href="#contact"
-            className="hidden md:inline-flex items-center px-4 py-2 rounded-lg bg-fia-primary text-white text-sm font-semibold hover:bg-blue-600 transition-colors"
+            className="hidden md:inline-flex items-center px-4 py-2 rounded-lg bg-fia-primary text-white text-sm font-semibold hover:bg-fia-primary-dark transition-colors"
           >
             Contactarme
           </a>

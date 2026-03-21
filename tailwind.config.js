@@ -7,10 +7,12 @@ export default {
   theme: {
     extend: {
       colors: {
-        'fia-primary': '#3B82F6',
-        'fia-secondary': '#F59E0B',
-        'fia-neutral-dark': '#1E293B',
-        'fia-neutral-light': '#F8FAFC',
+        'fia-primary': '#556B4A',
+        'fia-primary-dark': '#3E5034',
+        'fia-primary-light': '#EEF2EC',
+        'fia-secondary': '#C4A87A',
+        'fia-neutral-dark': '#2C382A',
+        'fia-neutral-light': '#F5F3EE',
         'fia-white': '#FFFFFF',
       },
       fontFamily: {

@@ -85,7 +85,7 @@ export function ContactSection() {
           <button
             type="submit"
             disabled={isSubmitting}
-            className="w-full flex items-center justify-center gap-2 px-6 py-3 bg-fia-primary text-white font-semibold rounded-xl hover:bg-blue-600 transition-colors disabled:opacity-60"
+            className="w-full flex items-center justify-center gap-2 px-6 py-3 bg-fia-primary text-white font-semibold rounded-xl hover:bg-fia-primary-dark transition-colors disabled:opacity-60"
           >
             <Send size={16} />
             {isSubmitting ? 'Enviando...' : CONTACT.submitLabel}

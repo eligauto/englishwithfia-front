@@ -17,13 +17,13 @@ export function HeroSection() {
           <div className="flex flex-wrap gap-4">
             <a
               href="#contact"
-              className="px-6 py-3 bg-fia-primary text-white font-semibold rounded-xl hover:bg-blue-600 transition-colors shadow-md"
+              className="px-6 py-3 bg-fia-primary text-white font-semibold rounded-xl hover:bg-fia-primary-dark transition-colors shadow-md"
             >
               {HERO.cta}
             </a>
             <a
               href="#services"
-              className="px-6 py-3 border-2 border-fia-primary text-fia-primary font-semibold rounded-xl hover:bg-blue-50 transition-colors"
+              className="px-6 py-3 border-2 border-fia-primary text-fia-primary font-semibold rounded-xl hover:bg-fia-primary-light transition-colors"
             >
               {HERO.ctaSecondary}
             </a>

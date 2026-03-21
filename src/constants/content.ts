@@ -24,10 +24,10 @@ export const NAV_LINKS: NavLink[] = [
 ];
 
 export const HERO = {
-  heading: 'Hablá inglés con',
-  headingHighlight: 'confianza y fluidez',
+  heading: 'Aprendé inglés de manera',
+  headingHighlight: 'dinámica y descontracturada',
   subheading:
-    'Clases personalizadas adaptadas a tu nivel y objetivos. Online o presencial, a tu ritmo.',
+    'Clases personalizadas adaptadas a tu nivel y objetivos. 100% online, a tu ritmo.',
   cta: 'Empezá hoy',
   ctaSecondary: 'Conocer más',
   imagePlaceholder: 'https://picsum.photos/seed/english-fia-hero/800/600',
@@ -35,16 +35,17 @@ export const HERO = {
 
 export const ABOUT = {
   heading: 'Sobre',
-  headingHighlight: 'Fia',
-  bio: `Soy Fiamma, profesora de inglés con más de 5 años de experiencia. 
-Me especializo en ayudar a adultos y jóvenes a superar el miedo a hablar 
-y alcanzar sus metas: ya sea para el trabajo, viajes o simplemente por amor al idioma.`,
+  headingHighlight: 'Mi',
+  bio: `Soy Fía, profesora de inglés con más de 10 años de experiencia. 
+Me especializo en ayudar a adultos a aprender este idioma de manera dinámica  para superar el miedo a expresarse. 
+Buscamos alcanzar tus metas, ya sea para el trabajo, para viajar, o simplemente por amor al idioma. 
+Hablar inglés amplía tu capacidad de entender el mundo. `,
   imagePlaceholder: 'https://picsum.photos/seed/fia-portrait/400/500',
   highlights: [
-    '+5 años de experiencia',
-    'Certificación Cambridge',
-    '100+ alumnos',
-    'Clases online y presencial',
+    '+10 años de experiencia',
+    'Certificado universitario',
+    '+300 alumnos',
+    'Clases 100% remotas',
   ],
 } as const;
 
@@ -54,24 +55,24 @@ export const SERVICES: ServiceItem[] = [
     title: 'Inglés desde cero',
     description:
       'Ideal si nunca tuviste clases o querés retomar desde las bases. Metodología clara y sin presión.',
-    level: 'Principiante (A1–A2)',
-    modality: 'ambos',
+    level: 'Principiante (A1-A2)',
+    modality: 'online',
   },
   {
     id: 'intermediate',
     title: 'Conversación y fluidez',
     description:
       'Para quienes ya tienen una base y quieren ganar confianza al hablar. Práctica real de conversación.',
-    level: 'Intermedio (B1–B2)',
-    modality: 'ambos',
+    level: 'Intermedio (B1-B2)',
+    modality: 'online',
   },
   {
     id: 'advanced',
-    title: 'Inglés avanzado',
+    title: 'Inglés con propósitos específicos',
     description:
-      'Perfeccioná tu escritura, lectura y pronunciación. Ideal para entornos profesionales o académicos.',
-    level: 'Avanzado (C1–C2)',
-    modality: 'ambos',
+      'Orientá tu conocimiento al lenguaje específico de tu campo de trabajo o estudio.',
+    level: 'Avanzado (C1-C2)',
+    modality: 'online',
   },
   {
     id: 'exam',
