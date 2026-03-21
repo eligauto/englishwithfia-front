@@ -1,10 +1,14 @@
+import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { Send } from 'lucide-react';
 import { CONTACT, SITE } from '../../constants/content';
 import type { ContactFormData } from '../../types';
+import { submitContactForm, ApiRequestError } from '../../services/api';
 import { cn } from '../../utils/cn';
 
 export function ContactSection() {
+  const [submitError, setSubmitError] = useState<string | null>(null);
+
   const {
     register,
     handleSubmit,
@@ -12,10 +16,18 @@ export function ContactSection() {
     formState: { errors, isSubmitSuccessful, isSubmitting },
   } = useForm<ContactFormData>();
 
-  function onSubmit(_data: ContactFormData) {
-    // TODO: conectar con POST /api/contact cuando haya backend
-    // Por ahora simula un envío exitoso
-    return new Promise<void>((resolve) => setTimeout(() => { reset(); resolve(); }, 800));
+  async function onSubmit(data: ContactFormData) {
+    setSubmitError(null);
+    try {
+      await submitContactForm(data);
+      reset();
+    } catch (err) {
+      if (err instanceof ApiRequestError) {
+        setSubmitError(err.message);
+      } else {
+        setSubmitError('No se pudo enviar el mensaje. Intentá de nuevo más tarde.');
+      }
+    }
   }
 
   return (
@@ -38,6 +50,11 @@ export function ContactSection() {
           {isSubmitSuccessful && (
             <p className="text-sm text-green-600 font-medium bg-green-50 px-4 py-2 rounded-lg">
               {CONTACT.successMessage}
+            </p>
+          )}
+          {submitError && (
+            <p className="text-sm text-red-600 font-medium bg-red-50 px-4 py-2 rounded-lg">
+              {submitError}
             </p>
           )}
 

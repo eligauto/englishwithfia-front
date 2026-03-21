@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { ChevronLeft, ChevronRight, Quote, MapPin } from 'lucide-react';
 import { TESTIMONIALS } from '../../constants/content';
 import type { TestimonialItem } from '../../types';
+import { fetchTestimonials } from '../../services/api';
 import { cn } from '../../utils/cn';
 
 const AUTOPLAY_DELAY = 5000;
@@ -39,9 +40,17 @@ function TestimonialCard({ item }: { item: TestimonialItem }) {
 }
 
 export function TestimonialsSection() {
+  const [items, setItems] = useState<TestimonialItem[]>(TESTIMONIALS);
   const [current, setCurrent] = useState(0);
   const [paused, setPaused] = useState(false);
-  const total = TESTIMONIALS.length;
+
+  useEffect(() => {
+    fetchTestimonials()
+      .then((data) => { if (data.length > 0) setItems(data); })
+      .catch(() => { /* Fallback silencioso a los datos estáticos de content.ts */ });
+  }, []);
+
+  const total = items.length;
 
   const next = useCallback(() => setCurrent((c) => (c + 1) % total), [total]);
   const prev = useCallback(() => setCurrent((c) => (c - 1 + total) % total), [total]);
@@ -76,7 +85,7 @@ export function TestimonialsSection() {
               className="flex transition-transform duration-500 ease-in-out"
               style={{ transform: `translateX(-${current * 100}%)` }}
             >
-              {TESTIMONIALS.map((item) => (
+              {items.map((item) => (
                 <TestimonialCard key={item.id} item={item} />
               ))}
             </div>
@@ -103,7 +112,7 @@ export function TestimonialsSection() {
 
         {/* Dots */}
         <div className="flex justify-center gap-2 mt-6" role="tablist" aria-label="Testimonios">
-          {TESTIMONIALS.map((_, i) => (
+          {items.map((_, i) => (
             <button
               key={i}
               role="tab"
