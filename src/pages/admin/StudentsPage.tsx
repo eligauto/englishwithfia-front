@@ -1,0 +1,376 @@
+import { useState, useEffect } from 'react';
+import { Plus, Pencil, UserX, Search, X } from 'lucide-react';
+import { useForm } from 'react-hook-form';
+import {
+  getStudents,
+  createStudent,
+  updateStudent,
+  deleteStudent,
+  ApiRequestError,
+} from '../../services/api';
+import type { Student, CreateStudentData, ClassModality } from '../../types';
+import { cn } from '../../utils/cn';
+
+// ── Tipos del formulario ──────────────────────────────────────────────────────
+
+interface StudentFormData {
+  fullName: string;
+  email: string;
+  phone: string;
+  classRate: number;
+  modality: ClassModality;
+}
+
+function toPayload(data: StudentFormData): CreateStudentData {
+  return {
+    fullName: data.fullName.trim(),
+    classRate: data.classRate,
+    modality: data.modality,
+    ...(data.email.trim() ? { email: data.email.trim() } : {}),
+    ...(data.phone.trim() ? { phone: data.phone.trim() } : {}),
+  };
+}
+
+// ── StudentsPage ──────────────────────────────────────────────────────────────
+
+export function StudentsPage() {
+  const [students, setStudents] = useState<Student[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [search, setSearch] = useState('');
+  const [modalStudent, setModalStudent] = useState<Student | null | undefined>(undefined);
+  // undefined = modal cerrado, null = modal abierto para crear, Student = editar
+
+  useEffect(() => {
+    getStudents()
+      .then(setStudents)
+      .catch((err) =>
+        setError(err instanceof ApiRequestError ? err.message : 'Error al cargar alumnos'),
+      )
+      .finally(() => setLoading(false));
+  }, []);
+
+  function handleSaved(saved: Student) {
+    setStudents((prev) => {
+      const idx = prev.findIndex((s) => s.id === saved.id);
+      if (idx >= 0) {
+        const next = [...prev];
+        next[idx] = saved;
+        return next;
+      }
+      return [saved, ...prev];
+    });
+    setModalStudent(undefined);
+  }
+
+  async function handleDeactivate(student: Student) {
+    if (!confirm(`¿Dar de baja a ${student.fullName}? Se puede reactivar más adelante.`)) return;
+    try {
+      await deleteStudent(student.id);
+      setStudents((prev) => prev.filter((s) => s.id !== student.id));
+    } catch (err) {
+      alert(err instanceof ApiRequestError ? err.message : 'Error al dar de baja al alumno');
+    }
+  }
+
+  const visible = students
+    .filter((s) => s.isActive)
+    .filter(
+      (s) =>
+        s.fullName.toLowerCase().includes(search.toLowerCase()) ||
+        s.email?.toLowerCase().includes(search.toLowerCase()),
+    );
+
+  return (
+    <div className="p-8">
+      {/* Cabecera */}
+      <div className="flex items-center justify-between mb-6">
+        <h1 className="text-2xl font-bold text-fia-neutral-dark">Alumnos</h1>
+        <button
+          onClick={() => setModalStudent(null)}
+          className="flex items-center gap-2 px-4 py-2 bg-fia-primary text-white text-sm font-semibold rounded-xl hover:bg-fia-primary-dark transition-colors"
+        >
+          <Plus size={16} />
+          Nuevo alumno
+        </button>
+      </div>
+
+      {/* Buscador */}
+      <div className="relative mb-6 max-w-sm">
+        <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+        <input
+          type="search"
+          placeholder="Buscar por nombre o email…"
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          className="w-full pl-9 pr-4 py-2.5 text-sm border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-fia-primary"
+        />
+      </div>
+
+      {/* Estado: cargando */}
+      {loading && (
+        <div className="flex justify-center py-16">
+          <div className="w-8 h-8 border-4 border-fia-primary border-t-transparent rounded-full animate-spin" />
+        </div>
+      )}
+
+      {/* Estado: error */}
+      {!loading && error && (
+        <p className="text-sm text-red-600 bg-red-50 px-4 py-3 rounded-xl">{error}</p>
+      )}
+
+      {/* Estado: vacío */}
+      {!loading && !error && visible.length === 0 && (
+        <p className="text-sm text-gray-500 py-12 text-center">
+          {search
+            ? 'No hay alumnos que coincidan con la búsqueda.'
+            : 'Todavía no hay alumnos. ¡Creá el primero!'}
+        </p>
+      )}
+
+      {/* Tabla */}
+      {!loading && !error && visible.length > 0 && (
+        <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+          <table className="w-full text-sm">
+            <thead className="bg-gray-50 border-b border-gray-100">
+              <tr>
+                <th className="text-left px-6 py-3 text-xs font-semibold text-gray-400 uppercase tracking-wider">
+                  Nombre
+                </th>
+                <th className="text-left px-6 py-3 text-xs font-semibold text-gray-400 uppercase tracking-wider">
+                  Email
+                </th>
+                <th className="text-left px-6 py-3 text-xs font-semibold text-gray-400 uppercase tracking-wider">
+                  Teléfono
+                </th>
+                <th className="text-left px-6 py-3 text-xs font-semibold text-gray-400 uppercase tracking-wider">
+                  Tarifa
+                </th>
+                <th className="px-6 py-3" />
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-gray-50">
+              {visible.map((student) => (
+                <tr key={student.id} className="hover:bg-gray-50/60 transition-colors">
+                  <td className="px-6 py-4 font-medium text-fia-neutral-dark">{student.fullName}</td>
+                  <td className="px-6 py-4 text-gray-500">{student.email ?? '—'}</td>
+                  <td className="px-6 py-4 text-gray-500">{student.phone ?? '—'}</td>
+                  <td className="px-6 py-4 text-gray-700">
+                    ${Number(student.classRate).toFixed(2)}
+                  </td>
+                  <td className="px-6 py-4">
+                    <div className="flex items-center justify-end gap-1">
+                      <button
+                        onClick={() => setModalStudent(student)}
+                        className="p-1.5 text-gray-400 hover:text-fia-primary hover:bg-fia-primary-light rounded-lg transition-colors"
+                        aria-label="Editar alumno"
+                      >
+                        <Pencil size={15} />
+                      </button>
+                      <button
+                        onClick={() => handleDeactivate(student)}
+                        className="p-1.5 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors"
+                        aria-label="Dar de baja"
+                      >
+                        <UserX size={15} />
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+
+      {/* Modal crear / editar */}
+      {modalStudent !== undefined && (
+        <StudentModal
+          student={modalStudent}
+          onClose={() => setModalStudent(undefined)}
+          onSaved={handleSaved}
+        />
+      )}
+    </div>
+  );
+}
+
+// ── StudentModal ──────────────────────────────────────────────────────────────
+
+interface StudentModalProps {
+  student: Student | null; // null = crear, Student = editar
+  onClose: () => void;
+  onSaved: (student: Student) => void;
+}
+
+function StudentModal({ student, onClose, onSaved }: StudentModalProps) {
+  const [submitError, setSubmitError] = useState<string | null>(null);
+
+  const {
+    register,
+    handleSubmit,
+    formState: { errors, isSubmitting },
+  } = useForm<StudentFormData>({
+    defaultValues: {
+      fullName: student?.fullName ?? '',
+      email: student?.email ?? '',
+      phone: student?.phone ?? '',
+      classRate: student ? Number(student.classRate) : ('' as unknown as number),
+      modality: student?.modality ?? 'ONLINE',
+    },
+  });
+
+  async function onSubmit(data: StudentFormData) {
+    setSubmitError(null);
+    try {
+      const payload = toPayload(data);
+      const saved = student
+        ? await updateStudent(student.id, payload)
+        : await createStudent(payload);
+      onSaved(saved);
+    } catch (err) {
+      setSubmitError(
+        err instanceof ApiRequestError ? err.message : 'Error al guardar el alumno',
+      );
+    }
+  }
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+      {/* Fondo oscuro */}
+      <div className="absolute inset-0 bg-black/40" onClick={onClose} />
+
+      {/* Dialog */}
+      <div className="relative bg-white rounded-2xl shadow-xl w-full max-w-md">
+        <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100">
+          <h2 className="text-base font-semibold text-fia-neutral-dark">
+            {student ? 'Editar alumno' : 'Nuevo alumno'}
+          </h2>
+          <button
+            onClick={onClose}
+            className="p-1 text-gray-400 hover:text-gray-600 rounded-lg transition-colors"
+          >
+            <X size={18} />
+          </button>
+        </div>
+
+        <form onSubmit={handleSubmit(onSubmit)} className="px-6 py-5 space-y-4">
+          {submitError && (
+            <p className="text-sm text-red-600 bg-red-50 px-4 py-2 rounded-lg">{submitError}</p>
+          )}
+
+          {/* Nombre */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Nombre <span className="text-red-500">*</span>
+            </label>
+            <input
+              {...register('fullName', { required: 'El nombre es obligatorio' })}
+              className={cn(
+                'w-full px-4 py-2.5 rounded-xl border text-sm focus:outline-none focus:ring-2 focus:ring-fia-primary transition',
+                errors.fullName ? 'border-red-400' : 'border-gray-200',
+              )}
+            />
+            {errors.fullName && <p className="mt-1 text-xs text-red-500">{errors.fullName.message}</p>}
+          </div>
+
+          {/* Email */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
+            <input
+              {...register('email', {
+                validate: (v) =>
+                  !v.trim() || /^\S+@\S+\.\S+$/.test(v) || 'Email inválido',
+              })}
+              type="email"
+              className={cn(
+                'w-full px-4 py-2.5 rounded-xl border text-sm focus:outline-none focus:ring-2 focus:ring-fia-primary transition',
+                errors.email ? 'border-red-400' : 'border-gray-200',
+              )}
+            />
+            {errors.email && <p className="mt-1 text-xs text-red-500">{errors.email.message}</p>}
+          </div>
+
+          {/* Teléfono */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Teléfono</label>
+            <input
+              {...register('phone')}
+              type="tel"
+              className="w-full px-4 py-2.5 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-fia-primary transition"
+            />
+          </div>
+
+          {/* Tarifa */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Tarifa por clase <span className="text-red-500">*</span>
+            </label>
+            <div className="relative">
+              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm select-none">
+                $
+              </span>
+              <input
+                {...register('classRate', {
+                  valueAsNumber: true,
+                  validate: {
+                    required: (v) => !isNaN(v) || 'La tarifa es obligatoria',
+                    positive: (v) => v > 0 || 'La tarifa debe ser mayor a 0',
+                  },
+                })}
+                type="number"
+                step="0.01"
+                min="0"
+                className={cn(
+                  'w-full pl-7 pr-4 py-2.5 rounded-xl border text-sm focus:outline-none focus:ring-2 focus:ring-fia-primary transition',
+                  errors.classRate ? 'border-red-400' : 'border-gray-200',
+                )}
+              />
+            </div>
+            {errors.classRate && (
+              <p className="mt-1 text-xs text-red-500">{errors.classRate.message}</p>
+            )}
+          </div>
+
+          {/* Modalidad */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Modalidad <span className="text-red-500">*</span>
+            </label>
+            <select
+              {...register('modality', { required: 'La modalidad es obligatoria' })}
+              className={cn(
+                'w-full px-4 py-2.5 rounded-xl border text-sm focus:outline-none focus:ring-2 focus:ring-fia-primary transition bg-white',
+                errors.modality ? 'border-red-400' : 'border-gray-200',
+              )}
+            >
+              <option value="ONLINE">Online</option>
+              <option value="IN_PERSON">Presencial</option>
+            </select>
+            {errors.modality && (
+              <p className="mt-1 text-xs text-red-500">{errors.modality.message}</p>
+            )}
+          </div>
+
+          {/* Acciones */}
+          <div className="flex gap-3 pt-2">
+            <button
+              type="button"
+              onClick={onClose}
+              className="flex-1 py-2.5 border border-gray-200 text-gray-600 text-sm font-medium rounded-xl hover:bg-gray-50 transition-colors"
+            >
+              Cancelar
+            </button>
+            <button
+              type="submit"
+              disabled={isSubmitting}
+              className="flex-1 py-2.5 bg-fia-primary text-white text-sm font-semibold rounded-xl hover:bg-fia-primary-dark transition-colors disabled:opacity-60"
+            >
+              {isSubmitting ? 'Guardando…' : 'Guardar'}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+}

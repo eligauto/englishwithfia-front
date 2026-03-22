@@ -10,9 +10,24 @@
  * Base URL configurada via VITE_API_URL en .env.
  */
 
-import type { ContactFormData, TestimonialItem } from '../types';
+import type {
+  ContactFormData,
+  TestimonialItem,
+  AuthUser,
+  Student,
+  CreateStudentData,
+  UpdateStudentData,
+  DashboardData,
+} from '../types';
 
 const API_URL = (import.meta.env.VITE_API_URL as string | undefined) ?? 'http://localhost:3000';
+
+export const TOKEN_KEY = 'fia_admin_token';
+
+function getAuthHeaders(): Record<string, string> {
+  const token = localStorage.getItem(TOKEN_KEY);
+  return token ? { Authorization: `Bearer ${token}` } : {};
+}
 
 // ── Tipos internos ──────────────────────────────────────────────────────────
 
@@ -45,9 +60,13 @@ export class ApiRequestError extends Error {
 
 // ── Fetch base ──────────────────────────────────────────────────────────────
 
-async function apiFetch<T>(path: string, init?: RequestInit): Promise<T> {
+async function apiFetch<T>(path: string, init?: RequestInit, auth = false): Promise<T> {
   const response = await fetch(`${API_URL}${path}`, {
-    headers: { 'Content-Type': 'application/json', ...init?.headers },
+    headers: {
+      'Content-Type': 'application/json',
+      ...(auth ? getAuthHeaders() : {}),
+      ...init?.headers,
+    },
     ...init,
   });
 
@@ -102,4 +121,52 @@ export async function submitContactForm(data: ContactFormData): Promise<void> {
  */
 export async function fetchTestimonials(): Promise<TestimonialItem[]> {
   return apiFetch<TestimonialItem[]>('/api/testimonials');
+}
+
+// ── Auth ────────────────────────────────────────────────────────────────────
+
+interface LoginResponse {
+  accessToken: string;
+}
+
+/**
+ * POST /auth/login — devuelve el JWT.
+ */
+export async function login(email: string, password: string): Promise<string> {
+  const { accessToken } = await apiFetch<LoginResponse>('/auth/login', {
+    method: 'POST',
+    body: JSON.stringify({ email, password }),
+  });
+  return accessToken;
+}
+
+/**
+ * GET /auth/me — usuario autenticado actual.
+ */
+export async function getMe(): Promise<AuthUser> {
+  return apiFetch<AuthUser>('/auth/me', undefined, true);
+}
+
+// ── Students ─────────────────────────────────────────────────────────────────
+
+export async function getStudents(): Promise<Student[]> {
+  return apiFetch<Student[]>('/students', undefined, true);
+}
+
+export async function createStudent(data: CreateStudentData): Promise<Student> {
+  return apiFetch<Student>('/students', { method: 'POST', body: JSON.stringify(data) }, true);
+}
+
+export async function updateStudent(id: string, data: UpdateStudentData): Promise<Student> {
+  return apiFetch<Student>(`/students/${id}`, { method: 'PATCH', body: JSON.stringify(data) }, true);
+}
+
+export async function deleteStudent(id: string): Promise<void> {
+  await apiFetch<void>(`/students/${id}`, { method: 'DELETE' }, true);
+}
+
+// ── Dashboard ────────────────────────────────────────────────────────────────
+
+export async function getDashboard(): Promise<DashboardData> {
+  return apiFetch<DashboardData>('/dashboard', undefined, true);
 }
