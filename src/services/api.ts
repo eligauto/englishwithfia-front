@@ -28,7 +28,15 @@ import type {
   CreatePackData,
 } from '../types';
 
-const API_URL = (import.meta.env.VITE_API_URL as string | undefined) ?? 'http://localhost:3000';
+const RAW_API_URL = (import.meta.env.VITE_API_URL as string | undefined) ?? 'http://localhost:3000';
+
+/**
+ * Garantiza que la URL base tenga siempre un esquema http/https.
+ * Previene que una variable de entorno sin protocolo se trate como ruta relativa.
+ */
+const API_URL = /^https?:\/\//i.test(RAW_API_URL)
+  ? RAW_API_URL.replace(/\/$/, '')
+  : `https://${RAW_API_URL.replace(/\/$/, '')}`;
 
 export const TOKEN_KEY = 'fia_admin_token';
 

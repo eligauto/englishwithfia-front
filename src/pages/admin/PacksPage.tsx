@@ -256,6 +256,8 @@ function CreatePackModal({
 
   const {
     register,
+    watch,
+    setValue,
     handleSubmit,
     formState: { errors, isSubmitting },
   } = useForm<CreatePackFormData>({
@@ -267,6 +269,28 @@ function CreatePackModal({
       notes: '',
     },
   });
+
+  const totalClasses = watch('totalClasses');
+  const amountPaid = watch('amountPaid');
+  const studentId = watch('studentId');
+
+  const selectedStudent = useMemo(
+    () => students.find((s) => s.id === studentId) ?? null,
+    [students, studentId],
+  );
+
+  // Auto-calcular monto al cambiar alumno o cantidad de clases
+  useEffect(() => {
+    if (!selectedStudent) return;
+    const rate = Number(selectedStudent.classRate);
+    if (rate > 0 && totalClasses > 0) {
+      setValue('amountPaid', rate * totalClasses, { shouldValidate: true });
+    }
+  }, [selectedStudent, totalClasses, setValue]);
+
+  const pricePerClass =
+    selectedStudent ? Number(selectedStudent.classRate) :
+    totalClasses > 0 && amountPaid > 0 ? amountPaid / totalClasses : null;
 
   async function onSubmit(data: CreatePackFormData) {
     setSubmitError(null);
@@ -316,7 +340,7 @@ function CreatePackModal({
         </div>
 
         {/* Cantidad de clases + monto */}
-        <div className="grid grid-cols-2 gap-3">
+        <div className="grid grid-cols-2 gap-3" style={{ alignItems: 'start' }}>
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
               Clases <span className="text-red-500">*</span>
@@ -371,6 +395,15 @@ function CreatePackModal({
             )}
           </div>
         </div>
+
+        {/* Hint precio por clase */}
+        {pricePerClass !== null && (
+          <p className="text-xs text-fia-primary font-medium -mt-1">
+            {selectedStudent
+              ? `Tarifa del alumno: $${pricePerClass.toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} / clase — monto calculado automáticamente`
+              : `Precio por clase: $${pricePerClass.toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}
+          </p>
+        )}
 
         {/* Vencimiento */}
         <div>

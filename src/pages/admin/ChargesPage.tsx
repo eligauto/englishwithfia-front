@@ -76,6 +76,7 @@ function fmtDate(iso: string | null) {
 export function ChargesPage() {
   const [charges, setCharges] = useState<Charge[]>([]);
   const [students, setStudents] = useState<Student[]>([]);
+  const [allPacks, setAllPacks] = useState<Pack[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [filterStudentId, setFilterStudentId] = useState('');
@@ -87,14 +88,27 @@ export function ChargesPage() {
     [students],
   );
 
+  /** Packs activos con clases disponibles, agrupados por alumno */
+  const packsMap = useMemo(() => {
+    const map = new Map<string, Pack[]>();
+    for (const p of allPacks) {
+      if (!p.isActive || p.availableClasses <= 0) continue;
+      const list = map.get(p.studentId) ?? [];
+      list.push(p);
+      map.set(p.studentId, list);
+    }
+    return map;
+  }, [allPacks]);
+
   useEffect(() => {
-    Promise.all([getCharges(), getStudents()])
-      .then(([chg, sts]) => {
+    Promise.all([getCharges(), getStudents(), getPacks()])
+      .then(([chg, sts, pkgs]) => {
         chg.sort(
           (a, b) => new Date(b.generatedAt).getTime() - new Date(a.generatedAt).getTime(),
         );
         setCharges(chg);
         setStudents(sts);
+        setAllPacks(pkgs);
       })
       .catch((err) =>
         setError(err instanceof ApiRequestError ? err.message : 'Error al cargar datos'),
@@ -255,6 +269,7 @@ export function ChargesPage() {
         <UpdateChargeModal
           charge={target}
           studentName={studentMap[target.studentId] ?? ''}
+          availablePacks={packsMap.get(target.studentId) ?? []}
           onClose={() => setTarget(null)}
           onUpdated={(updated) => {
             patchCharge(updated);
@@ -278,15 +293,16 @@ interface UpdateFormData {
 function UpdateChargeModal({
   charge,
   studentName,
+  availablePacks,
   onClose,
   onUpdated,
 }: {
   charge: Charge;
   studentName: string;
+  availablePacks: Pack[];
   onClose: () => void;
   onUpdated: (charge: Charge) => void;
 }) {
-  const [packs, setPacks] = useState<Pack[]>([]);
   const [submitError, setSubmitError] = useState<string | null>(null);
 
   const transitions = TRANSITIONS[charge.financialStatus] ?? [];
@@ -307,14 +323,6 @@ function UpdateChargeModal({
 
   const selectedStatus = watch('financialStatus');
 
-  // Cargar packs del alumno cuando se selecciona PACK_COVERED
-  useEffect(() => {
-    if (selectedStatus === 'PACK_COVERED') {
-      getPacks(charge.studentId)
-        .then((all) => setPacks(all.filter((p) => p.isActive && p.availableClasses > 0)))
-        .catch(() => setPacks([]));
-    }
-  }, [selectedStatus, charge.studentId]);
 
   async function onSubmit(data: UpdateFormData) {
     setSubmitError(null);
@@ -382,7 +390,7 @@ function UpdateChargeModal({
             <label className="block text-sm font-medium text-gray-700 mb-1">
               Pack <span className="text-red-500">*</span>
             </label>
-            {packs.length === 0 ? (
+            {availablePacks.length === 0 ? (
               <p className="text-xs text-red-500">
                 El alumno no tiene packs activos con clases disponibles.
               </p>
@@ -397,7 +405,7 @@ function UpdateChargeModal({
                 )}
               >
                 <option value="">Seleccionar pack…</option>
-                {packs.map((p) => (
+                {availablePacks.map((p) => (
                   <option key={p.id} value={p.id}>
                     {p.availableClasses} clases disponibles — comprado{' '}
                     {fmtDate(p.purchasedAt)}
@@ -459,7 +467,7 @@ function UpdateChargeModal({
           </button>
           <button
             type="submit"
-            disabled={isSubmitting || (selectedStatus === 'PACK_COVERED' && packs.length === 0)}
+            disabled={isSubmitting || (selectedStatus === 'PACK_COVERED' && availablePacks.length === 0)}
             className="flex-1 py-2.5 bg-fia-primary text-white text-sm font-semibold rounded-xl hover:bg-fia-primary-dark transition-colors disabled:opacity-60"
           >
             {isSubmitting ? 'Guardando…' : 'Guardar'}
