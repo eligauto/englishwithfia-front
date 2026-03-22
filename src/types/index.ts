@@ -126,6 +126,18 @@ export interface Class {
   updatedAt: string;
 }
 
+export interface CreateClassData {
+  studentId: string;
+  scheduledAt: string;   // ISO 8601
+  duration: number;      // minutos
+  notes?: string;
+}
+
+export interface RescheduleClassData {
+  scheduledAt: string;   // ISO 8601 — nueva fecha/hora
+  notes?: string;
+}
+
 // ── Admin — Charges ───────────────────────────────────────────────────────────
 
 /** Entidad Charge tal como la devuelve el backend */

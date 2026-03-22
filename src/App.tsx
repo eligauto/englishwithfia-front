@@ -6,6 +6,7 @@ import { HomePage } from './pages/HomePage';
 import { LoginPage } from './pages/admin/LoginPage';
 import { DashboardPage } from './pages/admin/DashboardPage';
 import { StudentsPage } from './pages/admin/StudentsPage';
+import { ClassesPage } from './pages/admin/ClassesPage';
 import { ROUTES } from './constants/routes';
 
 function PlaceholderPage({ title }: { title: string }) {
@@ -31,10 +32,7 @@ export function App() {
             <Route element={<AdminLayout />}>
               <Route path={ROUTES.ADMIN.DASHBOARD} element={<DashboardPage />} />
               <Route path={ROUTES.ADMIN.STUDENTS} element={<StudentsPage />} />
-              <Route
-                path={ROUTES.ADMIN.CLASSES}
-                element={<PlaceholderPage title="Clases" />}
-              />
+              <Route path={ROUTES.ADMIN.CLASSES} element={<ClassesPage />} />
               <Route
                 path={ROUTES.ADMIN.CHARGES}
                 element={<PlaceholderPage title="Cargos" />}

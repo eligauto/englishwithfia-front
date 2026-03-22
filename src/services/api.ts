@@ -18,6 +18,10 @@ import type {
   CreateStudentData,
   UpdateStudentData,
   DashboardData,
+  Class,
+  ClassStatus,
+  CreateClassData,
+  RescheduleClassData,
 } from '../types';
 
 const API_URL = (import.meta.env.VITE_API_URL as string | undefined) ?? 'http://localhost:3000';
@@ -169,4 +173,38 @@ export async function deleteStudent(id: string): Promise<void> {
 
 export async function getDashboard(): Promise<DashboardData> {
   return apiFetch<DashboardData>('/dashboard', undefined, true);
+}
+
+// ── Classes ──────────────────────────────────────────────────────────────────
+
+export async function getClasses(): Promise<Class[]> {
+  return apiFetch<Class[]>('/classes', undefined, true);
+}
+
+export async function createClass(data: CreateClassData): Promise<Class> {
+  return apiFetch<Class>('/classes', { method: 'POST', body: JSON.stringify(data) }, true);
+}
+
+export async function updateClassStatus(id: string, status: ClassStatus): Promise<Class> {
+  return apiFetch<Class>(
+    `/classes/${id}/status`,
+    { method: 'PATCH', body: JSON.stringify({ status }) },
+    true,
+  );
+}
+
+export async function rescheduleClass(id: string, data: RescheduleClassData): Promise<Class> {
+  return apiFetch<Class>(
+    `/classes/${id}/reschedule`,
+    { method: 'POST', body: JSON.stringify(data) },
+    true,
+  );
+}
+
+export async function absentDecision(id: string, chargeable: boolean): Promise<Class> {
+  return apiFetch<Class>(
+    `/classes/${id}/absent-decision`,
+    { method: 'POST', body: JSON.stringify({ chargeable }) },
+    true,
+  );
 }
