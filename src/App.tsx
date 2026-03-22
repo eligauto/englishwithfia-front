@@ -8,16 +8,8 @@ import { DashboardPage } from './pages/admin/DashboardPage';
 import { StudentsPage } from './pages/admin/StudentsPage';
 import { ClassesPage } from './pages/admin/ClassesPage';
 import { ChargesPage } from './pages/admin/ChargesPage';
+import { PacksPage } from './pages/admin/PacksPage';
 import { ROUTES } from './constants/routes';
-
-function PlaceholderPage({ title }: { title: string }) {
-  return (
-    <div className="p-8">
-      <h1 className="text-2xl font-bold text-fia-neutral-dark mb-2">{title}</h1>
-      <p className="text-sm text-gray-500">Esta sección estará disponible próximamente.</p>
-    </div>
-  );
-}
 
 export function App() {
   return (
@@ -35,10 +27,7 @@ export function App() {
               <Route path={ROUTES.ADMIN.STUDENTS} element={<StudentsPage />} />
               <Route path={ROUTES.ADMIN.CLASSES} element={<ClassesPage />} />
               <Route path={ROUTES.ADMIN.CHARGES} element={<ChargesPage />} />
-              <Route
-                path={ROUTES.ADMIN.PACKS}
-                element={<PlaceholderPage title="Packs" />}
-              />
+              <Route path={ROUTES.ADMIN.PACKS} element={<PacksPage />} />
             </Route>
           </Route>
         </Routes>

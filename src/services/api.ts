@@ -25,6 +25,7 @@ import type {
   Charge,
   UpdateChargeStatusData,
   Pack,
+  CreatePackData,
 } from '../types';
 
 const API_URL = (import.meta.env.VITE_API_URL as string | undefined) ?? 'http://localhost:3000';
@@ -231,4 +232,12 @@ export async function updateChargeStatus(id: string, data: UpdateChargeStatusDat
 export async function getPacks(studentId?: string): Promise<Pack[]> {
   const query = studentId ? `?studentId=${encodeURIComponent(studentId)}` : '';
   return apiFetch<Pack[]>(`/packs${query}`, undefined, true);
+}
+
+export async function createPack(data: CreatePackData): Promise<Pack> {
+  return apiFetch<Pack>('/packs', { method: 'POST', body: JSON.stringify(data) }, true);
+}
+
+export async function deletePack(id: string): Promise<void> {
+  await apiFetch<void>(`/packs/${id}`, { method: 'DELETE' }, true);
 }

@@ -179,6 +179,15 @@ export interface Pack {
   updatedAt: string;
 }
 
+export interface CreatePackData {
+  studentId: string;
+  totalClasses: number;
+  amountPaid: number;      // se envía como number; Prisma lo convierte a Decimal
+
+  expiresAt?: string;     // ISO 8601
+  notes?: string;
+}
+
 // ── Admin — Dashboard ─────────────────────────────────────────────────────────
 
 export interface DebtorSummary {
