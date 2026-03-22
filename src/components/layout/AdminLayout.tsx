@@ -59,7 +59,7 @@ export function AdminLayout() {
               {initial}
             </div>
             <div className="min-w-0">
-              <p className="text-white text-xs font-medium truncate">{user?.name ?? 'Fiamma'}</p>
+              <p className="text-white text-xs font-medium truncate">{/* user?.name ?? */ 'Fiamma'}</p>
               <p className="text-white/50 text-xs truncate">{user?.email}</p>
             </div>
           </div>
