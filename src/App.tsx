@@ -7,6 +7,7 @@ import { LoginPage } from './pages/admin/LoginPage';
 import { DashboardPage } from './pages/admin/DashboardPage';
 import { StudentsPage } from './pages/admin/StudentsPage';
 import { ClassesPage } from './pages/admin/ClassesPage';
+import { ChargesPage } from './pages/admin/ChargesPage';
 import { ROUTES } from './constants/routes';
 
 function PlaceholderPage({ title }: { title: string }) {
@@ -33,10 +34,7 @@ export function App() {
               <Route path={ROUTES.ADMIN.DASHBOARD} element={<DashboardPage />} />
               <Route path={ROUTES.ADMIN.STUDENTS} element={<StudentsPage />} />
               <Route path={ROUTES.ADMIN.CLASSES} element={<ClassesPage />} />
-              <Route
-                path={ROUTES.ADMIN.CHARGES}
-                element={<PlaceholderPage title="Cargos" />}
-              />
+              <Route path={ROUTES.ADMIN.CHARGES} element={<ChargesPage />} />
               <Route
                 path={ROUTES.ADMIN.PACKS}
                 element={<PlaceholderPage title="Packs" />}

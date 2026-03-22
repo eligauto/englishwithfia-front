@@ -154,7 +154,13 @@ export interface Charge {
   packId: string | null;            // poblado cuando financialStatus = PACK_COVERED
   updatedAt: string;
 }
-
+/** Payload para PATCH /charges/:id/status */
+export interface UpdateChargeStatusData {
+  financialStatus: FinancialStatus;
+  notes?: string;                   // obligatorio cuando financialStatus = DEFERRED
+  promisedPaymentDate?: string;     // ISO 8601, opcional para DEFERRED
+  packId?: string;                  // obligatorio cuando financialStatus = PACK_COVERED
+}
 // ── Admin — Packs ─────────────────────────────────────────────────────────────
 
 /** Entidad Pack tal como la devuelve el backend */

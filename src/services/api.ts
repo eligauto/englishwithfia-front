@@ -22,6 +22,9 @@ import type {
   ClassStatus,
   CreateClassData,
   RescheduleClassData,
+  Charge,
+  UpdateChargeStatusData,
+  Pack,
 } from '../types';
 
 const API_URL = (import.meta.env.VITE_API_URL as string | undefined) ?? 'http://localhost:3000';
@@ -207,4 +210,25 @@ export async function absentDecision(id: string, chargeable: boolean): Promise<C
     { method: 'POST', body: JSON.stringify({ chargeable }) },
     true,
   );
+}
+
+// ── Charges ──────────────────────────────────────────────────────────────────
+
+export async function getCharges(): Promise<Charge[]> {
+  return apiFetch<Charge[]>('/charges', undefined, true);
+}
+
+export async function updateChargeStatus(id: string, data: UpdateChargeStatusData): Promise<Charge> {
+  return apiFetch<Charge>(
+    `/charges/${id}/status`,
+    { method: 'PATCH', body: JSON.stringify(data) },
+    true,
+  );
+}
+
+// ── Packs ────────────────────────────────────────────────────────────────────
+
+export async function getPacks(studentId?: string): Promise<Pack[]> {
+  const query = studentId ? `?studentId=${encodeURIComponent(studentId)}` : '';
+  return apiFetch<Pack[]>(`/packs${query}`, undefined, true);
 }
