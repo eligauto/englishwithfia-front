@@ -50,6 +50,8 @@ export type ClassModality = 'IN_PERSON' | 'ONLINE';
 
 export type ClassStatus = 'SCHEDULED' | 'TAUGHT' | 'CANCELLED' | 'RESCHEDULED' | 'ABSENT';
 
+export type Currency = 'ARS' | 'EUR' | 'USD' | 'UYU' | 'BRL' | 'GBP' | 'OTHER';
+
 export type FinancialStatus =
   | 'PENDING_PAYMENT'
   | 'PAID'
@@ -87,6 +89,7 @@ export interface Student {
   phone: string | null;
   email: string | null;
   classRate: string;            // Decimal serializado como string, e.g. "45.00"
+  currency: Currency;           // moneda por defecto de los cargos
   modality: ClassModality;
   weeklyFrequency: number | null;
   classDuration: number | null; // minutos
@@ -99,6 +102,7 @@ export interface Student {
 export interface CreateStudentData {
   fullName: string;
   classRate: number;
+  currency?: Currency;
   modality: ClassModality;
   email?: string;
   phone?: string;
@@ -119,6 +123,7 @@ export interface Class {
   duration: number;                 // minutos
   status: ClassStatus;
   appliedRate: string | null;       // Decimal como string, e.g. "45.00"
+  currency: Currency;               // moneda heredada del alumno al momento de crear la clase
   chargeGenerated: boolean;
   notes: string | null;
   originalClassId: string | null;   // apunta a la clase reagendada de origen
@@ -146,6 +151,8 @@ export interface Charge {
   studentId: string;
   classId: string;
   amount: string;                   // Decimal como string, e.g. "45.00"
+  currency: Currency;               // moneda del cargo (nunca mutable)
+  paymentCurrency: Currency | null; // moneda en la que se recibió el pago (solo cuando PAID)
   financialStatus: FinancialStatus;
   generatedAt: string;              // ISO 8601
   promisedPaymentDate: string | null;
@@ -160,6 +167,7 @@ export interface UpdateChargeStatusData {
   notes?: string;                   // obligatorio cuando financialStatus = DEFERRED
   promisedPaymentDate?: string;     // ISO 8601, opcional para DEFERRED
   packId?: string;                  // obligatorio cuando financialStatus = PACK_COVERED
+  paymentCurrency?: Currency;       // moneda de pago recibido (cuando financialStatus = PAID)
 }
 // ── Admin — Packs ─────────────────────────────────────────────────────────────
 
@@ -171,6 +179,7 @@ export interface Pack {
   usedClasses: number;
   availableClasses: number;         // computado: totalClasses - usedClasses
   amountPaid: string;               // Decimal como string, e.g. "180.00"
+  currency: Currency;               // moneda del monto pagado
   purchasedAt: string;              // ISO 8601
   expiresAt: string | null;
   isActive: boolean;
@@ -183,7 +192,7 @@ export interface CreatePackData {
   studentId: string;
   totalClasses: number;
   amountPaid: number;      // se envía como number; Prisma lo convierte a Decimal
-
+  currency?: Currency;
   expiresAt?: string;     // ISO 8601
   notes?: string;
 }
@@ -193,8 +202,21 @@ export interface CreatePackData {
 export interface DebtorSummary {
   studentId: string;
   fullName: string;
-  totalDebt: number;      // ya convertido desde Decimal
+  totalDebt: number;      // ya convertido desde Decimal (suma multi-moneda, solo referencial)
   chargesCount: number;
+}
+
+export interface DebtorSummaryByCurrency {
+  studentId: string;
+  fullName: string;
+  currency: Currency;
+  totalDebt: number;
+  chargesCount: number;
+}
+
+export interface PendingByCurrencyItem {
+  currency: Currency;
+  amount: number;
 }
 
 export interface DeferredItem {
@@ -206,13 +228,15 @@ export interface DeferredItem {
 }
 
 export interface DashboardMetrics {
-  totalPendingAmount: number;         // suma de PENDING_PAYMENT + DEFERRED + ABSENT_CHARGEABLE
+  totalPendingAmount: number;                     // suma multi-moneda (solo referencial)
+  pendingByCurrency: PendingByCurrencyItem[];     // deuda pendiente desglosada por moneda
   studentsWithDebt: number;
   activeDeferredPayments: number;
   taughtTodayUnpaid: number;
-  overduePromises: number;            // DEFERRED donde promisedPaymentDate < ahora
-  upcomingPromises: DeferredItem[];   // promesas dentro de los próximos 7 días
-  topDebtors: DebtorSummary[];        // top 5 por monto pendiente
+  overduePromises: number;                        // DEFERRED donde promisedPaymentDate < ahora
+  upcomingPromises: DeferredItem[];               // promesas dentro de los próximos 7 días
+  topDebtors: DebtorSummary[];                    // top 5 por monto (multi-moneda, referencial)
+  topDebtorsByCurrency: DebtorSummaryByCurrency[]; // top deudores por (alumno, moneda)
 }
 
 /** Alias por compatibilidad — preferir DashboardMetrics */

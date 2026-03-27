@@ -1,59 +1,65 @@
-import { useState, useEffect, useMemo, type ReactNode } from 'react';
-import { X } from 'lucide-react';
-import { useForm } from 'react-hook-form';
+import { useState, useEffect, useMemo, type ReactNode } from "react";
+import { X } from "lucide-react";
+import { useForm } from "react-hook-form";
 import {
   getCharges,
   getStudents,
   getPacks,
   updateChargeStatus,
   ApiRequestError,
-} from '../../services/api';
+} from "../../services/api";
 import type {
   Charge,
   Student,
   Pack,
   FinancialStatus,
   UpdateChargeStatusData,
-} from '../../types';
-import { cn } from '../../utils/cn';
+  Currency,
+} from "../../types";
+import { cn } from "../../utils/cn";
 
 // ── Status helpers ────────────────────────────────────────────────────────────
 
 const STATUS_LABELS: Record<FinancialStatus, string> = {
-  PENDING_PAYMENT: 'Pendiente',
-  PAID: 'Pagado',
-  DEFERRED: 'Diferido',
-  WAIVED: 'Condonado',
-  PACK_COVERED: 'Pack',
-  ABSENT_CHARGEABLE: 'Ausente / cobra',
-  ABSENT_NON_CHARGEABLE: 'Ausente / no cobra',
+  PENDING_PAYMENT: "Pendiente",
+  PAID: "Pagado",
+  DEFERRED: "Diferido",
+  WAIVED: "Condonado",
+  PACK_COVERED: "Pack",
+  ABSENT_CHARGEABLE: "Ausente / cobra",
+  ABSENT_NON_CHARGEABLE: "Ausente / no cobra",
 };
 
 const STATUS_COLORS: Record<FinancialStatus, string> = {
-  PENDING_PAYMENT: 'bg-yellow-100 text-yellow-700',
-  PAID: 'bg-green-100 text-green-700',
-  DEFERRED: 'bg-orange-100 text-orange-700',
-  WAIVED: 'bg-gray-100 text-gray-500',
-  PACK_COVERED: 'bg-purple-100 text-purple-700',
-  ABSENT_CHARGEABLE: 'bg-red-100 text-red-700',
-  ABSENT_NON_CHARGEABLE: 'bg-gray-100 text-gray-400',
+  PENDING_PAYMENT: "bg-yellow-100 text-yellow-700",
+  PAID: "bg-green-100 text-green-700",
+  DEFERRED: "bg-orange-100 text-orange-700",
+  WAIVED: "bg-gray-100 text-gray-500",
+  PACK_COVERED: "bg-purple-100 text-purple-700",
+  ABSENT_CHARGEABLE: "bg-red-100 text-red-700",
+  ABSENT_NON_CHARGEABLE: "bg-gray-100 text-gray-400",
 };
 
 /** Estados terminales — no admiten más transiciones */
-const TERMINAL: FinancialStatus[] = ['PAID', 'WAIVED', 'PACK_COVERED', 'ABSENT_NON_CHARGEABLE'];
+const TERMINAL: FinancialStatus[] = [
+  "PAID",
+  "WAIVED",
+  "PACK_COVERED",
+  "ABSENT_NON_CHARGEABLE",
+];
 
 /** Transiciones válidas por estado origen (BR07) */
 const TRANSITIONS: Partial<Record<FinancialStatus, FinancialStatus[]>> = {
-  PENDING_PAYMENT: ['PAID', 'DEFERRED', 'WAIVED', 'PACK_COVERED'],
-  DEFERRED: ['PAID', 'WAIVED', 'PACK_COVERED'],
-  ABSENT_CHARGEABLE: ['PAID', 'DEFERRED', 'WAIVED'],
+  PENDING_PAYMENT: ["PAID", "DEFERRED", "WAIVED", "PACK_COVERED"],
+  DEFERRED: ["PAID", "WAIVED", "PACK_COVERED"],
+  ABSENT_CHARGEABLE: ["PAID", "DEFERRED", "WAIVED"],
 };
 
 function StatusBadge({ status }: { status: FinancialStatus }) {
   return (
     <span
       className={cn(
-        'inline-flex px-2.5 py-0.5 rounded-full text-xs font-medium',
+        "inline-flex px-2.5 py-0.5 rounded-full text-xs font-medium",
         STATUS_COLORS[status],
       )}
     >
@@ -63,11 +69,11 @@ function StatusBadge({ status }: { status: FinancialStatus }) {
 }
 
 function fmtDate(iso: string | null) {
-  if (!iso) return '—';
-  return new Date(iso).toLocaleDateString('es-AR', {
-    day: '2-digit',
-    month: '2-digit',
-    year: 'numeric',
+  if (!iso) return "—";
+  return new Date(iso).toLocaleDateString("es-AR", {
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
   });
 }
 
@@ -79,8 +85,8 @@ export function ChargesPage() {
   const [allPacks, setAllPacks] = useState<Pack[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [filterStudentId, setFilterStudentId] = useState('');
-  const [filterStatus, setFilterStatus] = useState<FinancialStatus | ''>('');
+  const [filterStudentId, setFilterStudentId] = useState("");
+  const [filterStatus, setFilterStatus] = useState<FinancialStatus | "">("");
   const [target, setTarget] = useState<Charge | null>(null);
 
   const studentMap = useMemo(
@@ -104,14 +110,20 @@ export function ChargesPage() {
     Promise.all([getCharges(), getStudents(), getPacks()])
       .then(([chg, sts, pkgs]) => {
         chg.sort(
-          (a, b) => new Date(b.generatedAt).getTime() - new Date(a.generatedAt).getTime(),
+          (a, b) =>
+            new Date(b.generatedAt).getTime() -
+            new Date(a.generatedAt).getTime(),
         );
         setCharges(chg);
         setStudents(sts);
         setAllPacks(pkgs);
       })
       .catch((err) =>
-        setError(err instanceof ApiRequestError ? err.message : 'Error al cargar datos'),
+        setError(
+          err instanceof ApiRequestError
+            ? err.message
+            : "Error al cargar datos",
+        ),
       )
       .finally(() => setLoading(false));
   }, []);
@@ -130,26 +142,38 @@ export function ChargesPage() {
     .filter((c) => !filterStudentId || c.studentId === filterStudentId)
     .filter((c) => !filterStatus || c.financialStatus === filterStatus);
 
-  // Totales del subconjunto visible
-  const pendingTotal = visible
+  // Deuda pendiente del subconjunto visible, agrupada por moneda
+  const pendingByCurrency = visible
     .filter((c) =>
-      (['PENDING_PAYMENT', 'DEFERRED', 'ABSENT_CHARGEABLE'] as FinancialStatus[]).includes(
-        c.financialStatus,
-      ),
+      (
+        [
+          "PENDING_PAYMENT",
+          "DEFERRED",
+          "ABSENT_CHARGEABLE",
+        ] as FinancialStatus[]
+      ).includes(c.financialStatus),
     )
-    .reduce((sum, c) => sum + Number(c.amount), 0);
+    .reduce<Record<string, number>>((acc, c) => {
+      acc[c.currency] = (acc[c.currency] ?? 0) + Number(c.amount);
+      return acc;
+    }, {});
+
+  const pendingEntries = Object.entries(pendingByCurrency);
 
   return (
     <div className="p-8">
       {/* Cabecera */}
       <div className="flex items-center justify-between mb-6">
         <h1 className="text-2xl font-bold text-fia-neutral-dark">Cargos</h1>
-        {pendingTotal > 0 && (
-          <div className="text-sm text-gray-500">
-            Deuda visible:{' '}
-            <span className="font-semibold text-red-500">
-              ${pendingTotal.toLocaleString('es-AR', { minimumFractionDigits: 2 })}
-            </span>
+        {pendingEntries.length > 0 && (
+          <div className="flex items-center gap-3 text-sm text-gray-500">
+            <span>Deuda visible:</span>
+            {pendingEntries.map(([cur, total]) => (
+              <span key={cur} className="font-semibold text-red-500">
+                {cur}{" "}
+                {total.toLocaleString("es-AR", { minimumFractionDigits: 2 })}
+              </span>
+            ))}
           </div>
         )}
       </div>
@@ -171,7 +195,9 @@ export function ChargesPage() {
 
         <select
           value={filterStatus}
-          onChange={(e) => setFilterStatus(e.target.value as FinancialStatus | '')}
+          onChange={(e) =>
+            setFilterStatus(e.target.value as FinancialStatus | "")
+          }
           className="px-3 py-2 text-sm border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-fia-primary bg-white"
         >
           <option value="">Todos los estados</option>
@@ -190,13 +216,15 @@ export function ChargesPage() {
         </div>
       )}
       {!loading && error && (
-        <p className="text-sm text-red-600 bg-red-50 px-4 py-3 rounded-xl">{error}</p>
+        <p className="text-sm text-red-600 bg-red-50 px-4 py-3 rounded-xl">
+          {error}
+        </p>
       )}
       {!loading && !error && visible.length === 0 && (
         <p className="text-sm text-gray-500 py-12 text-center">
           {filterStudentId || filterStatus
-            ? 'No hay cargos que coincidan con los filtros.'
-            : 'Todavía no hay cargos registrados.'}
+            ? "No hay cargos que coincidan con los filtros."
+            : "Todavía no hay cargos registrados."}
         </p>
       )}
 
@@ -228,23 +256,29 @@ export function ChargesPage() {
               {visible.map((charge) => {
                 const isTerminal = TERMINAL.includes(charge.financialStatus);
                 return (
-                  <tr key={charge.id} className="hover:bg-gray-50/60 transition-colors">
+                  <tr
+                    key={charge.id}
+                    className="hover:bg-gray-50/60 transition-colors"
+                  >
                     <td className="px-6 py-4 font-medium text-fia-neutral-dark">
-                      {studentMap[charge.studentId] ?? '—'}
+                      {studentMap[charge.studentId] ?? "—"}
                     </td>
-                    <td className="px-6 py-4 text-gray-500">{fmtDate(charge.generatedAt)}</td>
+                    <td className="px-6 py-4 text-gray-500">
+                      {fmtDate(charge.generatedAt)}
+                    </td>
                     <td className="px-6 py-4 text-gray-700 font-medium">
-                      ${Number(charge.amount).toFixed(2)}
+                      {charge.currency} {Number(charge.amount).toFixed(2)}
                     </td>
                     <td className="px-6 py-4">
                       <StatusBadge status={charge.financialStatus} />
                     </td>
                     <td className="px-6 py-4 text-gray-500">
-                      {charge.financialStatus === 'DEFERRED' && charge.promisedPaymentDate
+                      {charge.financialStatus === "DEFERRED" &&
+                      charge.promisedPaymentDate
                         ? fmtDate(charge.promisedPaymentDate)
                         : charge.paidAt
                           ? fmtDate(charge.paidAt)
-                          : '—'}
+                          : "—"}
                     </td>
                     <td className="px-6 py-4 text-right">
                       {!isTerminal && (
@@ -268,7 +302,7 @@ export function ChargesPage() {
       {target && (
         <UpdateChargeModal
           charge={target}
-          studentName={studentMap[target.studentId] ?? ''}
+          studentName={studentMap[target.studentId] ?? ""}
           availablePacks={packsMap.get(target.studentId) ?? []}
           onClose={() => setTarget(null)}
           onUpdated={(updated) => {
@@ -288,6 +322,7 @@ interface UpdateFormData {
   notes: string;
   promisedPaymentDate: string;
   packId: string;
+  paymentCurrency: Currency;
 }
 
 function UpdateChargeModal({
@@ -315,52 +350,62 @@ function UpdateChargeModal({
   } = useForm<UpdateFormData>({
     defaultValues: {
       financialStatus: transitions[0],
-      notes: '',
-      promisedPaymentDate: '',
-      packId: '',
+      notes: "",
+      promisedPaymentDate: "",
+      packId: "",
+      paymentCurrency: charge.currency,
     },
   });
 
-  const selectedStatus = watch('financialStatus');
-
+  const selectedStatus = watch("financialStatus");
 
   async function onSubmit(data: UpdateFormData) {
     setSubmitError(null);
     try {
-      const payload: UpdateChargeStatusData = { financialStatus: data.financialStatus };
+      const payload: UpdateChargeStatusData = {
+        financialStatus: data.financialStatus,
+      };
       if (data.notes.trim()) payload.notes = data.notes.trim();
-      if (data.financialStatus === 'DEFERRED' && data.promisedPaymentDate) {
-        payload.promisedPaymentDate = new Date(data.promisedPaymentDate).toISOString();
+      if (data.financialStatus === "DEFERRED" && data.promisedPaymentDate) {
+        payload.promisedPaymentDate = new Date(
+          data.promisedPaymentDate,
+        ).toISOString();
       }
-      if (data.financialStatus === 'PACK_COVERED' && data.packId) {
+      if (data.financialStatus === "PACK_COVERED" && data.packId) {
         payload.packId = data.packId;
+      }
+      if (data.financialStatus === "PAID") {
+        payload.paymentCurrency = data.paymentCurrency;
       }
       onUpdated(await updateChargeStatus(charge.id, payload));
     } catch (err) {
-      setSubmitError(err instanceof ApiRequestError ? err.message : 'Error al actualizar el cargo');
+      setSubmitError(
+        err instanceof ApiRequestError
+          ? err.message
+          : "Error al actualizar el cargo",
+      );
     }
   }
 
   return (
-    <ModalShell
-      title={`Actualizar cargo — ${studentName}`}
-      onClose={onClose}
-    >
+    <ModalShell title={`Actualizar cargo — ${studentName}`} onClose={onClose}>
       <form onSubmit={handleSubmit(onSubmit)} className="px-6 py-5 space-y-4">
         {submitError && (
-          <p className="text-sm text-red-600 bg-red-50 px-4 py-2 rounded-lg">{submitError}</p>
+          <p className="text-sm text-red-600 bg-red-50 px-4 py-2 rounded-lg">
+            {submitError}
+          </p>
         )}
 
         {/* Info del cargo */}
         <div className="flex gap-4 text-xs text-gray-500 bg-gray-50 rounded-xl px-4 py-3">
           <span>
-            Monto:{' '}
+            Monto:{" "}
             <span className="font-semibold text-gray-700">
-              ${Number(charge.amount).toFixed(2)}
+              {charge.currency} {Number(charge.amount).toFixed(2)}
             </span>
           </span>
           <span>
-            Estado actual:{' '}
+            Estado actual:{" "}
             <span className="font-semibold text-gray-700">
               {STATUS_LABELS[charge.financialStatus]}
             </span>
@@ -373,7 +418,7 @@ function UpdateChargeModal({
             Nuevo estado <span className="text-red-500">*</span>
           </label>
           <select
-            {...register('financialStatus')}
+            {...register("financialStatus")}
             className="w-full px-4 py-2.5 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-fia-primary bg-white"
           >
             {transitions.map((t) => (
@@ -385,7 +430,7 @@ function UpdateChargeModal({
         </div>
 
         {/* PACK_COVERED — selector de pack */}
-        {selectedStatus === 'PACK_COVERED' && (
+        {selectedStatus === "PACK_COVERED" && (
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
               Pack <span className="text-red-500">*</span>
@@ -396,59 +441,96 @@ function UpdateChargeModal({
               </p>
             ) : (
               <select
-                {...register('packId', {
-                  required: selectedStatus === 'PACK_COVERED' ? 'Seleccioná un pack' : false,
+                {...register("packId", {
+                  required:
+                    selectedStatus === "PACK_COVERED"
+                      ? "Seleccioná un pack"
+                      : false,
                 })}
                 className={cn(
-                  'w-full px-4 py-2.5 rounded-xl border text-sm focus:outline-none focus:ring-2 focus:ring-fia-primary bg-white',
-                  errors.packId ? 'border-red-400' : 'border-gray-200',
+                  "w-full px-4 py-2.5 rounded-xl border text-sm focus:outline-none focus:ring-2 focus:ring-fia-primary bg-white",
+                  errors.packId ? "border-red-400" : "border-gray-200",
                 )}
               >
                 <option value="">Seleccionar pack…</option>
                 {availablePacks.map((p) => (
                   <option key={p.id} value={p.id}>
-                    {p.availableClasses} clases disponibles — comprado{' '}
+                    {p.availableClasses} clases disponibles — comprado{" "}
                     {fmtDate(p.purchasedAt)}
                   </option>
                 ))}
               </select>
             )}
             {errors.packId && (
-              <p className="mt-1 text-xs text-red-500">{errors.packId.message}</p>
+              <p className="mt-1 text-xs text-red-500">
+                {errors.packId.message}
+              </p>
             )}
           </div>
         )}
 
         {/* DEFERRED — fecha promesa */}
-        {selectedStatus === 'DEFERRED' && (
+        {selectedStatus === "DEFERRED" && (
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
               Fecha de promesa de pago
             </label>
             <input
-              {...register('promisedPaymentDate')}
+              {...register("promisedPaymentDate")}
               type="date"
               className="w-full px-4 py-2.5 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-fia-primary"
             />
           </div>
         )}
 
+        {/* PAID — moneda de pago recibido */}
+        {selectedStatus === "PAID" && (
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Moneda recibida
+            </label>
+            <select
+              {...register("paymentCurrency")}
+              className="w-full px-4 py-2.5 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-fia-primary bg-white"
+            >
+              {(
+                [
+                  "ARS",
+                  "USD",
+                  "EUR",
+                  "UYU",
+                  "BRL",
+                  "GBP",
+                  "OTHER",
+                ] as Currency[]
+              ).map((c) => (
+                <option key={c} value={c}>
+                  {c}
+                </option>
+              ))}
+            </select>
+          </div>
+        )}
+
         {/* Notas (obligatorio para DEFERRED) */}
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">
-            Notas{selectedStatus === 'DEFERRED' && <span className="text-red-500"> *</span>}
+            Notas
+            {selectedStatus === "DEFERRED" && (
+              <span className="text-red-500"> *</span>
+            )}
           </label>
           <textarea
-            {...register('notes', {
+            {...register("notes", {
               validate: (v) =>
-                selectedStatus !== 'DEFERRED' || v.trim().length > 0
+                selectedStatus !== "DEFERRED" || v.trim().length > 0
                   ? true
-                  : 'Las notas son obligatorias para diferir un pago',
+                  : "Las notas son obligatorias para diferir un pago",
             })}
             rows={2}
             className={cn(
-              'w-full px-4 py-2.5 rounded-xl border text-sm focus:outline-none focus:ring-2 focus:ring-fia-primary resize-none',
-              errors.notes ? 'border-red-400' : 'border-gray-200',
+              "w-full px-4 py-2.5 rounded-xl border text-sm focus:outline-none focus:ring-2 focus:ring-fia-primary resize-none",
+              errors.notes ? "border-red-400" : "border-gray-200",
             )}
           />
           {errors.notes && (
@@ -467,10 +549,13 @@ function UpdateChargeModal({
           </button>
           <button
             type="submit"
-            disabled={isSubmitting || (selectedStatus === 'PACK_COVERED' && availablePacks.length === 0)}
+            disabled={
+              isSubmitting ||
+              (selectedStatus === "PACK_COVERED" && availablePacks.length === 0)
+            }
             className="flex-1 py-2.5 bg-fia-primary text-white text-sm font-semibold rounded-xl hover:bg-fia-primary-dark transition-colors disabled:opacity-60"
           >
-            {isSubmitting ? 'Guardando…' : 'Guardar'}
+            {isSubmitting ? "Guardando…" : "Guardar"}
           </button>
         </div>
       </form>
@@ -494,7 +579,9 @@ function ModalShell({
       <div className="absolute inset-0 bg-black/40" onClick={onClose} />
       <div className="relative bg-white rounded-2xl shadow-xl w-full max-w-md">
         <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100">
-          <h2 className="text-base font-semibold text-fia-neutral-dark">{title}</h2>
+          <h2 className="text-base font-semibold text-fia-neutral-dark">
+            {title}
+          </h2>
           <button
             onClick={onClose}
             className="p-1 text-gray-400 hover:text-gray-600 rounded-lg transition-colors"

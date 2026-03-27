@@ -1,24 +1,24 @@
-import { useState, useEffect, useMemo, type ReactNode } from 'react';
-import { Plus, Trash2, X } from 'lucide-react';
-import { useForm } from 'react-hook-form';
+import { useState, useEffect, useMemo, type ReactNode } from "react";
+import { Plus, Trash2, X } from "lucide-react";
+import { useForm } from "react-hook-form";
 import {
   getPacks,
   getStudents,
   createPack,
   deletePack,
   ApiRequestError,
-} from '../../services/api';
-import type { Pack, Student, CreatePackData } from '../../types';
-import { cn } from '../../utils/cn';
+} from "../../services/api";
+import type { Pack, Student, CreatePackData, Currency } from "../../types";
+import { cn } from "../../utils/cn";
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
 function fmtDate(iso: string | null) {
-  if (!iso) return '—';
-  return new Date(iso).toLocaleDateString('es-AR', {
-    day: '2-digit',
-    month: '2-digit',
-    year: 'numeric',
+  if (!iso) return "—";
+  return new Date(iso).toLocaleDateString("es-AR", {
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
   });
 }
 
@@ -29,8 +29,10 @@ export function PacksPage() {
   const [students, setStudents] = useState<Student[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [filterStudentId, setFilterStudentId] = useState('');
-  const [filterActive, setFilterActive] = useState<'all' | 'active' | 'inactive'>('all');
+  const [filterStudentId, setFilterStudentId] = useState("");
+  const [filterActive, setFilterActive] = useState<
+    "all" | "active" | "inactive"
+  >("all");
   const [showCreate, setShowCreate] = useState(false);
 
   const studentMap = useMemo(
@@ -42,13 +44,19 @@ export function PacksPage() {
     Promise.all([getPacks(), getStudents()])
       .then(([pkgs, sts]) => {
         pkgs.sort(
-          (a, b) => new Date(b.purchasedAt).getTime() - new Date(a.purchasedAt).getTime(),
+          (a, b) =>
+            new Date(b.purchasedAt).getTime() -
+            new Date(a.purchasedAt).getTime(),
         );
         setPacks(pkgs);
         setStudents(sts.filter((s) => s.isActive));
       })
       .catch((err) =>
-        setError(err instanceof ApiRequestError ? err.message : 'Error al cargar datos'),
+        setError(
+          err instanceof ApiRequestError
+            ? err.message
+            : "Error al cargar datos",
+        ),
       )
       .finally(() => setLoading(false));
   }, []);
@@ -56,7 +64,7 @@ export function PacksPage() {
   async function handleDelete(pack: Pack) {
     if (
       !confirm(
-        `¿Eliminar el pack de ${studentMap[pack.studentId] ?? 'este alumno'}? Esta acción no puede deshacerse.`,
+        `¿Eliminar el pack de ${studentMap[pack.studentId] ?? "este alumno"}? Esta acción no puede deshacerse.`,
       )
     )
       return;
@@ -64,15 +72,19 @@ export function PacksPage() {
       await deletePack(pack.id);
       setPacks((prev) => prev.filter((p) => p.id !== pack.id));
     } catch (err) {
-      alert(err instanceof ApiRequestError ? err.message : 'Error al eliminar el pack');
+      alert(
+        err instanceof ApiRequestError
+          ? err.message
+          : "Error al eliminar el pack",
+      );
     }
   }
 
   const visible = packs
     .filter((p) => !filterStudentId || p.studentId === filterStudentId)
     .filter((p) => {
-      if (filterActive === 'active') return p.isActive;
-      if (filterActive === 'inactive') return !p.isActive;
+      if (filterActive === "active") return p.isActive;
+      if (filterActive === "inactive") return !p.isActive;
       return true;
     });
 
@@ -80,7 +92,9 @@ export function PacksPage() {
     <div className="p-8">
       {/* Cabecera */}
       <div className="flex items-center justify-between mb-6">
-        <h1 className="text-2xl font-bold text-fia-neutral-dark">Packs prepagos</h1>
+        <h1 className="text-2xl font-bold text-fia-neutral-dark">
+          Packs prepagos
+        </h1>
         <button
           onClick={() => setShowCreate(true)}
           className="flex items-center gap-2 px-4 py-2 bg-fia-primary text-white text-sm font-semibold rounded-xl hover:bg-fia-primary-dark transition-colors"
@@ -107,7 +121,9 @@ export function PacksPage() {
 
         <select
           value={filterActive}
-          onChange={(e) => setFilterActive(e.target.value as 'all' | 'active' | 'inactive')}
+          onChange={(e) =>
+            setFilterActive(e.target.value as "all" | "active" | "inactive")
+          }
           className="px-3 py-2 text-sm border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-fia-primary bg-white"
         >
           <option value="all">Todos</option>
@@ -123,13 +139,15 @@ export function PacksPage() {
         </div>
       )}
       {!loading && error && (
-        <p className="text-sm text-red-600 bg-red-50 px-4 py-3 rounded-xl">{error}</p>
+        <p className="text-sm text-red-600 bg-red-50 px-4 py-3 rounded-xl">
+          {error}
+        </p>
       )}
       {!loading && !error && visible.length === 0 && (
         <p className="text-sm text-gray-500 py-12 text-center">
-          {filterStudentId || filterActive !== 'all'
-            ? 'No hay packs que coincidan con los filtros.'
-            : 'Todavía no hay packs. ¡Creá el primero!'}
+          {filterStudentId || filterActive !== "all"
+            ? "No hay packs que coincidan con los filtros."
+            : "Todavía no hay packs. ¡Creá el primero!"}
         </p>
       )}
 
@@ -165,9 +183,12 @@ export function PacksPage() {
             </thead>
             <tbody className="divide-y divide-gray-50">
               {visible.map((pack) => (
-                <tr key={pack.id} className="hover:bg-gray-50/60 transition-colors">
+                <tr
+                  key={pack.id}
+                  className="hover:bg-gray-50/60 transition-colors"
+                >
                   <td className="px-6 py-4 font-medium text-fia-neutral-dark">
-                    {studentMap[pack.studentId] ?? '—'}
+                    {studentMap[pack.studentId] ?? "—"}
                   </td>
                   <td className="px-6 py-4 text-gray-700">
                     {pack.usedClasses} / {pack.totalClasses}
@@ -175,18 +196,24 @@ export function PacksPage() {
                   <td className="px-6 py-4">
                     <span
                       className={cn(
-                        'font-semibold',
-                        pack.availableClasses > 0 ? 'text-green-600' : 'text-gray-400',
+                        "font-semibold",
+                        pack.availableClasses > 0
+                          ? "text-green-600"
+                          : "text-gray-400",
                       )}
                     >
                       {pack.availableClasses}
                     </span>
                   </td>
                   <td className="px-6 py-4 text-gray-700">
-                    ${Number(pack.amountPaid).toFixed(2)}
+                    {pack.currency} {Number(pack.amountPaid).toFixed(2)}
                   </td>
-                  <td className="px-6 py-4 text-gray-500">{fmtDate(pack.purchasedAt)}</td>
-                  <td className="px-6 py-4 text-gray-500">{fmtDate(pack.expiresAt)}</td>
+                  <td className="px-6 py-4 text-gray-500">
+                    {fmtDate(pack.purchasedAt)}
+                  </td>
+                  <td className="px-6 py-4 text-gray-500">
+                    {fmtDate(pack.expiresAt)}
+                  </td>
                   <td className="px-6 py-4">
                     {pack.isActive ? (
                       <span className="inline-flex px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-700">
@@ -222,7 +249,9 @@ export function PacksPage() {
           onCreated={(pack) => {
             setPacks((prev) =>
               [pack, ...prev].sort(
-                (a, b) => new Date(b.purchasedAt).getTime() - new Date(a.purchasedAt).getTime(),
+                (a, b) =>
+                  new Date(b.purchasedAt).getTime() -
+                  new Date(a.purchasedAt).getTime(),
               ),
             );
             setShowCreate(false);
@@ -239,6 +268,7 @@ interface CreatePackFormData {
   studentId: string;
   totalClasses: number;
   amountPaid: number;
+  currency: Currency;
   expiresAt: string;
   notes: string;
 }
@@ -262,17 +292,18 @@ function CreatePackModal({
     formState: { errors, isSubmitting },
   } = useForm<CreatePackFormData>({
     defaultValues: {
-      studentId: '',
+      studentId: "",
       totalClasses: 4,
-      amountPaid: '' as unknown as number,
-      expiresAt: '',
-      notes: '',
+      amountPaid: "" as unknown as number,
+      currency: "ARS",
+      expiresAt: "",
+      notes: "",
     },
   });
 
-  const totalClasses = watch('totalClasses');
-  const amountPaid = watch('amountPaid');
-  const studentId = watch('studentId');
+  const totalClasses = watch("totalClasses");
+  const amountPaid = watch("amountPaid");
+  const studentId = watch("studentId");
 
   const selectedStudent = useMemo(
     () => students.find((s) => s.id === studentId) ?? null,
@@ -284,13 +315,17 @@ function CreatePackModal({
     if (!selectedStudent) return;
     const rate = Number(selectedStudent.classRate);
     if (rate > 0 && totalClasses > 0) {
-      setValue('amountPaid', rate * totalClasses, { shouldValidate: true });
+      setValue("amountPaid", rate * totalClasses, { shouldValidate: true });
     }
+    // Heredar moneda del alumno
+    setValue("currency", selectedStudent.currency);
   }, [selectedStudent, totalClasses, setValue]);
 
-  const pricePerClass =
-    selectedStudent ? Number(selectedStudent.classRate) :
-    totalClasses > 0 && amountPaid > 0 ? amountPaid / totalClasses : null;
+  const pricePerClass = selectedStudent
+    ? Number(selectedStudent.classRate)
+    : totalClasses > 0 && amountPaid > 0
+      ? amountPaid / totalClasses
+      : null;
 
   async function onSubmit(data: CreatePackFormData) {
     setSubmitError(null);
@@ -299,12 +334,17 @@ function CreatePackModal({
         studentId: data.studentId,
         totalClasses: data.totalClasses,
         amountPaid: data.amountPaid,
-        ...(data.expiresAt ? { expiresAt: new Date(data.expiresAt).toISOString() } : {}),
+        currency: data.currency,
+        ...(data.expiresAt
+          ? { expiresAt: new Date(data.expiresAt).toISOString() }
+          : {}),
         ...(data.notes.trim() ? { notes: data.notes.trim() } : {}),
       };
       onCreated(await createPack(payload));
     } catch (err) {
-      setSubmitError(err instanceof ApiRequestError ? err.message : 'Error al crear el pack');
+      setSubmitError(
+        err instanceof ApiRequestError ? err.message : "Error al crear el pack",
+      );
     }
   }
 
@@ -312,7 +352,9 @@ function CreatePackModal({
     <ModalShell title="Nuevo pack prepago" onClose={onClose}>
       <form onSubmit={handleSubmit(onSubmit)} className="px-6 py-5 space-y-4">
         {submitError && (
-          <p className="text-sm text-red-600 bg-red-50 px-4 py-2 rounded-lg">{submitError}</p>
+          <p className="text-sm text-red-600 bg-red-50 px-4 py-2 rounded-lg">
+            {submitError}
+          </p>
         )}
 
         {/* Alumno */}
@@ -321,10 +363,10 @@ function CreatePackModal({
             Alumno <span className="text-red-500">*</span>
           </label>
           <select
-            {...register('studentId', { required: 'El alumno es obligatorio' })}
+            {...register("studentId", { required: "El alumno es obligatorio" })}
             className={cn(
-              'w-full px-4 py-2.5 rounded-xl border text-sm focus:outline-none focus:ring-2 focus:ring-fia-primary bg-white',
-              errors.studentId ? 'border-red-400' : 'border-gray-200',
+              "w-full px-4 py-2.5 rounded-xl border text-sm focus:outline-none focus:ring-2 focus:ring-fia-primary bg-white",
+              errors.studentId ? "border-red-400" : "border-gray-200",
             )}
           >
             <option value="">Seleccionar alumno…</option>
@@ -335,63 +377,90 @@ function CreatePackModal({
             ))}
           </select>
           {errors.studentId && (
-            <p className="mt-1 text-xs text-red-500">{errors.studentId.message}</p>
+            <p className="mt-1 text-xs text-red-500">
+              {errors.studentId.message}
+            </p>
           )}
         </div>
 
-        {/* Cantidad de clases + monto */}
-        <div className="grid grid-cols-2 gap-3" style={{ alignItems: 'start' }}>
+        {/* Cantidad de clases + moneda + monto */}
+        <div className="grid grid-cols-3 gap-3" style={{ alignItems: "start" }}>
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
               Clases <span className="text-red-500">*</span>
             </label>
             <input
-              {...register('totalClasses', {
+              {...register("totalClasses", {
                 valueAsNumber: true,
                 validate: {
-                  required: (v) => !isNaN(v) || 'Obligatorio',
-                  positive: (v) => v > 0 || 'Debe ser mayor a 0',
+                  required: (v) => !isNaN(v) || "Obligatorio",
+                  positive: (v) => v > 0 || "Debe ser mayor a 0",
                 },
               })}
               type="number"
               min="1"
               className={cn(
-                'w-full px-4 py-2.5 rounded-xl border text-sm focus:outline-none focus:ring-2 focus:ring-fia-primary',
-                errors.totalClasses ? 'border-red-400' : 'border-gray-200',
+                "w-full px-4 py-2.5 rounded-xl border text-sm focus:outline-none focus:ring-2 focus:ring-fia-primary",
+                errors.totalClasses ? "border-red-400" : "border-gray-200",
               )}
             />
             {errors.totalClasses && (
-              <p className="mt-1 text-xs text-red-500">{errors.totalClasses.message}</p>
+              <p className="mt-1 text-xs text-red-500">
+                {errors.totalClasses.message}
+              </p>
             )}
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Moneda
+            </label>
+            <select
+              {...register("currency")}
+              className="w-full px-3 py-2.5 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-fia-primary bg-white"
+            >
+              {(
+                [
+                  "ARS",
+                  "USD",
+                  "EUR",
+                  "UYU",
+                  "BRL",
+                  "GBP",
+                  "OTHER",
+                ] as Currency[]
+              ).map((c) => (
+                <option key={c} value={c}>
+                  {c}
+                </option>
+              ))}
+            </select>
           </div>
 
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
               Monto pagado <span className="text-red-500">*</span>
             </label>
-            <div className="relative">
-              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm select-none">
-                $
-              </span>
-              <input
-                {...register('amountPaid', {
-                  valueAsNumber: true,
-                  validate: {
-                    required: (v) => !isNaN(v) || 'Obligatorio',
-                    positive: (v) => v > 0 || 'Debe ser mayor a 0',
-                  },
-                })}
-                type="number"
-                step="0.01"
-                min="0"
-                className={cn(
-                  'w-full pl-7 pr-4 py-2.5 rounded-xl border text-sm focus:outline-none focus:ring-2 focus:ring-fia-primary',
-                  errors.amountPaid ? 'border-red-400' : 'border-gray-200',
-                )}
-              />
-            </div>
+            <input
+              {...register("amountPaid", {
+                valueAsNumber: true,
+                validate: {
+                  required: (v) => !isNaN(v) || "Obligatorio",
+                  positive: (v) => v > 0 || "Debe ser mayor a 0",
+                },
+              })}
+              type="number"
+              step="0.01"
+              min="0"
+              className={cn(
+                "w-full px-4 py-2.5 rounded-xl border text-sm focus:outline-none focus:ring-2 focus:ring-fia-primary",
+                errors.amountPaid ? "border-red-400" : "border-gray-200",
+              )}
+            />
             {errors.amountPaid && (
-              <p className="mt-1 text-xs text-red-500">{errors.amountPaid.message}</p>
+              <p className="mt-1 text-xs text-red-500">
+                {errors.amountPaid.message}
+              </p>
             )}
           </div>
         </div>
@@ -400,16 +469,18 @@ function CreatePackModal({
         {pricePerClass !== null && (
           <p className="text-xs text-fia-primary font-medium -mt-1">
             {selectedStudent
-              ? `Tarifa del alumno: $${pricePerClass.toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} / clase — monto calculado automáticamente`
-              : `Precio por clase: $${pricePerClass.toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}
+              ? `Tarifa del alumno: ${selectedStudent.currency} ${pricePerClass.toLocaleString("es-AR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} / clase — monto calculado automáticamente`
+              : `Precio por clase: ${pricePerClass.toLocaleString("es-AR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}
           </p>
         )}
 
         {/* Vencimiento */}
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Vencimiento</label>
+          <label className="block text-sm font-medium text-gray-700 mb-1">
+            Vencimiento
+          </label>
           <input
-            {...register('expiresAt')}
+            {...register("expiresAt")}
             type="date"
             className="w-full px-4 py-2.5 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-fia-primary"
           />
@@ -417,9 +488,11 @@ function CreatePackModal({
 
         {/* Notas */}
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Notas</label>
+          <label className="block text-sm font-medium text-gray-700 mb-1">
+            Notas
+          </label>
           <textarea
-            {...register('notes')}
+            {...register("notes")}
             rows={2}
             className="w-full px-4 py-2.5 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-fia-primary resize-none"
           />
@@ -439,7 +512,7 @@ function CreatePackModal({
             disabled={isSubmitting}
             className="flex-1 py-2.5 bg-fia-primary text-white text-sm font-semibold rounded-xl hover:bg-fia-primary-dark transition-colors disabled:opacity-60"
           >
-            {isSubmitting ? 'Guardando…' : 'Crear pack'}
+            {isSubmitting ? "Guardando…" : "Crear pack"}
           </button>
         </div>
       </form>
@@ -463,7 +536,9 @@ function ModalShell({
       <div className="absolute inset-0 bg-black/40" onClick={onClose} />
       <div className="relative bg-white rounded-2xl shadow-xl w-full max-w-md">
         <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100">
-          <h2 className="text-base font-semibold text-fia-neutral-dark">{title}</h2>
+          <h2 className="text-base font-semibold text-fia-neutral-dark">
+            {title}
+          </h2>
           <button
             onClick={onClose}
             className="p-1 text-gray-400 hover:text-gray-600 rounded-lg transition-colors"

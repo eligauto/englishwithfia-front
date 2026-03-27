@@ -1,15 +1,20 @@
-import { useState, useEffect } from 'react';
-import { Plus, Pencil, UserX, Search, X } from 'lucide-react';
-import { useForm } from 'react-hook-form';
+import { useState, useEffect } from "react";
+import { Plus, Pencil, UserX, Search, X } from "lucide-react";
+import { useForm } from "react-hook-form";
 import {
   getStudents,
   createStudent,
   updateStudent,
   deleteStudent,
   ApiRequestError,
-} from '../../services/api';
-import type { Student, CreateStudentData, ClassModality } from '../../types';
-import { cn } from '../../utils/cn';
+} from "../../services/api";
+import type {
+  Student,
+  CreateStudentData,
+  ClassModality,
+  Currency,
+} from "../../types";
+import { cn } from "../../utils/cn";
 
 // ── Tipos del formulario ──────────────────────────────────────────────────────
 
@@ -18,6 +23,7 @@ interface StudentFormData {
   email: string;
   phone: string;
   classRate: number;
+  currency: Currency;
   modality: ClassModality;
 }
 
@@ -25,6 +31,7 @@ function toPayload(data: StudentFormData): CreateStudentData {
   return {
     fullName: data.fullName.trim(),
     classRate: data.classRate,
+    currency: data.currency,
     modality: data.modality,
     ...(data.email.trim() ? { email: data.email.trim() } : {}),
     ...(data.phone.trim() ? { phone: data.phone.trim() } : {}),
@@ -37,15 +44,21 @@ export function StudentsPage() {
   const [students, setStudents] = useState<Student[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [search, setSearch] = useState('');
-  const [modalStudent, setModalStudent] = useState<Student | null | undefined>(undefined);
+  const [search, setSearch] = useState("");
+  const [modalStudent, setModalStudent] = useState<Student | null | undefined>(
+    undefined,
+  );
   // undefined = modal cerrado, null = modal abierto para crear, Student = editar
 
   useEffect(() => {
     getStudents()
       .then(setStudents)
       .catch((err) =>
-        setError(err instanceof ApiRequestError ? err.message : 'Error al cargar alumnos'),
+        setError(
+          err instanceof ApiRequestError
+            ? err.message
+            : "Error al cargar alumnos",
+        ),
       )
       .finally(() => setLoading(false));
   }, []);
@@ -64,12 +77,21 @@ export function StudentsPage() {
   }
 
   async function handleDeactivate(student: Student) {
-    if (!confirm(`¿Dar de baja a ${student.fullName}? Se puede reactivar más adelante.`)) return;
+    if (
+      !confirm(
+        `¿Dar de baja a ${student.fullName}? Se puede reactivar más adelante.`,
+      )
+    )
+      return;
     try {
       await deleteStudent(student.id);
       setStudents((prev) => prev.filter((s) => s.id !== student.id));
     } catch (err) {
-      alert(err instanceof ApiRequestError ? err.message : 'Error al dar de baja al alumno');
+      alert(
+        err instanceof ApiRequestError
+          ? err.message
+          : "Error al dar de baja al alumno",
+      );
     }
   }
 
@@ -97,7 +119,10 @@ export function StudentsPage() {
 
       {/* Buscador */}
       <div className="relative mb-6 max-w-sm">
-        <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+        <Search
+          size={15}
+          className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
+        />
         <input
           type="search"
           placeholder="Buscar por nombre o email…"
@@ -116,15 +141,17 @@ export function StudentsPage() {
 
       {/* Estado: error */}
       {!loading && error && (
-        <p className="text-sm text-red-600 bg-red-50 px-4 py-3 rounded-xl">{error}</p>
+        <p className="text-sm text-red-600 bg-red-50 px-4 py-3 rounded-xl">
+          {error}
+        </p>
       )}
 
       {/* Estado: vacío */}
       {!loading && !error && visible.length === 0 && (
         <p className="text-sm text-gray-500 py-12 text-center">
           {search
-            ? 'No hay alumnos que coincidan con la búsqueda.'
-            : 'Todavía no hay alumnos. ¡Creá el primero!'}
+            ? "No hay alumnos que coincidan con la búsqueda."
+            : "Todavía no hay alumnos. ¡Creá el primero!"}
         </p>
       )}
 
@@ -151,12 +178,21 @@ export function StudentsPage() {
             </thead>
             <tbody className="divide-y divide-gray-50">
               {visible.map((student) => (
-                <tr key={student.id} className="hover:bg-gray-50/60 transition-colors">
-                  <td className="px-6 py-4 font-medium text-fia-neutral-dark">{student.fullName}</td>
-                  <td className="px-6 py-4 text-gray-500">{student.email ?? '—'}</td>
-                  <td className="px-6 py-4 text-gray-500">{student.phone ?? '—'}</td>
+                <tr
+                  key={student.id}
+                  className="hover:bg-gray-50/60 transition-colors"
+                >
+                  <td className="px-6 py-4 font-medium text-fia-neutral-dark">
+                    {student.fullName}
+                  </td>
+                  <td className="px-6 py-4 text-gray-500">
+                    {student.email ?? "—"}
+                  </td>
+                  <td className="px-6 py-4 text-gray-500">
+                    {student.phone ?? "—"}
+                  </td>
                   <td className="px-6 py-4 text-gray-700">
-                    ${Number(student.classRate).toFixed(2)}
+                    {student.currency} {Number(student.classRate).toFixed(2)}
                   </td>
                   <td className="px-6 py-4">
                     <div className="flex items-center justify-end gap-1">
@@ -212,11 +248,14 @@ function StudentModal({ student, onClose, onSaved }: StudentModalProps) {
     formState: { errors, isSubmitting },
   } = useForm<StudentFormData>({
     defaultValues: {
-      fullName: student?.fullName ?? '',
-      email: student?.email ?? '',
-      phone: student?.phone ?? '',
-      classRate: student ? Number(student.classRate) : ('' as unknown as number),
-      modality: student?.modality ?? 'ONLINE',
+      fullName: student?.fullName ?? "",
+      email: student?.email ?? "",
+      phone: student?.phone ?? "",
+      classRate: student
+        ? Number(student.classRate)
+        : ("" as unknown as number),
+      currency: student?.currency ?? "ARS",
+      modality: student?.modality ?? "ONLINE",
     },
   });
 
@@ -230,7 +269,9 @@ function StudentModal({ student, onClose, onSaved }: StudentModalProps) {
       onSaved(saved);
     } catch (err) {
       setSubmitError(
-        err instanceof ApiRequestError ? err.message : 'Error al guardar el alumno',
+        err instanceof ApiRequestError
+          ? err.message
+          : "Error al guardar el alumno",
       );
     }
   }
@@ -244,7 +285,7 @@ function StudentModal({ student, onClose, onSaved }: StudentModalProps) {
       <div className="relative bg-white rounded-2xl shadow-xl w-full max-w-md">
         <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100">
           <h2 className="text-base font-semibold text-fia-neutral-dark">
-            {student ? 'Editar alumno' : 'Nuevo alumno'}
+            {student ? "Editar alumno" : "Nuevo alumno"}
           </h2>
           <button
             onClick={onClose}
@@ -256,7 +297,9 @@ function StudentModal({ student, onClose, onSaved }: StudentModalProps) {
 
         <form onSubmit={handleSubmit(onSubmit)} className="px-6 py-5 space-y-4">
           {submitError && (
-            <p className="text-sm text-red-600 bg-red-50 px-4 py-2 rounded-lg">{submitError}</p>
+            <p className="text-sm text-red-600 bg-red-50 px-4 py-2 rounded-lg">
+              {submitError}
+            </p>
           )}
 
           {/* Nombre */}
@@ -265,70 +308,103 @@ function StudentModal({ student, onClose, onSaved }: StudentModalProps) {
               Nombre <span className="text-red-500">*</span>
             </label>
             <input
-              {...register('fullName', { required: 'El nombre es obligatorio' })}
+              {...register("fullName", {
+                required: "El nombre es obligatorio",
+              })}
               className={cn(
-                'w-full px-4 py-2.5 rounded-xl border text-sm focus:outline-none focus:ring-2 focus:ring-fia-primary transition',
-                errors.fullName ? 'border-red-400' : 'border-gray-200',
+                "w-full px-4 py-2.5 rounded-xl border text-sm focus:outline-none focus:ring-2 focus:ring-fia-primary transition",
+                errors.fullName ? "border-red-400" : "border-gray-200",
               )}
             />
-            {errors.fullName && <p className="mt-1 text-xs text-red-500">{errors.fullName.message}</p>}
+            {errors.fullName && (
+              <p className="mt-1 text-xs text-red-500">
+                {errors.fullName.message}
+              </p>
+            )}
           </div>
 
           {/* Email */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Email
+            </label>
             <input
-              {...register('email', {
+              {...register("email", {
                 validate: (v) =>
-                  !v.trim() || /^\S+@\S+\.\S+$/.test(v) || 'Email inválido',
+                  !v.trim() || /^\S+@\S+\.\S+$/.test(v) || "Email inválido",
               })}
               type="email"
               className={cn(
-                'w-full px-4 py-2.5 rounded-xl border text-sm focus:outline-none focus:ring-2 focus:ring-fia-primary transition',
-                errors.email ? 'border-red-400' : 'border-gray-200',
+                "w-full px-4 py-2.5 rounded-xl border text-sm focus:outline-none focus:ring-2 focus:ring-fia-primary transition",
+                errors.email ? "border-red-400" : "border-gray-200",
               )}
             />
-            {errors.email && <p className="mt-1 text-xs text-red-500">{errors.email.message}</p>}
+            {errors.email && (
+              <p className="mt-1 text-xs text-red-500">
+                {errors.email.message}
+              </p>
+            )}
           </div>
 
           {/* Teléfono */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Teléfono</label>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Teléfono
+            </label>
             <input
-              {...register('phone')}
+              {...register("phone")}
               type="tel"
               className="w-full px-4 py-2.5 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-fia-primary transition"
             />
           </div>
 
-          {/* Tarifa */}
+          {/* Tarifa + Moneda */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
               Tarifa por clase <span className="text-red-500">*</span>
             </label>
-            <div className="relative">
-              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm select-none">
-                $
-              </span>
+            <div className="flex gap-2">
+              <select
+                {...register("currency")}
+                className="px-3 py-2.5 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-fia-primary bg-white w-24 shrink-0"
+              >
+                {(
+                  [
+                    "ARS",
+                    "USD",
+                    "EUR",
+                    "UYU",
+                    "BRL",
+                    "GBP",
+                    "OTHER",
+                  ] as Currency[]
+                ).map((c) => (
+                  <option key={c} value={c}>
+                    {c}
+                  </option>
+                ))}
+              </select>
               <input
-                {...register('classRate', {
+                {...register("classRate", {
                   valueAsNumber: true,
                   validate: {
-                    required: (v) => !isNaN(v) || 'La tarifa es obligatoria',
-                    positive: (v) => v > 0 || 'La tarifa debe ser mayor a 0',
+                    required: (v) => !isNaN(v) || "La tarifa es obligatoria",
+                    positive: (v) => v > 0 || "La tarifa debe ser mayor a 0",
                   },
                 })}
                 type="number"
                 step="0.01"
                 min="0"
                 className={cn(
-                  'w-full pl-7 pr-4 py-2.5 rounded-xl border text-sm focus:outline-none focus:ring-2 focus:ring-fia-primary transition',
-                  errors.classRate ? 'border-red-400' : 'border-gray-200',
+                  "flex-1 px-4 py-2.5 rounded-xl border text-sm focus:outline-none focus:ring-2 focus:ring-fia-primary transition",
+                  errors.classRate ? "border-red-400" : "border-gray-200",
                 )}
               />
             </div>
             {errors.classRate && (
-              <p className="mt-1 text-xs text-red-500">{errors.classRate.message}</p>
+              <p className="mt-1 text-xs text-red-500">
+                {errors.classRate.message}
+              </p>
             )}
           </div>
 
@@ -338,17 +414,21 @@ function StudentModal({ student, onClose, onSaved }: StudentModalProps) {
               Modalidad <span className="text-red-500">*</span>
             </label>
             <select
-              {...register('modality', { required: 'La modalidad es obligatoria' })}
+              {...register("modality", {
+                required: "La modalidad es obligatoria",
+              })}
               className={cn(
-                'w-full px-4 py-2.5 rounded-xl border text-sm focus:outline-none focus:ring-2 focus:ring-fia-primary transition bg-white',
-                errors.modality ? 'border-red-400' : 'border-gray-200',
+                "w-full px-4 py-2.5 rounded-xl border text-sm focus:outline-none focus:ring-2 focus:ring-fia-primary transition bg-white",
+                errors.modality ? "border-red-400" : "border-gray-200",
               )}
             >
               <option value="ONLINE">Online</option>
               <option value="IN_PERSON">Presencial</option>
             </select>
             {errors.modality && (
-              <p className="mt-1 text-xs text-red-500">{errors.modality.message}</p>
+              <p className="mt-1 text-xs text-red-500">
+                {errors.modality.message}
+              </p>
             )}
           </div>
 
@@ -366,7 +446,7 @@ function StudentModal({ student, onClose, onSaved }: StudentModalProps) {
               disabled={isSubmitting}
               className="flex-1 py-2.5 bg-fia-primary text-white text-sm font-semibold rounded-xl hover:bg-fia-primary-dark transition-colors disabled:opacity-60"
             >
-              {isSubmitting ? 'Guardando…' : 'Guardar'}
+              {isSubmitting ? "Guardando…" : "Guardar"}
             </button>
           </div>
         </form>
