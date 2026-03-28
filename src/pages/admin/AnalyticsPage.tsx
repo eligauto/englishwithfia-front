@@ -1,5 +1,17 @@
 import { useEffect, useMemo, useState } from "react";
 import { BarChart3, BookOpenCheck, CalendarDays, Receipt } from "lucide-react";
+import {
+  Bar,
+  BarChart,
+  CartesianGrid,
+  Cell,
+  Pie,
+  PieChart,
+  ResponsiveContainer,
+  Tooltip,
+  XAxis,
+  YAxis,
+} from "recharts";
 import { ApiRequestError, getAnalytics } from "../../services/api";
 import type { AnalyticsData, CurrencyAmount } from "../../types";
 
@@ -35,6 +47,84 @@ function formatCurrencyAmounts(items: CurrencyAmount[]): string {
     .join(" · ");
 }
 
+const PIE_COLORS = [
+  "#556B4A",
+  "#C4A87A",
+  "#9ca3af",
+  "#3b82f6",
+  "#ef4444",
+  "#f59e0b",
+];
+
+const CHARGE_SERIES = [
+  { key: "Pagados", color: "#556B4A" },
+  { key: "Pendientes", color: "#C4A87A" },
+  { key: "Condonados", color: "#9ca3af" },
+  { key: "Pack", color: "#3b82f6" },
+] as const;
+
+const CLASS_SERIES = [
+  { key: "Dictadas", color: "#556B4A" },
+  { key: "Ausentes", color: "#C4A87A" },
+  { key: "Canceladas", color: "#ef4444" },
+  { key: "Reagendadas", color: "#3b82f6" },
+  { key: "Programadas", color: "#d1d5db" },
+] as const;
+
+function ChartLegend({
+  series,
+}: {
+  series: readonly { key: string; color: string }[];
+}) {
+  return (
+    <div className="flex flex-wrap gap-x-5 gap-y-1.5 mt-4 justify-center">
+      {series.map((s) => (
+        <div key={s.key} className="flex items-center gap-1.5 text-xs text-gray-500">
+          <span
+            className="w-2.5 h-2.5 rounded-full shrink-0"
+            style={{ background: s.color }}
+          />
+          {s.key}
+        </div>
+      ))}
+    </div>
+  );
+}
+
+interface TooltipEntry {
+  dataKey: string;
+  value: number;
+  fill: string;
+}
+
+function CustomTooltip({
+  active,
+  payload,
+  label,
+}: {
+  active?: boolean;
+  payload?: TooltipEntry[];
+  label?: string;
+}) {
+  if (!active || !payload?.length) return null;
+  const nonZero = payload.filter((p) => p.value > 0);
+  if (nonZero.length === 0) return null;
+  return (
+    <div className="bg-white border border-gray-200 rounded-xl shadow-lg px-3 py-2.5 text-xs min-w-[120px]">
+      <p className="font-semibold text-gray-500 mb-2">{label}</p>
+      {nonZero.map((p) => (
+        <div key={p.dataKey} className="flex items-center gap-2 mb-1 last:mb-0">
+          <span className="w-2 h-2 rounded-full shrink-0" style={{ background: p.fill }} />
+          <span className="text-gray-700">
+            {p.dataKey}:{" "}
+            <span className="font-semibold">{p.value}</span>
+          </span>
+        </div>
+      ))}
+    </div>
+  );
+}
+
 function Kpi({
   label,
   value,
@@ -48,7 +138,9 @@ function Kpi({
 }) {
   return (
     <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5 flex items-center gap-4">
-      <div className={`w-11 h-11 rounded-xl flex items-center justify-center shrink-0 ${color}`}>
+      <div
+        className={`w-11 h-11 rounded-xl flex items-center justify-center shrink-0 ${color}`}
+      >
         <Icon size={20} />
       </div>
       <div>
@@ -80,7 +172,9 @@ export function AnalyticsPage() {
       setData(result);
     } catch (err) {
       setError(
-        err instanceof ApiRequestError ? err.message : "Error al cargar analytics",
+        err instanceof ApiRequestError
+          ? err.message
+          : "Error al cargar analytics",
       );
     } finally {
       setLoading(false);
@@ -103,10 +197,22 @@ export function AnalyticsPage() {
       };
     }
 
-    const classes = data.classesByMonth.reduce((acc, item) => acc + item.total, 0);
-    const taught = data.classesByMonth.reduce((acc, item) => acc + item.taught, 0);
-    const charges = data.revenueByMonth.reduce((acc, item) => acc + item.chargesCount, 0);
-    const pendingCharges = data.revenueByMonth.reduce((acc, item) => acc + item.pendingCount, 0);
+    const classes = data.classesByMonth.reduce(
+      (acc, item) => acc + item.total,
+      0,
+    );
+    const taught = data.classesByMonth.reduce(
+      (acc, item) => acc + item.taught,
+      0,
+    );
+    const charges = data.revenueByMonth.reduce(
+      (acc, item) => acc + item.chargesCount,
+      0,
+    );
+    const pendingCharges = data.revenueByMonth.reduce(
+      (acc, item) => acc + item.pendingCount,
+      0,
+    );
 
     return { classes, taught, charges, pendingCharges };
   }, [data]);
@@ -115,7 +221,9 @@ export function AnalyticsPage() {
     <div className="p-8 space-y-6">
       <div className="flex items-center justify-between gap-4 flex-wrap">
         <div>
-          <h1 className="text-2xl font-bold text-fia-neutral-dark">Analytics</h1>
+          <h1 className="text-2xl font-bold text-fia-neutral-dark">
+            Analytics
+          </h1>
           <p className="text-sm text-gray-500 mt-1">
             Tendencias históricas de clases y cobranza
           </p>
@@ -151,12 +259,14 @@ export function AnalyticsPage() {
       </div>
 
       {error && (
-        <p className="text-sm text-red-600 bg-red-50 px-4 py-3 rounded-xl">{error}</p>
+        <p className="text-sm text-red-600 bg-red-50 px-4 py-3 rounded-xl">
+          {error}
+        </p>
       )}
 
       {data && (
         <p className="text-xs text-gray-500">
-          Periodo: {new Date(data.period.from).toLocaleDateString("es-AR")} - {" "}
+          Periodo: {new Date(data.period.from).toLocaleDateString("es-AR")} -{" "}
           {new Date(data.period.to).toLocaleDateString("es-AR")}
         </p>
       )}
@@ -195,120 +305,214 @@ export function AnalyticsPage() {
       )}
 
       {!loading && data && (
-        <div className="grid xl:grid-cols-2 gap-6">
-          <section className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 overflow-x-auto">
-            <h2 className="text-sm font-semibold text-fia-neutral-dark mb-4">Revenue por mes</h2>
-            <table className="w-full text-sm min-w-[680px]">
-              <thead>
-                <tr className="text-left text-gray-400 text-xs uppercase border-b border-gray-100">
-                  <th className="py-2 pr-2">Mes</th>
-                  <th className="py-2 pr-2">Cargos</th>
-                  <th className="py-2 pr-2">Pagados</th>
-                  <th className="py-2 pr-2">Pendientes</th>
-                  <th className="py-2 pr-2">Condonados</th>
-                  <th className="py-2">Pack</th>
-                </tr>
-              </thead>
-              <tbody>
-                {data.revenueByMonth.map((month) => (
-                  <tr key={month.month} className="border-b border-gray-50 last:border-0">
-                    <td className="py-2 pr-2 text-gray-700">{formatMonth(month.month)}</td>
-                    <td className="py-2 pr-2">{month.chargesCount}</td>
-                    <td className="py-2 pr-2">{month.paidCount}</td>
-                    <td className="py-2 pr-2">{month.pendingCount}</td>
-                    <td className="py-2 pr-2">{month.waivedCount}</td>
-                    <td className="py-2">{month.packCoveredCount}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </section>
+        <div className="space-y-6">
+          {/* Row 1: bar charts */}
+          <div className="grid xl:grid-cols-2 gap-6">
+            <section className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
+              <h2 className="text-sm font-semibold text-fia-neutral-dark mb-4">
+                Cargos por mes
+              </h2>
+              <ResponsiveContainer width="100%" height={260}>
+                <BarChart
+                  data={data.revenueByMonth.map((m) => ({
+                    month: formatMonth(m.month),
+                    Pagados: m.paidCount,
+                    Pendientes: m.pendingCount,
+                    Condonados: m.waivedCount,
+                    Pack: m.packCoveredCount,
+                  }))}
+                  margin={{ top: 4, right: 4, left: -16, bottom: 0 }}
+                  maxBarSize={48}
+                  barCategoryGap="40%"
+                >
+                  <CartesianGrid strokeDasharray="3 3" stroke="#f3f4f6" vertical={false} />
+                  <XAxis
+                    dataKey="month"
+                    tick={{ fontSize: 11, fill: '#9ca3af' }}
+                    tickLine={false}
+                    axisLine={false}
+                  />
+                  <YAxis
+                    tick={{ fontSize: 11, fill: '#9ca3af' }}
+                    tickLine={false}
+                    axisLine={false}
+                    allowDecimals={false}
+                  />
+                  <Tooltip content={<CustomTooltip />} cursor={{ fill: '#f9fafb' }} />
+                  <Bar dataKey="Pagados" stackId="a" fill="#556B4A" />
+                  <Bar dataKey="Pendientes" stackId="a" fill="#C4A87A" />
+                  <Bar dataKey="Condonados" stackId="a" fill="#9ca3af" />
+                  <Bar dataKey="Pack" stackId="a" fill="#3b82f6" radius={[4, 4, 0, 0]} />
+                </BarChart>
+              </ResponsiveContainer>
+              <ChartLegend series={CHARGE_SERIES} />
+            </section>
 
-          <section className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 overflow-x-auto">
-            <h2 className="text-sm font-semibold text-fia-neutral-dark mb-4">Clases por mes</h2>
-            <table className="w-full text-sm min-w-[680px]">
-              <thead>
-                <tr className="text-left text-gray-400 text-xs uppercase border-b border-gray-100">
-                  <th className="py-2 pr-2">Mes</th>
-                  <th className="py-2 pr-2">Total</th>
-                  <th className="py-2 pr-2">Dictadas</th>
-                  <th className="py-2 pr-2">Ausentes</th>
-                  <th className="py-2 pr-2">Canceladas</th>
-                  <th className="py-2 pr-2">Reagendadas</th>
-                  <th className="py-2">Programadas</th>
-                </tr>
-              </thead>
-              <tbody>
-                {data.classesByMonth.map((month) => (
-                  <tr key={month.month} className="border-b border-gray-50 last:border-0">
-                    <td className="py-2 pr-2 text-gray-700">{formatMonth(month.month)}</td>
-                    <td className="py-2 pr-2">{month.total}</td>
-                    <td className="py-2 pr-2">{month.taught}</td>
-                    <td className="py-2 pr-2">{month.absent}</td>
-                    <td className="py-2 pr-2">{month.cancelled}</td>
-                    <td className="py-2 pr-2">{month.rescheduled}</td>
-                    <td className="py-2">{month.scheduled}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </section>
+            <section className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
+              <h2 className="text-sm font-semibold text-fia-neutral-dark mb-4">
+                Clases por mes
+              </h2>
+              <ResponsiveContainer width="100%" height={260}>
+                <BarChart
+                  data={data.classesByMonth.map((m) => ({
+                    month: formatMonth(m.month),
+                    Dictadas: m.taught,
+                    Ausentes: m.absent,
+                    Canceladas: m.cancelled,
+                    Reagendadas: m.rescheduled,
+                    Programadas: m.scheduled,
+                  }))}
+                  margin={{ top: 4, right: 4, left: -16, bottom: 0 }}
+                  maxBarSize={48}
+                  barCategoryGap="40%"
+                >
+                  <CartesianGrid strokeDasharray="3 3" stroke="#f3f4f6" vertical={false} />
+                  <XAxis
+                    dataKey="month"
+                    tick={{ fontSize: 11, fill: '#9ca3af' }}
+                    tickLine={false}
+                    axisLine={false}
+                  />
+                  <YAxis
+                    tick={{ fontSize: 11, fill: '#9ca3af' }}
+                    tickLine={false}
+                    axisLine={false}
+                    allowDecimals={false}
+                  />
+                  <Tooltip content={<CustomTooltip />} cursor={{ fill: '#f9fafb' }} />
+                  <Bar dataKey="Dictadas" stackId="b" fill="#556B4A" />
+                  <Bar dataKey="Ausentes" stackId="b" fill="#C4A87A" />
+                  <Bar dataKey="Canceladas" stackId="b" fill="#ef4444" />
+                  <Bar dataKey="Reagendadas" stackId="b" fill="#3b82f6" />
+                  <Bar dataKey="Programadas" stackId="b" fill="#d1d5db" radius={[4, 4, 0, 0]} />
+                </BarChart>
+              </ResponsiveContainer>
+              <ChartLegend series={CLASS_SERIES} />
+            </section>
+          </div>
 
-          <section className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
-            <h2 className="text-sm font-semibold text-fia-neutral-dark mb-4">
-              Distribucion de estados financieros
-            </h2>
-            {data.chargeStatusBreakdown.length === 0 ? (
-              <p className="text-sm text-gray-400">Sin datos.</p>
-            ) : (
-              <ul className="space-y-3">
-                {data.chargeStatusBreakdown.map((item) => (
-                  <li key={item.financialStatus} className="text-sm">
-                    <p className="font-medium text-gray-700">
-                      {item.financialStatus} ({item.count})
-                    </p>
-                    <p className="text-gray-500 mt-0.5">
-                      {formatCurrencyAmounts(item.totalByCurrency)}
-                    </p>
-                  </li>
-                ))}
-              </ul>
-            )}
-          </section>
+          {/* Row 2: pie chart + student table */}
+          <div className="grid xl:grid-cols-2 gap-6">
+            <section className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
+              <h2 className="text-sm font-semibold text-fia-neutral-dark mb-4">
+                Distribución de estados financieros
+              </h2>
+              {data.chargeStatusBreakdown.length === 0 ? (
+                <p className="text-sm text-gray-400">Sin datos.</p>
+              ) : (
+                <div className="flex flex-col sm:flex-row items-center gap-6">
+                  <ResponsiveContainer width={200} height={200}>
+                    <PieChart>
+                      <Pie
+                        data={data.chargeStatusBreakdown.map((item) => ({
+                          name: item.financialStatus,
+                          value: item.count,
+                        }))}
+                        cx="50%"
+                        cy="50%"
+                        innerRadius={52}
+                        outerRadius={90}
+                        paddingAngle={3}
+                        dataKey="value"
+                      >
+                        {data.chargeStatusBreakdown.map((item, idx) => (
+                          <Cell
+                            key={item.financialStatus}
+                            fill={PIE_COLORS[idx % PIE_COLORS.length]}
+                          />
+                        ))}
+                      </Pie>
+                      <Tooltip
+                        formatter={(value) => [`${value ?? 0} cargos`]}
+                      />
+                    </PieChart>
+                  </ResponsiveContainer>
+                  <ul className="space-y-3 flex-1">
+                    {data.chargeStatusBreakdown.map((item, idx) => (
+                      <li
+                        key={item.financialStatus}
+                        className="text-sm flex items-start gap-2"
+                      >
+                        <span
+                          className="w-3 h-3 rounded-full mt-0.5 shrink-0"
+                          style={{
+                            background: PIE_COLORS[idx % PIE_COLORS.length],
+                          }}
+                        />
+                        <div>
+                          <p className="font-medium text-gray-700">
+                            {item.financialStatus}{" "}
+                            <span className="font-normal text-gray-400">
+                              ({item.count})
+                            </span>
+                          </p>
+                          <p className="text-xs text-gray-400 mt-0.5">
+                            {formatCurrencyAmounts(item.totalByCurrency)}
+                          </p>
+                        </div>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+            </section>
 
-          <section className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 overflow-x-auto">
-            <h2 className="text-sm font-semibold text-fia-neutral-dark mb-4">
-              Breakdown por alumno
-            </h2>
-            {data.studentBreakdown.length === 0 ? (
-              <p className="text-sm text-gray-400">Sin datos.</p>
-            ) : (
-              <table className="w-full text-sm min-w-[680px]">
-                <thead>
-                  <tr className="text-left text-gray-400 text-xs uppercase border-b border-gray-100">
-                    <th className="py-2 pr-2">Alumno</th>
-                    <th className="py-2 pr-2">Cargos</th>
-                    <th className="py-2 pr-2">Pagados</th>
-                    <th className="py-2 pr-2">Pendientes</th>
-                    <th className="py-2">Pendiente por moneda</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {data.studentBreakdown.slice(0, 10).map((student) => (
-                    <tr key={student.studentId} className="border-b border-gray-50 last:border-0">
-                      <td className="py-2 pr-2 text-gray-700">{student.fullName}</td>
-                      <td className="py-2 pr-2">{student.chargesCount}</td>
-                      <td className="py-2 pr-2">{student.paidCount}</td>
-                      <td className="py-2 pr-2">{student.pendingCount}</td>
-                      <td className="py-2 text-gray-500">
-                        {formatCurrencyAmounts(student.pendingByCurrency)}
-                      </td>
+            <section className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 overflow-x-auto">
+              <h2 className="text-sm font-semibold text-fia-neutral-dark mb-4">
+                Breakdown por alumno
+              </h2>
+              {data.studentBreakdown.length === 0 ? (
+                <p className="text-sm text-gray-400">Sin datos.</p>
+              ) : (
+                <table className="w-full text-sm min-w-[400px]">
+                  <thead>
+                    <tr className="text-left text-gray-400 text-xs uppercase border-b border-gray-100">
+                      <th className="py-2 pr-3">Alumno</th>
+                      <th className="py-2 pr-3 text-right">Cargos</th>
+                      <th className="py-2 pr-3 text-right">Pagados</th>
+                      <th className="py-2 text-right">Pendientes</th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
-            )}
-          </section>
+                  </thead>
+                  <tbody>
+                    {data.studentBreakdown.slice(0, 10).map((student) => (
+                      <tr
+                        key={student.studentId}
+                        className="border-b border-gray-50 last:border-0"
+                      >
+                        <td className="py-2 pr-3 text-gray-700">
+                          {student.fullName}
+                        </td>
+                        <td className="py-2 pr-3 text-right">
+                          {student.chargesCount}
+                        </td>
+                        <td className="py-2 pr-3 text-right">
+                          {student.paidCount}
+                        </td>
+                        <td className="py-2 text-right">
+                          {student.pendingCount > 0 ? (
+                            <span className="text-amber-600 font-medium">
+                              {student.pendingCount}
+                              {student.pendingByCurrency.length > 0 && (
+                                <span className="font-normal text-xs ml-1 text-gray-400">
+                                  (
+                                  {formatCurrencyAmounts(
+                                    student.pendingByCurrency,
+                                  )}
+                                  )
+                                </span>
+                              )}
+                            </span>
+                          ) : (
+                            <span className="text-gray-400">0</span>
+                          )}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              )}
+            </section>
+          </div>
         </div>
       )}
     </div>
