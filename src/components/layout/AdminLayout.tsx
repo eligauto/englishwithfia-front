@@ -1,6 +1,7 @@
 import { NavLink, Outlet } from 'react-router-dom';
 import {
   LayoutDashboard,
+  BarChart3,
   Users,
   BookOpen,
   Receipt,
@@ -13,6 +14,7 @@ import { cn } from '../../utils/cn';
 
 const NAV_ITEMS = [
   { label: 'Dashboard', href: ROUTES.ADMIN.DASHBOARD, icon: LayoutDashboard, end: true },
+  { label: 'Analytics', href: ROUTES.ADMIN.ANALYTICS, icon: BarChart3, end: false },
   { label: 'Alumnos', href: ROUTES.ADMIN.STUDENTS, icon: Users, end: false },
   { label: 'Clases', href: ROUTES.ADMIN.CLASSES, icon: BookOpen, end: false },
   { label: 'Cargos', href: ROUTES.ADMIN.CHARGES, icon: Receipt, end: false },

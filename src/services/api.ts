@@ -18,6 +18,7 @@ import type {
   CreateStudentData,
   UpdateStudentData,
   DashboardData,
+  AnalyticsData,
   Class,
   ClassStatus,
   CreateClassData,
@@ -185,6 +186,22 @@ export async function deleteStudent(id: string): Promise<void> {
 
 export async function getDashboard(): Promise<DashboardData> {
   return apiFetch<DashboardData>('/dashboard', undefined, true);
+}
+
+// ── Analytics ────────────────────────────────────────────────────────────────
+
+export interface GetAnalyticsFilters {
+  from?: string;
+  to?: string;
+}
+
+export async function getAnalytics(filters?: GetAnalyticsFilters): Promise<AnalyticsData> {
+  const query = toQuery({
+    from: filters?.from,
+    to: filters?.to,
+  });
+
+  return apiFetch<AnalyticsData>(`/analytics${query}`, undefined, true);
 }
 
 // ── Classes ──────────────────────────────────────────────────────────────────

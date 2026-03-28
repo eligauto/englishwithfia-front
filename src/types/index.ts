@@ -241,3 +241,59 @@ export interface DashboardMetrics {
 
 /** Alias por compatibilidad — preferir DashboardMetrics */
 export type DashboardData = DashboardMetrics;
+
+// ── Admin — Analytics ───────────────────────────────────────────────────────
+
+export interface CurrencyAmount {
+  currency: Currency;
+  amount: number;
+}
+
+export interface MonthlyRevenueSummary {
+  month: string; // YYYY-MM
+  chargesCount: number;
+  paidCount: number;
+  pendingCount: number;
+  waivedCount: number;
+  packCoveredCount: number;
+  paidByCurrency: CurrencyAmount[];
+  pendingByCurrency: CurrencyAmount[];
+}
+
+export interface MonthlyClassSummary {
+  month: string; // YYYY-MM
+  total: number;
+  taught: number;
+  cancelled: number;
+  absent: number;
+  rescheduled: number;
+  scheduled: number;
+}
+
+export interface ChargeStatusEntry {
+  financialStatus: FinancialStatus;
+  count: number;
+  totalByCurrency: CurrencyAmount[];
+}
+
+export interface StudentRevenueSummary {
+  studentId: string;
+  fullName: string;
+  chargesCount: number;
+  paidCount: number;
+  pendingCount: number;
+  generatedByCurrency: CurrencyAmount[];
+  paidByCurrency: CurrencyAmount[];
+  pendingByCurrency: CurrencyAmount[];
+}
+
+export interface AnalyticsMetrics {
+  period: { from: string; to: string };
+  revenueByMonth: MonthlyRevenueSummary[];
+  classesByMonth: MonthlyClassSummary[];
+  chargeStatusBreakdown: ChargeStatusEntry[];
+  studentBreakdown: StudentRevenueSummary[];
+}
+
+/** Alias por compatibilidad — preferir AnalyticsMetrics */
+export type AnalyticsData = AnalyticsMetrics;

@@ -5,6 +5,7 @@ import { AdminLayout } from './components/layout/AdminLayout';
 import { HomePage } from './pages/HomePage';
 import { LoginPage } from './pages/admin/LoginPage';
 import { DashboardPage } from './pages/admin/DashboardPage';
+import { AnalyticsPage } from './pages/admin/AnalyticsPage';
 import { StudentsPage } from './pages/admin/StudentsPage';
 import { ClassesPage } from './pages/admin/ClassesPage';
 import { ChargesPage } from './pages/admin/ChargesPage';
@@ -24,6 +25,7 @@ export function App() {
           <Route element={<ProtectedRoute />}>
             <Route element={<AdminLayout />}>
               <Route path={ROUTES.ADMIN.DASHBOARD} element={<DashboardPage />} />
+              <Route path={ROUTES.ADMIN.ANALYTICS} element={<AnalyticsPage />} />
               <Route path={ROUTES.ADMIN.STUDENTS} element={<StudentsPage />} />
               <Route path={ROUTES.ADMIN.CLASSES} element={<ClassesPage />} />
               <Route path={ROUTES.ADMIN.CHARGES} element={<ChargesPage />} />
