@@ -1,11 +1,12 @@
 import { useState, useEffect, useMemo, type ReactNode } from "react";
-import { X } from "lucide-react";
+import { X, Download } from "lucide-react";
 import { useForm } from "react-hook-form";
 import {
   getCharges,
   getStudents,
   getPacks,
   updateChargeStatus,
+  exportChargesCSV,
   ApiRequestError,
 } from "../../services/api";
 import type {
@@ -88,6 +89,7 @@ export function ChargesPage() {
   const [filterStudentId, setFilterStudentId] = useState("");
   const [filterStatus, setFilterStatus] = useState<FinancialStatus | "">("");
   const [target, setTarget] = useState<Charge | null>(null);
+  const [exporting, setExporting] = useState(false);
 
   const studentMap = useMemo(
     () => Object.fromEntries(students.map((s) => [s.id, s.fullName])),
@@ -160,22 +162,48 @@ export function ChargesPage() {
 
   const pendingEntries = Object.entries(pendingByCurrency);
 
+  async function handleExport() {
+    setExporting(true);
+    try {
+      await exportChargesCSV({
+        studentId: filterStudentId || undefined,
+        financialStatus: filterStatus || undefined,
+      });
+    } catch (err) {
+      alert(
+        err instanceof ApiRequestError ? err.message : 'Error al exportar',
+      );
+    } finally {
+      setExporting(false);
+    }
+  }
+
   return (
     <div className="p-8">
       {/* Cabecera */}
       <div className="flex items-center justify-between mb-6">
         <h1 className="text-2xl font-bold text-fia-neutral-dark">Cargos</h1>
-        {pendingEntries.length > 0 && (
-          <div className="flex items-center gap-3 text-sm text-gray-500">
-            <span>Deuda visible:</span>
-            {pendingEntries.map(([cur, total]) => (
-              <span key={cur} className="font-semibold text-red-500">
-                {cur}{" "}
-                {total.toLocaleString("es-AR", { minimumFractionDigits: 2 })}
-              </span>
-            ))}
-          </div>
-        )}
+        <div className="flex items-center gap-3">
+          <button
+            onClick={() => void handleExport()}
+            disabled={exporting}
+            className="flex items-center gap-2 px-4 py-2 border border-gray-200 text-gray-600 text-sm font-medium rounded-xl hover:bg-gray-50 transition-colors disabled:opacity-60"
+          >
+            <Download size={15} />
+            {exporting ? 'Exportando…' : 'Exportar CSV'}
+          </button>
+          {pendingEntries.length > 0 && (
+            <div className="flex items-center gap-3 text-sm text-gray-500">
+              <span>Deuda visible:</span>
+              {pendingEntries.map(([cur, total]) => (
+                <span key={cur} className="font-semibold text-red-500">
+                  {cur}{" "}
+                  {total.toLocaleString("es-AR", { minimumFractionDigits: 2 })}
+                </span>
+              ))}
+            </div>
+          )}
+        </div>
       </div>
 
       {/* Filtros */}

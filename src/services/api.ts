@@ -276,6 +276,53 @@ export async function updateChargeStatus(id: string, data: UpdateChargeStatusDat
   );
 }
 
+// ── Export CSV ───────────────────────────────────────────────────────────────
+
+/**
+ * Descarga la respuesta como un archivo CSV activando un click en un anchor temporal.
+ * Los endpoints /export/* bypasean el TransformInterceptor y devuelven text/csv directamente.
+ */
+async function downloadCsv(path: string, filename: string): Promise<void> {
+  const response = await fetch(`${API_URL}${path}`, {
+    headers: { ...getAuthHeaders() },
+  });
+
+  if (!response.ok) {
+    const json: unknown = await response.json().catch(() => ({}));
+    throw new ApiRequestError(json as ApiError);
+  }
+
+  const blob = await response.blob();
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
+export async function exportClassesCSV(filters?: GetClassesFilters): Promise<void> {
+  const query = toQuery({
+    studentId: filters?.studentId,
+    status: filters?.status,
+    from: filters?.from,
+    to: filters?.to,
+  });
+  await downloadCsv(`/export/classes${query}`, 'clases.csv');
+}
+
+export async function exportChargesCSV(filters?: GetChargesFilters): Promise<void> {
+  const query = toQuery({
+    studentId: filters?.studentId,
+    financialStatus: filters?.financialStatus,
+    from: filters?.from,
+    to: filters?.to,
+  });
+  await downloadCsv(`/export/charges${query}`, 'cargos.csv');
+}
+
 // ── Packs ────────────────────────────────────────────────────────────────────
 
 export async function getPacks(studentId?: string): Promise<Pack[]> {

@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useCallback } from "react";
 import type { ReactNode } from "react";
 import {
   Plus,
@@ -8,8 +8,9 @@ import {
   CalendarClock,
   CircleDollarSign,
   X,
-} from "lucide-react";
-import { useForm } from "react-hook-form";
+  Download,
+} from 'lucide-react';
+import { useForm } from 'react-hook-form';
 import {
   getClasses,
   getStudents,
@@ -17,6 +18,7 @@ import {
   updateClassStatus,
   rescheduleClass,
   absentDecision,
+  exportClassesCSV,
   ApiRequestError,
 } from "../../services/api";
 import type {
@@ -84,6 +86,7 @@ export function ClassesPage() {
   const [error, setError] = useState<string | null>(null);
   const [filterStudentId, setFilterStudentId] = useState("");
   const [filterStatus, setFilterStatus] = useState<ClassStatus | "">("");
+  const [exporting, setExporting] = useState(false);
   const [showCreate, setShowCreate] = useState(false);
   const [rescheduleTarget, setRescheduleTarget] = useState<Class | null>(null);
   const [absentTarget, setAbsentTarget] = useState<Class | null>(null);
@@ -120,7 +123,7 @@ export function ClassesPage() {
     });
   }
 
-  async function fetchFilteredClasses() {
+  const fetchFilteredClasses = useCallback(async () => {
     try {
       const cls = await getClasses({
         studentId: filterStudentId || undefined,
@@ -139,12 +142,12 @@ export function ClassesPage() {
     } finally {
       setLoadingClasses(false);
     }
-  }
+  }, [filterStudentId, filterStatus]);
 
   useEffect(() => {
     setLoadingClasses(true);
     void fetchFilteredClasses();
-  }, [filterStudentId, filterStatus]);
+  }, [fetchFilteredClasses]);
 
   async function handleMarkTaught(cls: Class) {
     if (
@@ -195,6 +198,22 @@ export function ClassesPage() {
     }
   }
 
+  async function handleExport() {
+    setExporting(true);
+    try {
+      await exportClassesCSV({
+        studentId: filterStudentId || undefined,
+        status: filterStatus || undefined,
+      });
+    } catch (err) {
+      alert(
+        err instanceof ApiRequestError ? err.message : 'Error al exportar',
+      );
+    } finally {
+      setExporting(false);
+    }
+  }
+
   const visible = classes;
 
   return (
@@ -202,13 +221,23 @@ export function ClassesPage() {
       {/* Cabecera */}
       <div className="flex items-center justify-between mb-6">
         <h1 className="text-2xl font-bold text-fia-neutral-dark">Clases</h1>
-        <button
-          onClick={() => setShowCreate(true)}
-          className="flex items-center gap-2 px-4 py-2 bg-fia-primary text-white text-sm font-semibold rounded-xl hover:bg-fia-primary-dark transition-colors"
-        >
-          <Plus size={16} />
-          Nueva clase
-        </button>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => void handleExport()}
+            disabled={exporting}
+            className="flex items-center gap-2 px-4 py-2 border border-gray-200 text-gray-600 text-sm font-medium rounded-xl hover:bg-gray-50 transition-colors disabled:opacity-60"
+          >
+            <Download size={15} />
+            {exporting ? 'Exportando…' : 'Exportar CSV'}
+          </button>
+          <button
+            onClick={() => setShowCreate(true)}
+            className="flex items-center gap-2 px-4 py-2 bg-fia-primary text-white text-sm font-semibold rounded-xl hover:bg-fia-primary-dark transition-colors"
+          >
+            <Plus size={16} />
+            Nueva clase
+          </button>
+        </div>
       </div>
 
       {/* Filtros */}
