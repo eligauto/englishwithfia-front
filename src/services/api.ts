@@ -27,19 +27,25 @@ import type {
   UpdateChargeStatusData,
   Pack,
   CreatePackData,
-} from '../types';
+  Schedule,
+  CreateScheduleData,
+  UpdateScheduleData,
+  GenerateClassesData,
+} from "../types";
 
-const RAW_API_URL = (import.meta.env.VITE_API_URL as string | undefined) ?? 'http://localhost:3000';
+const RAW_API_URL =
+  (import.meta.env.VITE_API_URL as string | undefined) ??
+  "http://localhost:3000";
 
 /**
  * Garantiza que la URL base tenga siempre un esquema http/https.
  * Previene que una variable de entorno sin protocolo se trate como ruta relativa.
  */
 const API_URL = /^https?:\/\//i.test(RAW_API_URL)
-  ? RAW_API_URL.replace(/\/$/, '')
-  : `https://${RAW_API_URL.replace(/\/$/, '')}`;
+  ? RAW_API_URL.replace(/\/$/, "")
+  : `https://${RAW_API_URL.replace(/\/$/, "")}`;
 
-export const TOKEN_KEY = 'fia_admin_token';
+export const TOKEN_KEY = "fia_admin_token";
 
 function getAuthHeaders(): Record<string, string> {
   const token = localStorage.getItem(TOKEN_KEY);
@@ -69,7 +75,7 @@ export class ApiRequestError extends Error {
 
   constructor(apiError: ApiError) {
     super(apiError.message);
-    this.name = 'ApiRequestError';
+    this.name = "ApiRequestError";
     this.statusCode = apiError.statusCode;
     this.path = apiError.path;
   }
@@ -77,10 +83,14 @@ export class ApiRequestError extends Error {
 
 // ── Fetch base ──────────────────────────────────────────────────────────────
 
-async function apiFetch<T>(path: string, init?: RequestInit, auth = false): Promise<T> {
+async function apiFetch<T>(
+  path: string,
+  init?: RequestInit,
+  auth = false,
+): Promise<T> {
   const response = await fetch(`${API_URL}${path}`, {
     headers: {
-      'Content-Type': 'application/json',
+      "Content-Type": "application/json",
       ...(auth ? getAuthHeaders() : {}),
       ...init?.headers,
     },
@@ -123,8 +133,8 @@ export async function checkHealth(): Promise<HealthStatus> {
  * Endpoint pendiente de implementación en el backend.
  */
 export async function submitContactForm(data: ContactFormData): Promise<void> {
-  await apiFetch<void>('/api/contact', {
-    method: 'POST',
+  await apiFetch<void>("/api/contact", {
+    method: "POST",
     body: JSON.stringify(data),
   });
 }
@@ -137,7 +147,7 @@ export async function submitContactForm(data: ContactFormData): Promise<void> {
  * Endpoint pendiente de implementación en el backend.
  */
 export async function fetchTestimonials(): Promise<TestimonialItem[]> {
-  return apiFetch<TestimonialItem[]>('/api/testimonials');
+  return apiFetch<TestimonialItem[]>("/api/testimonials");
 }
 
 // ── Auth ────────────────────────────────────────────────────────────────────
@@ -150,8 +160,8 @@ interface LoginResponse {
  * POST /auth/login — devuelve el JWT.
  */
 export async function login(email: string, password: string): Promise<string> {
-  const { accessToken } = await apiFetch<LoginResponse>('/auth/login', {
-    method: 'POST',
+  const { accessToken } = await apiFetch<LoginResponse>("/auth/login", {
+    method: "POST",
     body: JSON.stringify({ email, password }),
   });
   return accessToken;
@@ -161,31 +171,42 @@ export async function login(email: string, password: string): Promise<string> {
  * GET /auth/me — usuario autenticado actual.
  */
 export async function getMe(): Promise<AuthUser> {
-  return apiFetch<AuthUser>('/auth/me', undefined, true);
+  return apiFetch<AuthUser>("/auth/me", undefined, true);
 }
 
 // ── Students ─────────────────────────────────────────────────────────────────
 
 export async function getStudents(): Promise<Student[]> {
-  return apiFetch<Student[]>('/students', undefined, true);
+  return apiFetch<Student[]>("/students", undefined, true);
 }
 
 export async function createStudent(data: CreateStudentData): Promise<Student> {
-  return apiFetch<Student>('/students', { method: 'POST', body: JSON.stringify(data) }, true);
+  return apiFetch<Student>(
+    "/students",
+    { method: "POST", body: JSON.stringify(data) },
+    true,
+  );
 }
 
-export async function updateStudent(id: string, data: UpdateStudentData): Promise<Student> {
-  return apiFetch<Student>(`/students/${id}`, { method: 'PATCH', body: JSON.stringify(data) }, true);
+export async function updateStudent(
+  id: string,
+  data: UpdateStudentData,
+): Promise<Student> {
+  return apiFetch<Student>(
+    `/students/${id}`,
+    { method: "PATCH", body: JSON.stringify(data) },
+    true,
+  );
 }
 
 export async function deleteStudent(id: string): Promise<void> {
-  await apiFetch<void>(`/students/${id}`, { method: 'DELETE' }, true);
+  await apiFetch<void>(`/students/${id}`, { method: "DELETE" }, true);
 }
 
 // ── Dashboard ────────────────────────────────────────────────────────────────
 
 export async function getDashboard(): Promise<DashboardData> {
-  return apiFetch<DashboardData>('/dashboard', undefined, true);
+  return apiFetch<DashboardData>("/dashboard", undefined, true);
 }
 
 // ── Analytics ────────────────────────────────────────────────────────────────
@@ -195,7 +216,9 @@ export interface GetAnalyticsFilters {
   to?: string;
 }
 
-export async function getAnalytics(filters?: GetAnalyticsFilters): Promise<AnalyticsData> {
+export async function getAnalytics(
+  filters?: GetAnalyticsFilters,
+): Promise<AnalyticsData> {
   const query = toQuery({
     from: filters?.from,
     to: filters?.to,
@@ -223,10 +246,12 @@ function toQuery(params: Record<string, string | undefined>): string {
   });
 
   const query = search.toString();
-  return query ? `?${query}` : '';
+  return query ? `?${query}` : "";
 }
 
-export async function getClasses(filters?: GetClassesFilters): Promise<Class[]> {
+export async function getClasses(
+  filters?: GetClassesFilters,
+): Promise<Class[]> {
   const query = toQuery({
     studentId: filters?.studentId,
     status: filters?.status,
@@ -238,29 +263,42 @@ export async function getClasses(filters?: GetClassesFilters): Promise<Class[]> 
 }
 
 export async function createClass(data: CreateClassData): Promise<Class> {
-  return apiFetch<Class>('/classes', { method: 'POST', body: JSON.stringify(data) }, true);
+  return apiFetch<Class>(
+    "/classes",
+    { method: "POST", body: JSON.stringify(data) },
+    true,
+  );
 }
 
-export async function updateClassStatus(id: string, status: ClassStatus): Promise<Class> {
+export async function updateClassStatus(
+  id: string,
+  status: ClassStatus,
+): Promise<Class> {
   return apiFetch<Class>(
     `/classes/${id}/status`,
-    { method: 'PATCH', body: JSON.stringify({ status }) },
+    { method: "PATCH", body: JSON.stringify({ status }) },
     true,
   );
 }
 
-export async function rescheduleClass(id: string, data: RescheduleClassData): Promise<Class> {
+export async function rescheduleClass(
+  id: string,
+  data: RescheduleClassData,
+): Promise<Class> {
   return apiFetch<Class>(
     `/classes/${id}/reschedule`,
-    { method: 'POST', body: JSON.stringify(data) },
+    { method: "POST", body: JSON.stringify(data) },
     true,
   );
 }
 
-export async function absentDecision(id: string, chargeable: boolean): Promise<Class> {
+export async function absentDecision(
+  id: string,
+  chargeable: boolean,
+): Promise<Class> {
   return apiFetch<Class>(
     `/classes/${id}/absent-decision`,
-    { method: 'POST', body: JSON.stringify({ chargeable }) },
+    { method: "POST", body: JSON.stringify({ chargeable }) },
     true,
   );
 }
@@ -269,12 +307,14 @@ export async function absentDecision(id: string, chargeable: boolean): Promise<C
 
 export interface GetChargesFilters {
   studentId?: string;
-  financialStatus?: UpdateChargeStatusData['financialStatus'];
+  financialStatus?: UpdateChargeStatusData["financialStatus"];
   from?: string;
   to?: string;
 }
 
-export async function getCharges(filters?: GetChargesFilters): Promise<Charge[]> {
+export async function getCharges(
+  filters?: GetChargesFilters,
+): Promise<Charge[]> {
   const query = toQuery({
     studentId: filters?.studentId,
     financialStatus: filters?.financialStatus,
@@ -285,10 +325,13 @@ export async function getCharges(filters?: GetChargesFilters): Promise<Charge[]>
   return apiFetch<Charge[]>(`/charges${query}`, undefined, true);
 }
 
-export async function updateChargeStatus(id: string, data: UpdateChargeStatusData): Promise<Charge> {
+export async function updateChargeStatus(
+  id: string,
+  data: UpdateChargeStatusData,
+): Promise<Charge> {
   return apiFetch<Charge>(
     `/charges/${id}/status`,
-    { method: 'PATCH', body: JSON.stringify(data) },
+    { method: "PATCH", body: JSON.stringify(data) },
     true,
   );
 }
@@ -311,7 +354,7 @@ async function downloadCsv(path: string, filename: string): Promise<void> {
 
   const blob = await response.blob();
   const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
+  const a = document.createElement("a");
   a.href = url;
   a.download = filename;
   document.body.appendChild(a);
@@ -320,37 +363,101 @@ async function downloadCsv(path: string, filename: string): Promise<void> {
   URL.revokeObjectURL(url);
 }
 
-export async function exportClassesCSV(filters?: GetClassesFilters): Promise<void> {
+export async function exportClassesCSV(
+  filters?: GetClassesFilters,
+): Promise<void> {
   const query = toQuery({
     studentId: filters?.studentId,
     status: filters?.status,
     from: filters?.from,
     to: filters?.to,
   });
-  await downloadCsv(`/export/classes${query}`, 'clases.csv');
+  await downloadCsv(`/export/classes${query}`, "clases.csv");
 }
 
-export async function exportChargesCSV(filters?: GetChargesFilters): Promise<void> {
+export async function exportChargesCSV(
+  filters?: GetChargesFilters,
+): Promise<void> {
   const query = toQuery({
     studentId: filters?.studentId,
     financialStatus: filters?.financialStatus,
     from: filters?.from,
     to: filters?.to,
   });
-  await downloadCsv(`/export/charges${query}`, 'cargos.csv');
+  await downloadCsv(`/export/charges${query}`, "cargos.csv");
 }
 
 // ── Packs ────────────────────────────────────────────────────────────────────
 
 export async function getPacks(studentId?: string): Promise<Pack[]> {
-  const query = studentId ? `?studentId=${encodeURIComponent(studentId)}` : '';
+  const query = studentId ? `?studentId=${encodeURIComponent(studentId)}` : "";
   return apiFetch<Pack[]>(`/packs${query}`, undefined, true);
 }
 
 export async function createPack(data: CreatePackData): Promise<Pack> {
-  return apiFetch<Pack>('/packs', { method: 'POST', body: JSON.stringify(data) }, true);
+  return apiFetch<Pack>(
+    "/packs",
+    { method: "POST", body: JSON.stringify(data) },
+    true,
+  );
 }
 
 export async function deletePack(id: string): Promise<void> {
-  await apiFetch<void>(`/packs/${id}`, { method: 'DELETE' }, true);
+  await apiFetch<void>(`/packs/${id}`, { method: "DELETE" }, true);
+}
+
+// ── Schedules ─────────────────────────────────────────────────────────────────
+
+export interface GetSchedulesFilters {
+  studentId?: string;
+  isActive?: boolean;
+}
+
+export async function getSchedules(
+  filters?: GetSchedulesFilters,
+): Promise<Schedule[]> {
+  const params: Record<string, string | undefined> = {
+    studentId: filters?.studentId,
+  };
+  if (filters?.isActive !== undefined) {
+    params.isActive = String(filters.isActive);
+  }
+  const query = toQuery(params);
+  return apiFetch<Schedule[]>(`/schedules${query}`, undefined, true);
+}
+
+export async function createSchedule(
+  data: CreateScheduleData,
+): Promise<Schedule> {
+  return apiFetch<Schedule>(
+    "/schedules",
+    { method: "POST", body: JSON.stringify(data) },
+    true,
+  );
+}
+
+export async function updateSchedule(
+  id: string,
+  data: UpdateScheduleData,
+): Promise<Schedule> {
+  return apiFetch<Schedule>(
+    `/schedules/${id}`,
+    { method: "PATCH", body: JSON.stringify(data) },
+    true,
+  );
+}
+
+export async function deleteSchedule(id: string): Promise<Schedule> {
+  return apiFetch<Schedule>(`/schedules/${id}`, { method: "DELETE" }, true);
+}
+
+export async function generateClasses(
+  id: string,
+  data: GenerateClassesData,
+): Promise<Class[]> {
+  return apiFetch<Class[]>(
+    `/schedules/${id}/generate`,
+    { method: "POST", body: JSON.stringify(data) },
+    true,
+  );
 }

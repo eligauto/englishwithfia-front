@@ -297,3 +297,44 @@ export interface AnalyticsMetrics {
 
 /** Alias por compatibilidad — preferir AnalyticsMetrics */
 export type AnalyticsData = AnalyticsMetrics;
+
+// ── Admin — Schedules ─────────────────────────────────────────────────────────
+
+export type DayOfWeek =
+  | 'MONDAY'
+  | 'TUESDAY'
+  | 'WEDNESDAY'
+  | 'THURSDAY'
+  | 'FRIDAY'
+  | 'SATURDAY'
+  | 'SUNDAY';
+
+/** Entidad Schedule tal como la devuelve el backend */
+export interface Schedule {
+  id: string;
+  studentId: string;
+  daysOfWeek: DayOfWeek[];
+  timeOfDay: string;          // "HH:MM" (UTC)
+  duration: number;           // minutos
+  appliedRate: string | null; // Decimal como string; null = usa la tarifa del alumno
+  notes: string | null;
+  isActive: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface CreateScheduleData {
+  studentId: string;
+  daysOfWeek: DayOfWeek[];
+  timeOfDay: string;     // "HH:MM"
+  duration: number;
+  appliedRate?: string;
+  notes?: string;
+}
+
+export type UpdateScheduleData = Partial<CreateScheduleData & { isActive: boolean }>;
+
+export interface GenerateClassesData {
+  from: string;  // YYYY-MM-DD
+  to: string;    // YYYY-MM-DD (max 90 days range)
+}
