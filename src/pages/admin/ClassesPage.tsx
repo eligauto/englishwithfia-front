@@ -1,5 +1,5 @@
-import { useState, useEffect, useMemo } from 'react';
-import type { ReactNode } from 'react';
+import { useState, useEffect, useMemo } from "react";
+import type { ReactNode } from "react";
 import {
   Plus,
   Check,
@@ -8,8 +8,8 @@ import {
   CalendarClock,
   CircleDollarSign,
   X,
-} from 'lucide-react';
-import { useForm } from 'react-hook-form';
+} from "lucide-react";
+import { useForm } from "react-hook-form";
 import {
   getClasses,
   getStudents,
@@ -18,39 +18,39 @@ import {
   rescheduleClass,
   absentDecision,
   ApiRequestError,
-} from '../../services/api';
+} from "../../services/api";
 import type {
   Class,
   Student,
   ClassStatus,
   CreateClassData,
   RescheduleClassData,
-} from '../../types';
-import { cn } from '../../utils/cn';
+} from "../../types";
+import { cn } from "../../utils/cn";
 
 // ── Status helpers ────────────────────────────────────────────────────────────
 
 const STATUS_LABELS: Record<ClassStatus, string> = {
-  SCHEDULED: 'Programada',
-  TAUGHT: 'Dictada',
-  CANCELLED: 'Cancelada',
-  RESCHEDULED: 'Reagendada',
-  ABSENT: 'Ausente',
+  SCHEDULED: "Programada",
+  TAUGHT: "Dictada",
+  CANCELLED: "Cancelada",
+  RESCHEDULED: "Reagendada",
+  ABSENT: "Ausente",
 };
 
 const STATUS_COLORS: Record<ClassStatus, string> = {
-  SCHEDULED: 'bg-blue-100 text-blue-700',
-  TAUGHT: 'bg-green-100 text-green-700',
-  CANCELLED: 'bg-gray-100 text-gray-500',
-  RESCHEDULED: 'bg-orange-100 text-orange-700',
-  ABSENT: 'bg-yellow-100 text-yellow-700',
+  SCHEDULED: "bg-blue-100 text-blue-700",
+  TAUGHT: "bg-green-100 text-green-700",
+  CANCELLED: "bg-gray-100 text-gray-500",
+  RESCHEDULED: "bg-orange-100 text-orange-700",
+  ABSENT: "bg-yellow-100 text-yellow-700",
 };
 
 function StatusBadge({ status }: { status: ClassStatus }) {
   return (
     <span
       className={cn(
-        'inline-flex px-2.5 py-0.5 rounded-full text-xs font-medium',
+        "inline-flex px-2.5 py-0.5 rounded-full text-xs font-medium",
         STATUS_COLORS[status],
       )}
     >
@@ -60,17 +60,17 @@ function StatusBadge({ status }: { status: ClassStatus }) {
 }
 
 function fmtDate(iso: string) {
-  return new Date(iso).toLocaleDateString('es-AR', {
-    day: '2-digit',
-    month: '2-digit',
-    year: 'numeric',
+  return new Date(iso).toLocaleDateString("es-AR", {
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
   });
 }
 
 function fmtTime(iso: string) {
-  return new Date(iso).toLocaleTimeString('es-AR', {
-    hour: '2-digit',
-    minute: '2-digit',
+  return new Date(iso).toLocaleTimeString("es-AR", {
+    hour: "2-digit",
+    minute: "2-digit",
   });
 }
 
@@ -79,10 +79,11 @@ function fmtTime(iso: string) {
 export function ClassesPage() {
   const [classes, setClasses] = useState<Class[]>([]);
   const [students, setStudents] = useState<Student[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [loadingClasses, setLoadingClasses] = useState(true);
+  const [loadingStudents, setLoadingStudents] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [filterStudentId, setFilterStudentId] = useState('');
-  const [filterStatus, setFilterStatus] = useState<ClassStatus | ''>('');
+  const [filterStudentId, setFilterStudentId] = useState("");
+  const [filterStatus, setFilterStatus] = useState<ClassStatus | "">("");
   const [showCreate, setShowCreate] = useState(false);
   const [rescheduleTarget, setRescheduleTarget] = useState<Class | null>(null);
   const [absentTarget, setAbsentTarget] = useState<Class | null>(null);
@@ -92,18 +93,21 @@ export function ClassesPage() {
     [students],
   );
 
+  const loading = loadingClasses || loadingStudents;
+
   useEffect(() => {
-    Promise.all([getClasses(), getStudents()])
-      .then(([cls, sts]) => {
-        // orden descendente por fecha
-        cls.sort((a, b) => new Date(b.scheduledAt).getTime() - new Date(a.scheduledAt).getTime());
-        setClasses(cls);
+    getStudents()
+      .then((sts) => {
         setStudents(sts.filter((s) => s.isActive));
       })
-      .catch((err) =>
-        setError(err instanceof ApiRequestError ? err.message : 'Error al cargar datos'),
-      )
-      .finally(() => setLoading(false));
+      .catch((err) => {
+        setError(
+          err instanceof ApiRequestError
+            ? err.message
+            : "Error al cargar alumnos",
+        );
+      })
+      .finally(() => setLoadingStudents(false));
   }, []);
 
   function patchClass(updated: Class) {
@@ -116,52 +120,82 @@ export function ClassesPage() {
     });
   }
 
-  function prependClass(created: Class) {
-    setClasses((prev) => [created, ...prev]);
-  }
-
-  // Después de reagendar se refresca la lista para que aparezca la clase nueva
-  async function refetchClasses() {
+  async function fetchFilteredClasses() {
     try {
-      const cls = await getClasses();
-      cls.sort((a, b) => new Date(b.scheduledAt).getTime() - new Date(a.scheduledAt).getTime());
+      const cls = await getClasses({
+        studentId: filterStudentId || undefined,
+        status: filterStatus || undefined,
+      });
+      cls.sort(
+        (a, b) =>
+          new Date(b.scheduledAt).getTime() - new Date(a.scheduledAt).getTime(),
+      );
       setClasses(cls);
-    } catch {
-      // silent — el estado local sigue siendo coherente
+      setError(null);
+    } catch (err) {
+      setError(
+        err instanceof ApiRequestError ? err.message : "Error al cargar clases",
+      );
+    } finally {
+      setLoadingClasses(false);
     }
   }
 
+  useEffect(() => {
+    setLoadingClasses(true);
+    void fetchFilteredClasses();
+  }, [filterStudentId, filterStatus]);
+
   async function handleMarkTaught(cls: Class) {
-    if (!confirm('¿Marcar esta clase como dictada? Se generará un cargo automáticamente.')) return;
+    if (
+      !confirm(
+        "¿Marcar esta clase como dictada? Se generará un cargo automáticamente.",
+      )
+    )
+      return;
     try {
-      patchClass(await updateClassStatus(cls.id, 'TAUGHT'));
+      patchClass(await updateClassStatus(cls.id, "TAUGHT"));
+      void fetchFilteredClasses();
     } catch (err) {
-      alert(err instanceof ApiRequestError ? err.message : 'Error al actualizar la clase');
+      alert(
+        err instanceof ApiRequestError
+          ? err.message
+          : "Error al actualizar la clase",
+      );
     }
   }
 
   async function handleMarkAbsent(cls: Class) {
     try {
-      const updated = await updateClassStatus(cls.id, 'ABSENT');
+      const updated = await updateClassStatus(cls.id, "ABSENT");
       patchClass(updated);
       setAbsentTarget(updated);
+      void fetchFilteredClasses();
     } catch (err) {
-      alert(err instanceof ApiRequestError ? err.message : 'Error al marcar ausente');
+      alert(
+        err instanceof ApiRequestError
+          ? err.message
+          : "Error al marcar ausente",
+      );
     }
   }
 
   async function handleCancel(cls: Class) {
-    if (!confirm('¿Cancelar esta clase? La acción no puede deshacerse.')) return;
+    if (!confirm("¿Cancelar esta clase? La acción no puede deshacerse."))
+      return;
     try {
-      patchClass(await updateClassStatus(cls.id, 'CANCELLED'));
+      patchClass(await updateClassStatus(cls.id, "CANCELLED"));
+      void fetchFilteredClasses();
     } catch (err) {
-      alert(err instanceof ApiRequestError ? err.message : 'Error al cancelar la clase');
+      alert(
+        err instanceof ApiRequestError
+          ? err.message
+          : "Error al cancelar la clase",
+      );
     }
   }
 
-  const visible = classes
-    .filter((c) => !filterStudentId || c.studentId === filterStudentId)
-    .filter((c) => !filterStatus || c.status === filterStatus);
+  const visible = classes;
 
   return (
     <div className="p-8">
@@ -186,18 +220,22 @@ export function ClassesPage() {
         >
           <option value="">Todos los alumnos</option>
           {students.map((s) => (
-            <option key={s.id} value={s.id}>{s.fullName}</option>
+            <option key={s.id} value={s.id}>
+              {s.fullName}
+            </option>
           ))}
         </select>
 
         <select
           value={filterStatus}
-          onChange={(e) => setFilterStatus(e.target.value as ClassStatus | '')}
+          onChange={(e) => setFilterStatus(e.target.value as ClassStatus | "")}
           className="px-3 py-2 text-sm border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-fia-primary bg-white"
         >
           <option value="">Todos los estados</option>
           {(Object.keys(STATUS_LABELS) as ClassStatus[]).map((s) => (
-            <option key={s} value={s}>{STATUS_LABELS[s]}</option>
+            <option key={s} value={s}>
+              {STATUS_LABELS[s]}
+            </option>
           ))}
         </select>
       </div>
@@ -209,13 +247,15 @@ export function ClassesPage() {
         </div>
       )}
       {!loading && error && (
-        <p className="text-sm text-red-600 bg-red-50 px-4 py-3 rounded-xl">{error}</p>
+        <p className="text-sm text-red-600 bg-red-50 px-4 py-3 rounded-xl">
+          {error}
+        </p>
       )}
       {!loading && !error && visible.length === 0 && (
         <p className="text-sm text-gray-500 py-12 text-center">
           {filterStudentId || filterStatus
-            ? 'No hay clases que coincidan con los filtros.'
-            : 'Todavía no hay clases. ¡Agendá la primera!'}
+            ? "No hay clases que coincidan con los filtros."
+            : "Todavía no hay clases. ¡Agendá la primera!"}
         </p>
       )}
 
@@ -248,18 +288,29 @@ export function ClassesPage() {
             </thead>
             <tbody className="divide-y divide-gray-50">
               {visible.map((cls) => (
-                <tr key={cls.id} className="hover:bg-gray-50/60 transition-colors">
+                <tr
+                  key={cls.id}
+                  className="hover:bg-gray-50/60 transition-colors"
+                >
                   <td className="px-6 py-4 font-medium text-fia-neutral-dark">
-                    {studentMap[cls.studentId] ?? '—'}
+                    {studentMap[cls.studentId] ?? "—"}
                   </td>
-                  <td className="px-6 py-4 text-gray-700">{fmtDate(cls.scheduledAt)}</td>
-                  <td className="px-6 py-4 text-gray-500">{fmtTime(cls.scheduledAt)}</td>
-                  <td className="px-6 py-4 text-gray-500">{cls.duration} min</td>
+                  <td className="px-6 py-4 text-gray-700">
+                    {fmtDate(cls.scheduledAt)}
+                  </td>
+                  <td className="px-6 py-4 text-gray-500">
+                    {fmtTime(cls.scheduledAt)}
+                  </td>
+                  <td className="px-6 py-4 text-gray-500">
+                    {cls.duration} min
+                  </td>
                   <td className="px-6 py-4">
                     <StatusBadge status={cls.status} />
                   </td>
                   <td className="px-6 py-4 text-gray-700">
-                    {cls.appliedRate ? `$${Number(cls.appliedRate).toFixed(2)}` : '—'}
+                    {cls.appliedRate
+                      ? `$${Number(cls.appliedRate).toFixed(2)}`
+                      : "—"}
                   </td>
                   <td className="px-6 py-4">
                     <ClassActions
@@ -283,9 +334,9 @@ export function ClassesPage() {
         <CreateClassModal
           students={students}
           onClose={() => setShowCreate(false)}
-          onCreated={(cls) => {
-            prependClass(cls);
+          onCreated={() => {
             setShowCreate(false);
+            void fetchFilteredClasses();
           }}
         />
       )}
@@ -293,12 +344,12 @@ export function ClassesPage() {
       {rescheduleTarget && (
         <RescheduleModal
           cls={rescheduleTarget}
-          studentName={studentMap[rescheduleTarget.studentId] ?? ''}
+          studentName={studentMap[rescheduleTarget.studentId] ?? ""}
           onClose={() => setRescheduleTarget(null)}
           onRescheduled={(updated) => {
             patchClass(updated);
             setRescheduleTarget(null);
-            void refetchClasses(); // trae la clase nueva generada por el backend
+            void fetchFilteredClasses(); // trae la clase nueva generada por el backend
           }}
         />
       )}
@@ -306,11 +357,12 @@ export function ClassesPage() {
       {absentTarget && (
         <AbsentDecisionModal
           cls={absentTarget}
-          studentName={studentMap[absentTarget.studentId] ?? ''}
+          studentName={studentMap[absentTarget.studentId] ?? ""}
           onClose={() => setAbsentTarget(null)}
           onDecided={(updated) => {
             patchClass(updated);
             setAbsentTarget(null);
+            void fetchFilteredClasses();
           }}
         />
       )}
@@ -337,7 +389,7 @@ function ClassActions({
   onReschedule,
   onAbsentDecision,
 }: ClassActionsProps) {
-  if (cls.status === 'SCHEDULED') {
+  if (cls.status === "SCHEDULED") {
     return (
       <div className="flex items-center justify-end gap-1">
         <button
@@ -373,7 +425,7 @@ function ClassActions({
   }
 
   // ABSENT sin decisión tomada todavía
-  if (cls.status === 'ABSENT' && !cls.chargeGenerated) {
+  if (cls.status === "ABSENT" && !cls.chargeGenerated) {
     return (
       <div className="flex items-center justify-end">
         <button
@@ -406,7 +458,9 @@ function ModalShell({
       <div className="absolute inset-0 bg-black/40" onClick={onClose} />
       <div className="relative bg-white rounded-2xl shadow-xl w-full max-w-md">
         <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100">
-          <h2 className="text-base font-semibold text-fia-neutral-dark">{title}</h2>
+          <h2 className="text-base font-semibold text-fia-neutral-dark">
+            {title}
+          </h2>
           <button
             onClick={onClose}
             className="p-1 text-gray-400 hover:text-gray-600 rounded-lg transition-colors"
@@ -443,7 +497,7 @@ function ModalActions({
         disabled={isSubmitting}
         className="flex-1 py-2.5 bg-fia-primary text-white text-sm font-semibold rounded-xl hover:bg-fia-primary-dark transition-colors disabled:opacity-60"
       >
-        {isSubmitting ? 'Guardando…' : submitLabel}
+        {isSubmitting ? "Guardando…" : submitLabel}
       </button>
     </div>
   );
@@ -473,7 +527,7 @@ function CreateClassModal({
     handleSubmit,
     formState: { errors, isSubmitting },
   } = useForm<CreateClassFormData>({
-    defaultValues: { studentId: '', scheduledAt: '', duration: 60, notes: '' },
+    defaultValues: { studentId: "", scheduledAt: "", duration: 60, notes: "" },
   });
 
   async function onSubmit(data: CreateClassFormData) {
@@ -487,7 +541,11 @@ function CreateClassModal({
       };
       onCreated(await createClass(payload));
     } catch (err) {
-      setSubmitError(err instanceof ApiRequestError ? err.message : 'Error al crear la clase');
+      setSubmitError(
+        err instanceof ApiRequestError
+          ? err.message
+          : "Error al crear la clase",
+      );
     }
   }
 
@@ -495,7 +553,9 @@ function CreateClassModal({
     <ModalShell title="Nueva clase" onClose={onClose}>
       <form onSubmit={handleSubmit(onSubmit)} className="px-6 py-5 space-y-4">
         {submitError && (
-          <p className="text-sm text-red-600 bg-red-50 px-4 py-2 rounded-lg">{submitError}</p>
+          <p className="text-sm text-red-600 bg-red-50 px-4 py-2 rounded-lg">
+            {submitError}
+          </p>
         )}
 
         {/* Alumno */}
@@ -504,19 +564,23 @@ function CreateClassModal({
             Alumno <span className="text-red-500">*</span>
           </label>
           <select
-            {...register('studentId', { required: 'El alumno es obligatorio' })}
+            {...register("studentId", { required: "El alumno es obligatorio" })}
             className={cn(
-              'w-full px-4 py-2.5 rounded-xl border text-sm focus:outline-none focus:ring-2 focus:ring-fia-primary bg-white',
-              errors.studentId ? 'border-red-400' : 'border-gray-200',
+              "w-full px-4 py-2.5 rounded-xl border text-sm focus:outline-none focus:ring-2 focus:ring-fia-primary bg-white",
+              errors.studentId ? "border-red-400" : "border-gray-200",
             )}
           >
             <option value="">Seleccionar alumno…</option>
             {students.map((s) => (
-              <option key={s.id} value={s.id}>{s.fullName}</option>
+              <option key={s.id} value={s.id}>
+                {s.fullName}
+              </option>
             ))}
           </select>
           {errors.studentId && (
-            <p className="mt-1 text-xs text-red-500">{errors.studentId.message}</p>
+            <p className="mt-1 text-xs text-red-500">
+              {errors.studentId.message}
+            </p>
           )}
         </div>
 
@@ -526,15 +590,19 @@ function CreateClassModal({
             Fecha y hora <span className="text-red-500">*</span>
           </label>
           <input
-            {...register('scheduledAt', { required: 'La fecha es obligatoria' })}
+            {...register("scheduledAt", {
+              required: "La fecha es obligatoria",
+            })}
             type="datetime-local"
             className={cn(
-              'w-full px-4 py-2.5 rounded-xl border text-sm focus:outline-none focus:ring-2 focus:ring-fia-primary',
-              errors.scheduledAt ? 'border-red-400' : 'border-gray-200',
+              "w-full px-4 py-2.5 rounded-xl border text-sm focus:outline-none focus:ring-2 focus:ring-fia-primary",
+              errors.scheduledAt ? "border-red-400" : "border-gray-200",
             )}
           />
           {errors.scheduledAt && (
-            <p className="mt-1 text-xs text-red-500">{errors.scheduledAt.message}</p>
+            <p className="mt-1 text-xs text-red-500">
+              {errors.scheduledAt.message}
+            </p>
           )}
         </div>
 
@@ -544,37 +612,45 @@ function CreateClassModal({
             Duración (minutos) <span className="text-red-500">*</span>
           </label>
           <input
-            {...register('duration', {
+            {...register("duration", {
               valueAsNumber: true,
               validate: {
-                required: (v) => !isNaN(v) || 'La duración es obligatoria',
-                positive: (v) => v > 0 || 'Debe ser mayor a 0',
+                required: (v) => !isNaN(v) || "La duración es obligatoria",
+                positive: (v) => v > 0 || "Debe ser mayor a 0",
               },
             })}
             type="number"
             min="15"
             step="15"
             className={cn(
-              'w-full px-4 py-2.5 rounded-xl border text-sm focus:outline-none focus:ring-2 focus:ring-fia-primary',
-              errors.duration ? 'border-red-400' : 'border-gray-200',
+              "w-full px-4 py-2.5 rounded-xl border text-sm focus:outline-none focus:ring-2 focus:ring-fia-primary",
+              errors.duration ? "border-red-400" : "border-gray-200",
             )}
           />
           {errors.duration && (
-            <p className="mt-1 text-xs text-red-500">{errors.duration.message}</p>
+            <p className="mt-1 text-xs text-red-500">
+              {errors.duration.message}
+            </p>
           )}
         </div>
 
         {/* Notas */}
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Notas</label>
+          <label className="block text-sm font-medium text-gray-700 mb-1">
+            Notas
+          </label>
           <textarea
-            {...register('notes')}
+            {...register("notes")}
             rows={2}
             className="w-full px-4 py-2.5 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-fia-primary resize-none"
           />
         </div>
 
-        <ModalActions onClose={onClose} isSubmitting={isSubmitting} submitLabel="Crear clase" />
+        <ModalActions
+          onClose={onClose}
+          isSubmitting={isSubmitting}
+          submitLabel="Crear clase"
+        />
       </form>
     </ModalShell>
   );
@@ -603,7 +679,9 @@ function RescheduleModal({
     register,
     handleSubmit,
     formState: { errors, isSubmitting },
-  } = useForm<RescheduleFormData>({ defaultValues: { scheduledAt: '', notes: '' } });
+  } = useForm<RescheduleFormData>({
+    defaultValues: { scheduledAt: "", notes: "" },
+  });
 
   async function onSubmit(data: RescheduleFormData) {
     setSubmitError(null);
@@ -614,7 +692,9 @@ function RescheduleModal({
       };
       onRescheduled(await rescheduleClass(cls.id, payload));
     } catch (err) {
-      setSubmitError(err instanceof ApiRequestError ? err.message : 'Error al reagendar');
+      setSubmitError(
+        err instanceof ApiRequestError ? err.message : "Error al reagendar",
+      );
     }
   }
 
@@ -622,11 +702,13 @@ function RescheduleModal({
     <ModalShell title={`Reagendar — ${studentName}`} onClose={onClose}>
       <form onSubmit={handleSubmit(onSubmit)} className="px-6 py-5 space-y-4">
         {submitError && (
-          <p className="text-sm text-red-600 bg-red-50 px-4 py-2 rounded-lg">{submitError}</p>
+          <p className="text-sm text-red-600 bg-red-50 px-4 py-2 rounded-lg">
+            {submitError}
+          </p>
         )}
 
         <p className="text-xs text-gray-500">
-          Clase original:{' '}
+          Clase original:{" "}
           <span className="font-medium">
             {fmtDate(cls.scheduledAt)} {fmtTime(cls.scheduledAt)}
           </span>
@@ -637,28 +719,38 @@ function RescheduleModal({
             Nueva fecha y hora <span className="text-red-500">*</span>
           </label>
           <input
-            {...register('scheduledAt', { required: 'La fecha es obligatoria' })}
+            {...register("scheduledAt", {
+              required: "La fecha es obligatoria",
+            })}
             type="datetime-local"
             className={cn(
-              'w-full px-4 py-2.5 rounded-xl border text-sm focus:outline-none focus:ring-2 focus:ring-fia-primary',
-              errors.scheduledAt ? 'border-red-400' : 'border-gray-200',
+              "w-full px-4 py-2.5 rounded-xl border text-sm focus:outline-none focus:ring-2 focus:ring-fia-primary",
+              errors.scheduledAt ? "border-red-400" : "border-gray-200",
             )}
           />
           {errors.scheduledAt && (
-            <p className="mt-1 text-xs text-red-500">{errors.scheduledAt.message}</p>
+            <p className="mt-1 text-xs text-red-500">
+              {errors.scheduledAt.message}
+            </p>
           )}
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Notas</label>
+          <label className="block text-sm font-medium text-gray-700 mb-1">
+            Notas
+          </label>
           <textarea
-            {...register('notes')}
+            {...register("notes")}
             rows={2}
             className="w-full px-4 py-2.5 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-fia-primary resize-none"
           />
         </div>
 
-        <ModalActions onClose={onClose} isSubmitting={isSubmitting} submitLabel="Reagendar" />
+        <ModalActions
+          onClose={onClose}
+          isSubmitting={isSubmitting}
+          submitLabel="Reagendar"
+        />
       </form>
     </ModalShell>
   );
@@ -687,7 +779,9 @@ function AbsentDecisionModal({
       onDecided(await absentDecision(cls.id, chargeable));
     } catch (err) {
       setSubmitError(
-        err instanceof ApiRequestError ? err.message : 'Error al registrar la decisión',
+        err instanceof ApiRequestError
+          ? err.message
+          : "Error al registrar la decisión",
       );
       setSubmitting(false);
     }
@@ -697,17 +791,21 @@ function AbsentDecisionModal({
     <ModalShell title={`Clase ausente — ${studentName}`} onClose={onClose}>
       <div className="px-6 py-5 space-y-4">
         {submitError && (
-          <p className="text-sm text-red-600 bg-red-50 px-4 py-2 rounded-lg">{submitError}</p>
+          <p className="text-sm text-red-600 bg-red-50 px-4 py-2 rounded-lg">
+            {submitError}
+          </p>
         )}
 
         <p className="text-sm text-gray-600">
-          El alumno no asistió a la clase del{' '}
+          El alumno no asistió a la clase del{" "}
           <strong>
             {fmtDate(cls.scheduledAt)} a las {fmtTime(cls.scheduledAt)}
           </strong>
           .
         </p>
-        <p className="text-sm text-gray-600">¿Querés cobrar esta clase de todas formas?</p>
+        <p className="text-sm text-gray-600">
+          ¿Querés cobrar esta clase de todas formas?
+        </p>
 
         <div className="flex gap-3 pt-2">
           <button

@@ -189,8 +189,35 @@ export async function getDashboard(): Promise<DashboardData> {
 
 // ── Classes ──────────────────────────────────────────────────────────────────
 
-export async function getClasses(): Promise<Class[]> {
-  return apiFetch<Class[]>('/classes', undefined, true);
+export interface GetClassesFilters {
+  studentId?: string;
+  status?: ClassStatus;
+  from?: string;
+  to?: string;
+}
+
+function toQuery(params: Record<string, string | undefined>): string {
+  const search = new URLSearchParams();
+
+  Object.entries(params).forEach(([key, value]) => {
+    if (value) {
+      search.set(key, value);
+    }
+  });
+
+  const query = search.toString();
+  return query ? `?${query}` : '';
+}
+
+export async function getClasses(filters?: GetClassesFilters): Promise<Class[]> {
+  const query = toQuery({
+    studentId: filters?.studentId,
+    status: filters?.status,
+    from: filters?.from,
+    to: filters?.to,
+  });
+
+  return apiFetch<Class[]>(`/classes${query}`, undefined, true);
 }
 
 export async function createClass(data: CreateClassData): Promise<Class> {
@@ -223,8 +250,22 @@ export async function absentDecision(id: string, chargeable: boolean): Promise<C
 
 // ── Charges ──────────────────────────────────────────────────────────────────
 
-export async function getCharges(): Promise<Charge[]> {
-  return apiFetch<Charge[]>('/charges', undefined, true);
+export interface GetChargesFilters {
+  studentId?: string;
+  financialStatus?: UpdateChargeStatusData['financialStatus'];
+  from?: string;
+  to?: string;
+}
+
+export async function getCharges(filters?: GetChargesFilters): Promise<Charge[]> {
+  const query = toQuery({
+    studentId: filters?.studentId,
+    financialStatus: filters?.financialStatus,
+    from: filters?.from,
+    to: filters?.to,
+  });
+
+  return apiFetch<Charge[]>(`/charges${query}`, undefined, true);
 }
 
 export async function updateChargeStatus(id: string, data: UpdateChargeStatusData): Promise<Charge> {
