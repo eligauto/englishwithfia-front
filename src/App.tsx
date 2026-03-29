@@ -1,8 +1,7 @@
-import { BrowserRouter, Route, Routes } from "react-router-dom";
+import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
 import { AuthProvider } from "./contexts/AuthContext";
 import { ProtectedRoute } from "./components/admin/ProtectedRoute";
 import { AdminLayout } from "./components/layout/AdminLayout";
-import { HomePage } from "./pages/HomePage";
 import { LoginPage } from "./pages/admin/LoginPage";
 import { DashboardPage } from "./pages/admin/DashboardPage";
 import { AnalyticsPage } from "./pages/admin/AnalyticsPage";
@@ -18,8 +17,11 @@ export function App() {
     <AuthProvider>
       <BrowserRouter>
         <Routes>
-          {/* Rutas públicas */}
-          <Route path={ROUTES.HOME} element={<HomePage />} />
+          {/* Landing pausada — redirige al panel admin */}
+          <Route
+            path={ROUTES.HOME}
+            element={<Navigate to={ROUTES.ADMIN.DASHBOARD} replace />}
+          />
           <Route path={ROUTES.ADMIN.LOGIN} element={<LoginPage />} />
 
           {/* Rutas protegidas del panel admin */}
