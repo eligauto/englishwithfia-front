@@ -1,5 +1,5 @@
 import { useState, useEffect, type ElementType } from "react";
-import { DollarSign, Users, Clock, AlertCircle, BookCheck } from "lucide-react";
+import { DollarSign, Users, Clock, AlertCircle, BookCheck, CalendarCheck } from "lucide-react";
 import { getDashboard, ApiRequestError } from "../../services/api";
 import type { DashboardData } from "../../types";
 
@@ -123,7 +123,36 @@ export function DashboardPage() {
           value={data.overduePromises}
           colorClass="bg-red-100 text-red-500"
         />
+        <KpiCard
+          icon={CalendarCheck}
+          label="Clases programadas hoy"
+          value={data.todayScheduledCount}
+          colorClass="bg-fia-primary-light text-fia-primary"
+        />
       </div>
+
+      {/* Ingresos esperados hoy */}
+      {(data.todayExpectedRevenueByCurrency?.length ?? 0) > 0 && (
+        <div className="flex flex-wrap gap-3 mb-8">
+          {data.todayExpectedRevenueByCurrency.map((item) => (
+            <div
+              key={item.currency}
+              className="bg-fia-primary-light rounded-xl px-4 py-2 flex items-center gap-2"
+            >
+              <span className="text-xs text-fia-primary font-medium">
+                Ingreso esperado hoy
+              </span>
+              <span className="text-sm font-bold text-fia-primary">
+                {item.currency}{" "}
+                {item.amount.toLocaleString("es-AR", {
+                  minimumFractionDigits: 2,
+                  maximumFractionDigits: 2,
+                })}
+              </span>
+            </div>
+          ))}
+        </div>
+      )}
 
       <div className="grid lg:grid-cols-2 gap-6">
         {/* Top deudores */}
@@ -175,7 +204,7 @@ export function DashboardPage() {
                     )}
                   </span>
                   <span className="font-semibold text-fia-secondary shrink-0">
-                    {fmt(p.amount)}
+                    {fmt(p.amount, p.currency)}
                   </span>
                 </li>
               ))}

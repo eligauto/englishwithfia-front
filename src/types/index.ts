@@ -251,6 +251,11 @@ export interface DeferredItem {
   promisedPaymentDate: string;  // ISO 8601
 }
 
+export interface TodayRevenueByCurrency {
+  currency: Currency;
+  amount: number;
+}
+
 export interface DashboardMetrics {
   totalPendingAmount: number;                     // suma multi-moneda (solo referencial)
   pendingByCurrency: PendingByCurrencyItem[];     // deuda pendiente desglosada por moneda
@@ -261,6 +266,8 @@ export interface DashboardMetrics {
   upcomingPromises: DeferredItem[];               // promesas dentro de los próximos 7 días
   topDebtors: DebtorSummary[];                    // top 5 por monto (multi-moneda, referencial)
   topDebtorsByCurrency: DebtorSummaryByCurrency[]; // top deudores por (alumno, moneda)
+  todayScheduledCount: number;                    // clases SCHEDULED hoy (timezone de la org)
+  todayExpectedRevenueByCurrency: TodayRevenueByCurrency[]; // ingresos esperados de las clases de hoy
 }
 
 /** Alias por compatibilidad — preferir DashboardMetrics */
