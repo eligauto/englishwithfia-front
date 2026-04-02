@@ -6,6 +6,7 @@ import {
   createSchedule,
   deleteSchedule,
   generateClasses,
+  getOrganization,
   getSchedules,
   getStudents,
   updateSchedule,
@@ -14,6 +15,7 @@ import type {
   CreateScheduleData,
   DayOfWeek,
   GenerateClassesData,
+  Organization,
   Schedule,
   ScheduleSlotInput,
   Student,
@@ -135,11 +137,13 @@ function SlotEditor({
 function ScheduleModal({
   initial,
   students,
+  timezone,
   onClose,
   onSave,
 }: {
   initial?: Schedule;
   students: Student[];
+  timezone: string;
   onClose: () => void;
   onSave: (data: CreateScheduleData | UpdateScheduleData) => Promise<void>;
 }) {
@@ -208,7 +212,7 @@ function ScheduleModal({
           {/* Slots */}
           <div>
             <label className="block text-xs font-medium text-gray-600 mb-2">
-              Días y horarios (UTC) *
+              Días y horarios ({timezone}) *
             </label>
             <SlotEditor
               slots={slots}
@@ -375,6 +379,7 @@ type Modal =
 export function SchedulesPage() {
   const [schedules, setSchedules] = useState<Schedule[]>([]);
   const [students, setStudents] = useState<Student[]>([]);
+  const [org, setOrg] = useState<Organization | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [successMsg, setSuccessMsg] = useState<string | null>(null);
@@ -386,15 +391,17 @@ export function SchedulesPage() {
     setLoading(true);
     setError(null);
     try {
-      const [schedulesData, studentsData] = await Promise.all([
+      const [schedulesData, studentsData, orgData] = await Promise.all([
         getSchedules({
           studentId: filterStudentId || undefined,
           isActive: filterActive === 'all' ? undefined : filterActive === 'active',
         }),
         getStudents(),
+        getOrganization(),
       ]);
       setSchedules(schedulesData);
       setStudents(studentsData);
+      setOrg(orgData);
     } catch (err) {
       setError(err instanceof ApiRequestError ? err.message : 'Error al cargar los datos');
     } finally {
@@ -524,7 +531,7 @@ export function SchedulesPage() {
             <thead>
               <tr className="text-left text-gray-400 text-xs uppercase border-b border-gray-100">
                 <th className="px-5 py-3 font-medium">Alumno</th>
-                <th className="px-5 py-3 font-medium">Slots (UTC)</th>
+                <th className="px-5 py-3 font-medium">Slots ({org?.timezone ?? 'UTC'})</th>
                 <th className="px-5 py-3 font-medium">Duración</th>
                 <th className="px-5 py-3 font-medium">Tarifa</th>
                 <th className="px-5 py-3 font-medium">Estado</th>
@@ -592,6 +599,7 @@ export function SchedulesPage() {
       {modal?.type === 'create' && (
         <ScheduleModal
           students={students}
+          timezone={org?.timezone ?? 'UTC'}
           onClose={() => setModal(null)}
           onSave={handleSaveSchedule}
         />
@@ -600,6 +608,7 @@ export function SchedulesPage() {
         <ScheduleModal
           initial={modal.schedule}
           students={students}
+          timezone={org?.timezone ?? 'UTC'}
           onClose={() => setModal(null)}
           onSave={handleSaveSchedule}
         />
