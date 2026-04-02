@@ -61,6 +61,28 @@ export type FinancialStatus =
   | 'ABSENT_CHARGEABLE'
   | 'ABSENT_NON_CHARGEABLE';
 
+// ── Organization ──────────────────────────────────────────────────────────────
+
+export interface Organization {
+  id: string;
+  name: string;
+  timezone: string; // IANA tz string, e.g. "America/Buenos_Aires"
+  createdAt: string; // ISO 8601
+  updatedAt: string;
+}
+
+export interface UpdateOrganizationData {
+  name?: string;
+  timezone?: string; // IANA tz string
+}
+
+export interface OrganizationMember {
+  id: string; // membership cuid
+  userId: string;
+  role: UserRole;
+  createdAt: string; // ISO 8601
+}
+
 // ── Auth ──────────────────────────────────────────────────────────────────────
 
 export interface LoginFormData {
@@ -316,7 +338,7 @@ export interface ScheduleSlot {
   id: string;
   scheduleId: string;
   dayOfWeek: DayOfWeek;
-  timeOfDay: string; // "HH:MM" 24h UTC
+  timeOfDay: string; // "HH:MM" 24h — hora local del timezone de la organización
 }
 
 /** Entidad Schedule tal como la devuelve el backend */

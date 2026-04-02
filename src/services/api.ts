@@ -14,6 +14,9 @@ import type {
   ContactFormData,
   TestimonialItem,
   AuthUser,
+  Organization,
+  UpdateOrganizationData,
+  OrganizationMember,
   Student,
   CreateStudentData,
   UpdateStudentData,
@@ -173,6 +176,26 @@ export async function login(email: string, password: string): Promise<string> {
  */
 export async function getMe(): Promise<AuthUser> {
   return apiFetch<AuthUser>("/auth/me", undefined, true);
+}
+
+// ── Organizations ────────────────────────────────────────────────────────────
+
+export async function getOrganization(): Promise<Organization> {
+  return apiFetch<Organization>("/organizations/me", undefined, true);
+}
+
+export async function updateOrganization(
+  data: UpdateOrganizationData,
+): Promise<Organization> {
+  return apiFetch<Organization>(
+    "/organizations/me",
+    { method: "PATCH", body: JSON.stringify(data) },
+    true,
+  );
+}
+
+export async function getOrganizationMembers(): Promise<OrganizationMember[]> {
+  return apiFetch<OrganizationMember[]>("/organizations/members", undefined, true);
 }
 
 // ── Students ─────────────────────────────────────────────────────────────────
