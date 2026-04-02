@@ -31,6 +31,7 @@ import type {
   CreateScheduleData,
   UpdateScheduleData,
   GenerateClassesData,
+  GenerateResult,
 } from "../types";
 
 const RAW_API_URL =
@@ -454,8 +455,8 @@ export async function deleteSchedule(id: string): Promise<Schedule> {
 export async function generateClasses(
   id: string,
   data: GenerateClassesData,
-): Promise<Class[]> {
-  return apiFetch<Class[]>(
+): Promise<GenerateResult> {
+  return apiFetch<GenerateResult>(
     `/schedules/${id}/generate`,
     { method: "POST", body: JSON.stringify(data) },
     true,

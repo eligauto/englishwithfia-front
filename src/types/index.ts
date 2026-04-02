@@ -225,6 +225,7 @@ export interface DeferredItem {
   studentId: string;
   fullName: string;
   amount: number;               // ya convertido desde Decimal
+  currency: Currency;
   promisedPaymentDate: string;  // ISO 8601
 }
 
@@ -310,12 +311,19 @@ export type DayOfWeek =
   | 'SATURDAY'
   | 'SUNDAY';
 
+/** Un slot de horario: un día de la semana + hora específica */
+export interface ScheduleSlot {
+  id: string;
+  scheduleId: string;
+  dayOfWeek: DayOfWeek;
+  timeOfDay: string; // "HH:MM" 24h UTC
+}
+
 /** Entidad Schedule tal como la devuelve el backend */
 export interface Schedule {
   id: string;
   studentId: string;
-  daysOfWeek: DayOfWeek[];
-  timeOfDay: string;          // "HH:MM" (UTC)
+  slots: ScheduleSlot[];  // uno por cada (día, hora) — permite horarios distintos por día
   duration: number;           // minutos
   appliedRate: string | null; // Decimal como string; null = usa la tarifa del alumno
   notes: string | null;
@@ -324,18 +332,29 @@ export interface Schedule {
   updatedAt: string;
 }
 
+export interface ScheduleSlotInput {
+  dayOfWeek: DayOfWeek;
+  timeOfDay: string; // "HH:MM"
+}
+
 export interface CreateScheduleData {
   studentId: string;
-  daysOfWeek: DayOfWeek[];
-  timeOfDay: string;     // "HH:MM"
+  slots: ScheduleSlotInput[];
   duration: number;
   appliedRate?: string;
   notes?: string;
 }
 
-export type UpdateScheduleData = Partial<CreateScheduleData & { isActive: boolean }>;
+export type UpdateScheduleData = Partial<Omit<CreateScheduleData, 'studentId'> & { isActive: boolean }>;
 
 export interface GenerateClassesData {
   from: string;  // YYYY-MM-DD
   to: string;    // YYYY-MM-DD (max 90 days range)
+}
+
+/** Respuesta de POST /schedules/:id/generate */
+export interface GenerateResult {
+  generated: number;
+  skipped: number;
+  classes: Class[];
 }

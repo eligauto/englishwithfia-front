@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
-import { useForm } from 'react-hook-form';
+import { useForm, useWatch } from 'react-hook-form';
 import { CalendarClock, Plus, Pencil, Trash2, PlayCircle, X } from 'lucide-react';
 import {
   ApiRequestError,
@@ -15,6 +15,7 @@ import type {
   DayOfWeek,
   GenerateClassesData,
   Schedule,
+  ScheduleSlotInput,
   Student,
   UpdateScheduleData,
 } from '../../types';
@@ -34,10 +35,13 @@ const ALL_DAYS: { value: DayOfWeek; label: string }[] = [
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
-function formatDays(days: DayOfWeek[]): string {
-  return days
-    .map((d) => ALL_DAYS.find((x) => x.value === d)?.label ?? d)
-    .join(', ');
+function dayLabel(day: DayOfWeek): string {
+  return ALL_DAYS.find((x) => x.value === day)?.label ?? day;
+}
+
+function formatSlots(slots: ScheduleSlotInput[]): string {
+  if (slots.length === 0) return '—';
+  return slots.map((s) => `${dayLabel(s.dayOfWeek)} ${s.timeOfDay}`).join(' · ');
 }
 
 function studentName(students: Student[], id: string): string {
@@ -63,11 +67,69 @@ function ActiveBadge({ isActive }: { isActive: boolean }) {
 
 interface ScheduleFormValues {
   studentId: string;
-  daysOfWeek: DayOfWeek[];
-  timeOfDay: string;
+  slots: ScheduleSlotInput[];
   duration: number;
   appliedRate: string;
   notes: string;
+}
+
+function SlotEditor({
+  slots,
+  onChange,
+}: {
+  slots: ScheduleSlotInput[];
+  onChange: (slots: ScheduleSlotInput[]) => void;
+}) {
+  function addSlot() {
+    onChange([...slots, { dayOfWeek: 'MONDAY', timeOfDay: '' }]);
+  }
+
+  function removeSlot(index: number) {
+    onChange(slots.filter((_, i) => i !== index));
+  }
+
+  function updateSlot(index: number, patch: Partial<ScheduleSlotInput>) {
+    onChange(slots.map((s, i) => (i === index ? { ...s, ...patch } : s)));
+  }
+
+  return (
+    <div className="space-y-2">
+      {slots.map((slot, i) => (
+        <div key={i} className="flex items-center gap-2">
+          <select
+            value={slot.dayOfWeek}
+            onChange={(e) => updateSlot(i, { dayOfWeek: e.target.value as DayOfWeek })}
+            className="flex-1 px-3 py-2 text-sm border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-fia-primary bg-white"
+          >
+            {ALL_DAYS.map(({ value, label }) => (
+              <option key={value} value={value}>{label}</option>
+            ))}
+          </select>
+          <input
+            type="time"
+            value={slot.timeOfDay}
+            onChange={(e) => updateSlot(i, { timeOfDay: e.target.value })}
+            className="w-28 px-3 py-2 text-sm border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-fia-primary bg-white"
+          />
+          <button
+            type="button"
+            onClick={() => removeSlot(i)}
+            className="p-1.5 rounded-lg text-red-400 hover:bg-red-50 transition-colors"
+          >
+            <X size={14} />
+          </button>
+        </div>
+      ))}
+      <button
+        type="button"
+        onClick={addSlot}
+        className="flex items-center gap-1.5 text-xs text-fia-primary hover:text-fia-primary-dark transition-colors"
+      >
+        <Plus size={13} />
+        Agregar día / hora
+      </button>
+    </div>
+  );
 }
 
 function ScheduleModal({
@@ -84,39 +146,26 @@ function ScheduleModal({
   const {
     register,
     handleSubmit,
-    watch,
+    control,
     setValue,
     formState: { errors, isSubmitting },
   } = useForm<ScheduleFormValues>({
     defaultValues: {
       studentId: initial?.studentId ?? '',
-      daysOfWeek: initial?.daysOfWeek ?? [],
-      timeOfDay: initial?.timeOfDay ?? '',
+      slots: initial?.slots.map((s) => ({ dayOfWeek: s.dayOfWeek, timeOfDay: s.timeOfDay })) ?? [{ dayOfWeek: 'MONDAY', timeOfDay: '' }],
       duration: initial?.duration ?? 60,
       appliedRate: initial?.appliedRate ?? '',
       notes: initial?.notes ?? '',
     },
   });
 
-  const selectedDays = watch('daysOfWeek');
-
-  function toggleDay(day: DayOfWeek) {
-    const current = selectedDays ?? [];
-    if (current.includes(day)) {
-      setValue(
-        'daysOfWeek',
-        current.filter((d) => d !== day),
-      );
-    } else {
-      setValue('daysOfWeek', [...current, day]);
-    }
-  }
+  const slots = useWatch({ control, name: 'slots' });
+  const slotsValid = slots.length > 0 && slots.every((s) => s.timeOfDay !== '');
 
   async function onSubmit(values: ScheduleFormValues) {
     const payload: CreateScheduleData = {
       studentId: values.studentId,
-      daysOfWeek: values.daysOfWeek,
-      timeOfDay: values.timeOfDay,
+      slots: values.slots,
       duration: Number(values.duration),
       ...(values.appliedRate ? { appliedRate: values.appliedRate } : {}),
       ...(values.notes ? { notes: values.notes } : {}),
@@ -156,60 +205,34 @@ function ScheduleModal({
             )}
           </div>
 
-          {/* Días */}
+          {/* Slots */}
           <div>
             <label className="block text-xs font-medium text-gray-600 mb-2">
-              Días de la semana *
+              Días y horarios (UTC) *
             </label>
-            <div className="flex gap-1.5 flex-wrap">
-              {ALL_DAYS.map(({ value, label }) => (
-                <button
-                  key={value}
-                  type="button"
-                  onClick={() => toggleDay(value)}
-                  className={cn(
-                    'px-3 py-1.5 rounded-lg text-xs font-medium transition-colors',
-                    selectedDays?.includes(value)
-                      ? 'bg-fia-primary text-white'
-                      : 'bg-gray-100 text-gray-600 hover:bg-gray-200',
-                  )}
-                >
-                  {label}
-                </button>
-              ))}
-            </div>
-            {selectedDays?.length === 0 && (
-              <p className="text-xs text-red-500 mt-1">Seleccioná al menos un día</p>
+            <SlotEditor
+              slots={slots}
+              onChange={(updated) => setValue('slots', updated)}
+            />
+            {!slotsValid && (
+              <p className="text-xs text-red-500 mt-1">
+                Agregá al menos un día con hora completa
+              </p>
             )}
           </div>
 
-          {/* Hora y duración */}
-          <div className="grid grid-cols-2 gap-3">
-            <div>
-              <label className="block text-xs font-medium text-gray-600 mb-1">
-                Hora (UTC) *
-              </label>
-              <input
-                type="time"
-                {...register('timeOfDay', { required: 'Requerido' })}
-                className="w-full px-3 py-2 text-sm border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-fia-primary bg-white"
-              />
-              {errors.timeOfDay && (
-                <p className="text-xs text-red-500 mt-1">{errors.timeOfDay.message}</p>
-              )}
-            </div>
-            <div>
-              <label className="block text-xs font-medium text-gray-600 mb-1">
-                Duración (min) *
-              </label>
-              <input
-                type="number"
-                min={15}
-                step={15}
-                {...register('duration', { required: 'Requerido', min: 15 })}
-                className="w-full px-3 py-2 text-sm border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-fia-primary bg-white"
-              />
-            </div>
+          {/* Duración */}
+          <div>
+            <label className="block text-xs font-medium text-gray-600 mb-1">
+              Duración (min) *
+            </label>
+            <input
+              type="number"
+              min={15}
+              step={15}
+              {...register('duration', { required: 'Requerido', min: 15 })}
+              className="w-full px-3 py-2 text-sm border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-fia-primary bg-white"
+            />
           </div>
 
           {/* Tarifa override */}
@@ -245,7 +268,7 @@ function ScheduleModal({
             </button>
             <button
               type="submit"
-              disabled={isSubmitting || (selectedDays?.length ?? 0) === 0}
+              disabled={isSubmitting || !slotsValid}
               className="px-4 py-2 rounded-xl bg-fia-primary text-white text-sm font-semibold hover:bg-fia-primary-dark transition-colors disabled:opacity-60"
             >
               {isSubmitting ? 'Guardando…' : 'Guardar'}
@@ -288,16 +311,13 @@ function GenerateModal({
 
         <div className="px-6 pt-4">
           <p className="text-sm text-gray-500">
-            <span className="font-medium text-gray-700">{studentFullName}</span> —{' '}
-            {formatDays(schedule.daysOfWeek)} a las {schedule.timeOfDay}
+            <span className="font-medium text-gray-700">{studentFullName}</span>
           </p>
+          <p className="text-xs text-gray-400 mt-0.5">{formatSlots(schedule.slots)}</p>
           <p className="text-xs text-gray-400 mt-1">Máximo 90 días por generación.</p>
         </div>
 
-        <form
-          onSubmit={handleSubmit(onGenerate)}
-          className="px-6 py-5 space-y-4"
-        >
+        <form onSubmit={handleSubmit(onGenerate)} className="px-6 py-5 space-y-4">
           <div className="grid grid-cols-2 gap-3">
             <div>
               <label className="block text-xs font-medium text-gray-600 mb-1">Desde *</label>
@@ -415,12 +435,12 @@ export function SchedulesPage() {
   }
 
   async function handleGenerate(schedule: Schedule, data: GenerateClassesData) {
-    const created = await generateClasses(schedule.id, data);
+    const result = await generateClasses(schedule.id, data);
     setModal(null);
     flash(
-      created.length === 0
-        ? 'No se crearon clases nuevas (todas ya existían)'
-        : `${created.length} clase${created.length === 1 ? '' : 's'} generada${created.length === 1 ? '' : 's'}`,
+      result.generated === 0
+        ? `No se crearon clases nuevas (${result.skipped} ya existían)`
+        : `${result.generated} clase${result.generated === 1 ? '' : 's'} generada${result.generated === 1 ? '' : 's'}${result.skipped > 0 ? ` · ${result.skipped} omitida${result.skipped === 1 ? '' : 's'}` : ''}`,
     );
   }
 
@@ -504,8 +524,7 @@ export function SchedulesPage() {
             <thead>
               <tr className="text-left text-gray-400 text-xs uppercase border-b border-gray-100">
                 <th className="px-5 py-3 font-medium">Alumno</th>
-                <th className="px-5 py-3 font-medium">Días</th>
-                <th className="px-5 py-3 font-medium">Hora (UTC)</th>
+                <th className="px-5 py-3 font-medium">Slots (UTC)</th>
                 <th className="px-5 py-3 font-medium">Duración</th>
                 <th className="px-5 py-3 font-medium">Tarifa</th>
                 <th className="px-5 py-3 font-medium">Estado</th>
@@ -518,8 +537,15 @@ export function SchedulesPage() {
                   <td className="px-5 py-3 font-medium text-fia-neutral-dark">
                     {studentName(students, s.studentId)}
                   </td>
-                  <td className="px-5 py-3 text-gray-600">{formatDays(s.daysOfWeek)}</td>
-                  <td className="px-5 py-3 text-gray-600">{s.timeOfDay}</td>
+                  <td className="px-5 py-3 text-gray-600 text-xs leading-relaxed">
+                    {s.slots.length === 0
+                      ? '—'
+                      : s.slots.map((slot) => (
+                          <span key={slot.id} className="inline-block mr-2 whitespace-nowrap">
+                            {dayLabel(slot.dayOfWeek)} {slot.timeOfDay}
+                          </span>
+                        ))}
+                  </td>
                   <td className="px-5 py-3 text-gray-600">{s.duration} min</td>
                   <td className="px-5 py-3 text-gray-600">
                     {s.appliedRate ? s.appliedRate : <span className="text-gray-400 text-xs">del alumno</span>}
