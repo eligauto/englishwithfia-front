@@ -1,4 +1,5 @@
 import { NavLink, Outlet } from "react-router-dom";
+import { useState, useEffect } from "react";
 import {
   LayoutDashboard,
   BarChart3,
@@ -10,6 +11,8 @@ import {
   LogOut,
 } from "lucide-react";
 import { useAuth } from "../../contexts/AuthContext";
+import { getOrganization } from "../../services/api";
+import type { Organization } from "../../types";
 import { ROUTES } from "../../constants/routes";
 import { cn } from "../../utils/cn";
 
@@ -40,7 +43,16 @@ const NAV_ITEMS = [
 
 export function AdminLayout() {
   const { user, logout } = useAuth();
-  const initial = user?.email?.[0]?.toUpperCase() ?? "F";
+  const [org, setOrg] = useState<Organization | null>(null);
+
+  useEffect(() => {
+    getOrganization().then(setOrg).catch(() => {});
+  }, []);
+
+  const displayName = user?.email
+    ? user.email.split("@")[0].replace(/[._-]/g, " ").replace(/\b\w/g, (c) => c.toUpperCase())
+    : "Usuario";
+  const initial = displayName[0]?.toUpperCase() ?? "U";
 
   return (
     <div className="flex min-h-screen bg-gray-50">
@@ -48,7 +60,7 @@ export function AdminLayout() {
       <aside className="w-60 shrink-0 bg-fia-neutral-dark flex flex-col">
         <div className="px-6 py-5 border-b border-white/10">
           <p className="text-white font-bold text-lg leading-tight">
-            English with Fia
+            {org?.name ?? "English with Fia"}
           </p>
           <p className="text-white/50 text-xs mt-0.5">
             Panel de administración
@@ -83,7 +95,7 @@ export function AdminLayout() {
             </div>
             <div className="min-w-0">
               <p className="text-white text-xs font-medium truncate">
-                {/* user?.name ?? */ "Fiamma"}
+                {displayName}
               </p>
               <p className="text-white/50 text-xs truncate">{user?.email}</p>
             </div>
