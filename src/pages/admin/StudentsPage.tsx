@@ -1,11 +1,13 @@
 import { useState, useEffect } from "react";
-import { Plus, Pencil, UserX, Search, X } from "lucide-react";
+import { Plus, Pencil, UserX, Search, X, Link, Trash2 } from "lucide-react";
 import { useForm } from "react-hook-form";
 import {
   getStudents,
   createStudent,
   updateStudent,
   deleteStudent,
+  generatePortalToken,
+  revokePortalToken,
   ApiRequestError,
 } from "../../services/api";
 import type {
@@ -14,6 +16,7 @@ import type {
   ClassModality,
   Currency,
 } from "../../types";
+import { ROUTES } from "../../constants/routes";
 import { cn } from "../../utils/cn";
 
 // ── Tipos del formulario ──────────────────────────────────────────────────────
@@ -49,6 +52,7 @@ export function StudentsPage() {
     undefined,
   );
   // undefined = modal cerrado, null = modal abierto para crear, Student = editar
+  const [portalTarget, setPortalTarget] = useState<Student | null>(null);
 
   useEffect(() => {
     getStudents()
@@ -197,6 +201,14 @@ export function StudentsPage() {
                   <td className="px-6 py-4">
                     <div className="flex items-center justify-end gap-1">
                       <button
+                        onClick={() => setPortalTarget(student)}
+                        className="p-1.5 text-gray-400 hover:text-blue-500 hover:bg-blue-50 rounded-lg transition-colors"
+                        aria-label="Portal del alumno"
+                        title="Portal del alumno"
+                      >
+                        <Link size={15} />
+                      </button>
+                      <button
                         onClick={() => setModalStudent(student)}
                         className="p-1.5 text-gray-400 hover:text-fia-primary hover:bg-fia-primary-light rounded-lg transition-colors"
                         aria-label="Editar alumno"
@@ -227,6 +239,136 @@ export function StudentsPage() {
           onSaved={handleSaved}
         />
       )}
+
+      {/* Modal portal del alumno */}
+      {portalTarget && (
+        <PortalModal
+          student={portalTarget}
+          onClose={() => setPortalTarget(null)}
+        />
+      )}
+    </div>
+  );
+}
+
+// ── PortalModal ───────────────────────────────────────────────────────────────
+
+function PortalModal({
+  student,
+  onClose,
+}: {
+  student: Student;
+  onClose: () => void;
+}) {
+  const [token, setToken] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [revoking, setRevoking] = useState(false);
+  const [copied, setCopied] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const portalUrl = token
+    ? `${window.location.origin}${ROUTES.PORTAL}?token=${token}`
+    : null;
+
+  async function handleGenerate() {
+    setLoading(true);
+    setError(null);
+    try {
+      const { portalToken } = await generatePortalToken(student.id);
+      setToken(portalToken);
+    } catch (err) {
+      setError(err instanceof ApiRequestError ? err.message : "Error al generar el token");
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  async function handleRevoke() {
+    if (!confirm("¿Revocar el acceso al portal? El link actual dejará de funcionar.")) return;
+    setRevoking(true);
+    setError(null);
+    try {
+      await revokePortalToken(student.id);
+      setToken(null);
+      onClose();
+    } catch (err) {
+      setError(err instanceof ApiRequestError ? err.message : "Error al revocar el token");
+    } finally {
+      setRevoking(false);
+    }
+  }
+
+  async function handleCopy() {
+    if (!portalUrl) return;
+    await navigator.clipboard.writeText(portalUrl);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  }
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+      <div className="absolute inset-0 bg-black/40" onClick={onClose} />
+      <div className="relative bg-white rounded-2xl shadow-xl w-full max-w-md">
+        <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100">
+          <h2 className="text-base font-semibold text-fia-neutral-dark">
+            Portal — {student.fullName}
+          </h2>
+          <button onClick={onClose} className="p-1 text-gray-400 hover:text-gray-600 rounded-lg transition-colors">
+            <X size={18} />
+          </button>
+        </div>
+
+        <div className="px-6 py-5 space-y-4">
+          {error && (
+            <p className="text-sm text-red-600 bg-red-50 px-4 py-2 rounded-lg">{error}</p>
+          )}
+
+          {!token ? (
+            <div className="space-y-3">
+              <p className="text-sm text-gray-600">
+                Generá un link de acceso para que{" "}
+                <span className="font-medium">{student.fullName}</span> pueda
+                ver sus clases, cargos y packs sin necesitar una cuenta.
+              </p>
+              <button
+                onClick={() => void handleGenerate()}
+                disabled={loading}
+                className="w-full py-2.5 bg-fia-primary text-white text-sm font-semibold rounded-xl hover:bg-fia-primary-dark transition-colors disabled:opacity-60"
+              >
+                {loading ? "Generando…" : "Generar link de acceso"}
+              </button>
+            </div>
+          ) : (
+            <div className="space-y-3">
+              <p className="text-sm text-gray-600">
+                Compartí este link con el alumno. Cualquiera que lo tenga puede
+                ver su información.
+              </p>
+              <div className="flex gap-2">
+                <input
+                  readOnly
+                  value={portalUrl ?? ""}
+                  className="flex-1 px-3 py-2 text-xs border border-gray-200 rounded-xl bg-gray-50 text-gray-600 truncate"
+                />
+                <button
+                  onClick={() => void handleCopy()}
+                  className="px-3 py-2 bg-fia-primary text-white text-xs font-semibold rounded-xl hover:bg-fia-primary-dark transition-colors"
+                >
+                  {copied ? "¡Copiado!" : "Copiar"}
+                </button>
+              </div>
+              <button
+                onClick={() => void handleRevoke()}
+                disabled={revoking}
+                className="flex items-center gap-2 text-xs text-red-500 hover:text-red-700 transition-colors disabled:opacity-60"
+              >
+                <Trash2 size={13} />
+                {revoking ? "Revocando…" : "Revocar acceso"}
+              </button>
+            </div>
+          )}
+        </div>
+      </div>
     </div>
   );
 }

@@ -414,3 +414,58 @@ export interface GenerateResult {
   skipped: number;
   classes: Class[];
 }
+
+// ── Portal del Alumno ─────────────────────────────────────────────────────────
+
+/** Respuesta de POST /students/:id/portal-token */
+export interface PortalTokenData {
+  portalToken: string;
+}
+
+/** Perfil del alumno — GET /portal/me (campos internos omitidos) */
+export interface PortalProfile {
+  id: string;
+  fullName: string;
+  modality: ClassModality;
+  classDuration: number | null;
+  weeklyFrequency: number | null;
+  currency: Currency;
+  isActive: boolean;
+}
+
+/** Clase visible para el alumno — GET /portal/classes (sin appliedRate) */
+export interface PortalClass {
+  id: string;
+  scheduledAt: string;   // ISO 8601
+  duration: number;       // minutos
+  status: ClassStatus;
+  classType: ClassType;
+  notes: string | null;
+  createdAt: string;
+}
+
+/** Cargo visible para el alumno — GET /portal/charges (sin notes interno) */
+export interface PortalCharge {
+  id: string;
+  classId: string;
+  amount: string;                   // Decimal como string
+  currency: Currency;
+  paymentCurrency: Currency | null;
+  paymentMethod: PaymentMethod | null;
+  financialStatus: FinancialStatus;
+  generatedAt: string;
+  promisedPaymentDate: string | null;
+  paidAt: string | null;
+}
+
+/** Pack visible para el alumno — GET /portal/packs (sin amountPaid) */
+export interface PortalPack {
+  id: string;
+  totalClasses: number;
+  usedClasses: number;
+  availableClasses: number;
+  currency: Currency;
+  purchasedAt: string;
+  expiresAt: string | null;
+  isActive: boolean;
+}

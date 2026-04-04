@@ -10,4 +10,5 @@ export const ROUTES = {
     PACKS: "/admin/packs",
     SCHEDULES: "/admin/schedules",
   },
+  PORTAL: "/portal",
 } as const;

@@ -37,6 +37,12 @@ import type {
   UpdateScheduleData,
   GenerateClassesData,
   GenerateResult,
+  PortalTokenData,
+  PortalProfile,
+  PortalClass,
+  PortalCharge,
+  PortalPack,
+  FinancialStatus,
 } from "../types";
 
 const RAW_API_URL =
@@ -520,4 +526,81 @@ export async function generateClasses(
     { method: "POST", body: JSON.stringify(data) },
     true,
   );
+}
+
+// ── Portal del Alumno — gestión (requiere JWT admin) ──────────────────────────
+
+export async function generatePortalToken(studentId: string): Promise<PortalTokenData> {
+  return apiFetch<PortalTokenData>(
+    `/students/${studentId}/portal-token`,
+    { method: "POST" },
+    true,
+  );
+}
+
+export async function revokePortalToken(studentId: string): Promise<void> {
+  await apiFetch<void>(
+    `/students/${studentId}/portal-token`,
+    { method: "DELETE" },
+    true,
+  );
+}
+
+// ── Portal del Alumno — endpoints públicos (requieren portalToken) ────────────
+
+/** Wrapper de fetch para endpoints del portal; usa portalToken como Bearer. */
+async function portalFetch<T>(path: string, token: string): Promise<T> {
+  const response = await fetch(`${API_URL}${path}`, {
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
+    },
+  });
+  const json: unknown = await response.json();
+  if (!response.ok) throw new ApiRequestError(json as ApiError);
+  return (json as ApiEnvelope<T>).data;
+}
+
+export async function getPortalMe(token: string): Promise<PortalProfile> {
+  return portalFetch<PortalProfile>("/portal/me", token);
+}
+
+export interface GetPortalClassesFilters {
+  status?: string;
+  from?: string;
+  to?: string;
+}
+
+export async function getPortalClasses(
+  token: string,
+  filters?: GetPortalClassesFilters,
+): Promise<PortalClass[]> {
+  const query = toQuery({
+    status: filters?.status,
+    from: filters?.from,
+    to: filters?.to,
+  });
+  return portalFetch<PortalClass[]>(`/portal/classes${query}`, token);
+}
+
+export interface GetPortalChargesFilters {
+  financialStatus?: FinancialStatus;
+  from?: string;
+  to?: string;
+}
+
+export async function getPortalCharges(
+  token: string,
+  filters?: GetPortalChargesFilters,
+): Promise<PortalCharge[]> {
+  const query = toQuery({
+    financialStatus: filters?.financialStatus,
+    from: filters?.from,
+    to: filters?.to,
+  });
+  return portalFetch<PortalCharge[]>(`/portal/charges${query}`, token);
+}
+
+export async function getPortalPacks(token: string): Promise<PortalPack[]> {
+  return portalFetch<PortalPack[]>("/portal/packs", token);
 }

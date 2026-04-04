@@ -10,6 +10,7 @@ import { ClassesPage } from "./pages/admin/ClassesPage";
 import { ChargesPage } from "./pages/admin/ChargesPage";
 import { PacksPage } from "./pages/admin/PacksPage";
 import { SchedulesPage } from "./pages/admin/SchedulesPage";
+import { PortalPage } from "./pages/PortalPage";
 import { ROUTES } from "./constants/routes";
 
 export function App() {
@@ -23,6 +24,9 @@ export function App() {
             element={<Navigate to={ROUTES.ADMIN.DASHBOARD} replace />}
           />
           <Route path={ROUTES.ADMIN.LOGIN} element={<LoginPage />} />
+
+          {/* Portal del alumno — acceso público con portalToken */}
+          <Route path={ROUTES.PORTAL} element={<PortalPage />} />
 
           {/* Rutas protegidas del panel admin */}
           <Route element={<ProtectedRoute />}>
