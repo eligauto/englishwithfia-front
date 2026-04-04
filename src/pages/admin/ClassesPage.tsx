@@ -9,8 +9,10 @@ import {
   CircleDollarSign,
   X,
   Download,
-} from 'lucide-react';
-import { useForm } from 'react-hook-form';
+  Users,
+  Trash2,
+} from "lucide-react";
+import { useForm } from "react-hook-form";
 import {
   getClasses,
   getStudents,
@@ -19,12 +21,17 @@ import {
   rescheduleClass,
   absentDecision,
   exportClassesCSV,
+  getClassParticipants,
+  addParticipant,
+  removeParticipant,
   ApiRequestError,
 } from "../../services/api";
 import type {
   Class,
   Student,
+  ClassType,
   ClassStatus,
+  ClassParticipant,
   CreateClassData,
   RescheduleClassData,
 } from "../../types";
@@ -90,6 +97,9 @@ export function ClassesPage() {
   const [showCreate, setShowCreate] = useState(false);
   const [rescheduleTarget, setRescheduleTarget] = useState<Class | null>(null);
   const [absentTarget, setAbsentTarget] = useState<Class | null>(null);
+  const [participantsTarget, setParticipantsTarget] = useState<Class | null>(
+    null,
+  );
 
   const studentMap = useMemo(
     () => Object.fromEntries(students.map((s) => [s.id, s.fullName])),
@@ -206,9 +216,7 @@ export function ClassesPage() {
         status: filterStatus || undefined,
       });
     } catch (err) {
-      alert(
-        err instanceof ApiRequestError ? err.message : 'Error al exportar',
-      );
+      alert(err instanceof ApiRequestError ? err.message : "Error al exportar");
     } finally {
       setExporting(false);
     }
@@ -228,7 +236,7 @@ export function ClassesPage() {
             className="flex items-center gap-2 px-4 py-2 border border-gray-200 text-gray-600 text-sm font-medium rounded-xl hover:bg-gray-50 transition-colors disabled:opacity-60"
           >
             <Download size={15} />
-            {exporting ? 'Exportando…' : 'Exportar CSV'}
+            {exporting ? "Exportando…" : "Exportar CSV"}
           </button>
           <button
             onClick={() => setShowCreate(true)}
@@ -322,7 +330,15 @@ export function ClassesPage() {
                   className="hover:bg-gray-50/60 transition-colors"
                 >
                   <td className="px-6 py-4 font-medium text-fia-neutral-dark">
-                    {studentMap[cls.studentId] ?? "—"}
+                    {cls.classType === "GROUP" ? (
+                      <span className="inline-flex items-center gap-1.5">
+                        <span className="inline-flex px-2 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-700">
+                          Grupal
+                        </span>
+                      </span>
+                    ) : (
+                      (studentMap[cls.studentId ?? ""] ?? "—")
+                    )}
                   </td>
                   <td className="px-6 py-4 text-gray-700">
                     {fmtDate(cls.scheduledAt)}
@@ -349,6 +365,7 @@ export function ClassesPage() {
                       onCancel={handleCancel}
                       onReschedule={setRescheduleTarget}
                       onAbsentDecision={setAbsentTarget}
+                      onManageParticipants={setParticipantsTarget}
                     />
                   </td>
                 </tr>
@@ -373,7 +390,7 @@ export function ClassesPage() {
       {rescheduleTarget && (
         <RescheduleModal
           cls={rescheduleTarget}
-          studentName={studentMap[rescheduleTarget.studentId] ?? ""}
+          studentName={studentMap[rescheduleTarget.studentId ?? ""] ?? ""}
           onClose={() => setRescheduleTarget(null)}
           onRescheduled={(updated) => {
             patchClass(updated);
@@ -386,13 +403,25 @@ export function ClassesPage() {
       {absentTarget && (
         <AbsentDecisionModal
           cls={absentTarget}
-          studentName={studentMap[absentTarget.studentId] ?? ""}
+          studentName={
+            absentTarget.studentId
+              ? (studentMap[absentTarget.studentId] ?? "")
+              : ""
+          }
           onClose={() => setAbsentTarget(null)}
           onDecided={(updated) => {
             patchClass(updated);
             setAbsentTarget(null);
             void fetchFilteredClasses();
           }}
+        />
+      )}
+
+      {participantsTarget && (
+        <ParticipantsModal
+          cls={participantsTarget}
+          students={students}
+          onClose={() => setParticipantsTarget(null)}
         />
       )}
     </div>
@@ -408,6 +437,7 @@ interface ClassActionsProps {
   onCancel: (cls: Class) => void;
   onReschedule: (cls: Class) => void;
   onAbsentDecision: (cls: Class) => void;
+  onManageParticipants: (cls: Class) => void;
 }
 
 function ClassActions({
@@ -417,10 +447,20 @@ function ClassActions({
   onCancel,
   onReschedule,
   onAbsentDecision,
+  onManageParticipants,
 }: ClassActionsProps) {
   if (cls.status === "SCHEDULED") {
     return (
       <div className="flex items-center justify-end gap-1">
+        {cls.classType === "GROUP" && (
+          <button
+            onClick={() => onManageParticipants(cls)}
+            title="Gestionar participantes"
+            className="p-1.5 text-gray-400 hover:text-purple-600 hover:bg-purple-50 rounded-lg transition-colors"
+          >
+            <Users size={15} />
+          </button>
+        )}
         <button
           onClick={() => onMarkTaught(cls)}
           title="Marcar como dictada"
@@ -535,6 +575,7 @@ function ModalActions({
 // ── CreateClassModal ──────────────────────────────────────────────────────────
 
 interface CreateClassFormData {
+  classType: ClassType;
   studentId: string;
   scheduledAt: string;
   duration: number;
@@ -551,21 +592,51 @@ function CreateClassModal({
   onCreated: (cls: Class) => void;
 }) {
   const [submitError, setSubmitError] = useState<string | null>(null);
+  const [groupParticipants, setGroupParticipants] = useState<string[]>([]);
+  const [addParticipantId, setAddParticipantId] = useState("");
   const {
     register,
     handleSubmit,
+    watch,
     formState: { errors, isSubmitting },
   } = useForm<CreateClassFormData>({
-    defaultValues: { studentId: "", scheduledAt: "", duration: 60, notes: "" },
+    defaultValues: {
+      classType: "INDIVIDUAL",
+      studentId: "",
+      scheduledAt: "",
+      duration: 60,
+      notes: "",
+    },
   });
+
+  const classType = watch("classType");
+
+  const studentNameMap = useMemo(
+    () => Object.fromEntries(students.map((s) => [s.id, s.fullName])),
+    [students],
+  );
+  const availableToAdd = students.filter((s) => !groupParticipants.includes(s.id));
+
+  function handleAddGroupParticipant() {
+    if (!addParticipantId) return;
+    setGroupParticipants((prev) => [...prev, addParticipantId]);
+    setAddParticipantId("");
+  }
 
   async function onSubmit(data: CreateClassFormData) {
     setSubmitError(null);
+    if (data.classType === "GROUP" && groupParticipants.length === 0) {
+      setSubmitError("Debés agregar al menos un participante para una clase grupal.");
+      return;
+    }
     try {
       const payload: CreateClassData = {
-        studentId: data.studentId,
+        classType: data.classType,
         scheduledAt: new Date(data.scheduledAt).toISOString(),
         duration: data.duration,
+        ...(data.classType === "INDIVIDUAL"
+          ? { studentId: data.studentId }
+          : { participants: groupParticipants.map((id) => ({ studentId: id })) }),
         ...(data.notes.trim() ? { notes: data.notes.trim() } : {}),
       };
       onCreated(await createClass(payload));
@@ -587,31 +658,108 @@ function CreateClassModal({
           </p>
         )}
 
-        {/* Alumno */}
+        {/* Tipo de clase */}
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">
-            Alumno <span className="text-red-500">*</span>
+            Tipo de clase
           </label>
-          <select
-            {...register("studentId", { required: "El alumno es obligatorio" })}
-            className={cn(
-              "w-full px-4 py-2.5 rounded-xl border text-sm focus:outline-none focus:ring-2 focus:ring-fia-primary bg-white",
-              errors.studentId ? "border-red-400" : "border-gray-200",
-            )}
-          >
-            <option value="">Seleccionar alumno…</option>
-            {students.map((s) => (
-              <option key={s.id} value={s.id}>
-                {s.fullName}
-              </option>
+          <div className="flex gap-3">
+            {(["INDIVIDUAL", "GROUP"] as ClassType[]).map((t) => (
+              <label key={t} className="flex items-center gap-2 cursor-pointer">
+                <input
+                  {...register("classType")}
+                  type="radio"
+                  value={t}
+                  className="accent-fia-primary"
+                />
+                <span className="text-sm text-gray-700">
+                  {t === "INDIVIDUAL" ? "Individual" : "Grupal"}
+                </span>
+              </label>
             ))}
-          </select>
-          {errors.studentId && (
-            <p className="mt-1 text-xs text-red-500">
-              {errors.studentId.message}
-            </p>
-          )}
+          </div>
         </div>
+
+        {/* Alumno — solo INDIVIDUAL */}
+        {classType === "INDIVIDUAL" && (
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Alumno <span className="text-red-500">*</span>
+            </label>
+            <select
+              {...register("studentId", {
+                validate: (v) =>
+                  classType !== "INDIVIDUAL" ||
+                  !!v ||
+                  "El alumno es obligatorio",
+              })}
+              className={cn(
+                "w-full px-4 py-2.5 rounded-xl border text-sm focus:outline-none focus:ring-2 focus:ring-fia-primary bg-white",
+                errors.studentId ? "border-red-400" : "border-gray-200",
+              )}
+            >
+              <option value="">Seleccionar alumno…</option>
+              {students.map((s) => (
+                <option key={s.id} value={s.id}>
+                  {s.fullName}
+                </option>
+              ))}
+            </select>
+            {errors.studentId && (
+              <p className="mt-1 text-xs text-red-500">
+                {errors.studentId.message}
+              </p>
+            )}
+          </div>
+        )}
+
+        {classType === "GROUP" && (
+          <div className="space-y-2">
+            <label className="block text-sm font-medium text-gray-700">
+              Participantes <span className="text-red-500">*</span>
+            </label>
+            <div className="flex gap-2">
+              <select
+                value={addParticipantId}
+                onChange={(e) => setAddParticipantId(e.target.value)}
+                className="flex-1 px-3 py-2 text-sm border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-fia-primary bg-white"
+              >
+                <option value="">Agregar alumno…</option>
+                {availableToAdd.map((s) => (
+                  <option key={s.id} value={s.id}>
+                    {s.fullName}
+                  </option>
+                ))}
+              </select>
+              <button
+                type="button"
+                onClick={handleAddGroupParticipant}
+                disabled={!addParticipantId}
+                className="px-3 py-2 bg-fia-primary text-white text-sm font-semibold rounded-xl hover:bg-fia-primary-dark transition-colors disabled:opacity-60"
+              >
+                <Plus size={16} />
+              </button>
+            </div>
+            {groupParticipants.length === 0 ? (
+              <p className="text-xs text-gray-400">Agregá al menos un alumno.</p>
+            ) : (
+              <ul className="space-y-1">
+                {groupParticipants.map((id) => (
+                  <li key={id} className="flex items-center justify-between px-3 py-1.5 bg-purple-50 rounded-lg">
+                    <span className="text-sm text-purple-800">{studentNameMap[id]}</span>
+                    <button
+                      type="button"
+                      onClick={() => setGroupParticipants((prev) => prev.filter((p) => p !== id))}
+                      className="text-purple-400 hover:text-red-500 transition-colors"
+                    >
+                      <X size={14} />
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
+        )}
 
         {/* Fecha y hora */}
         <div>
@@ -781,6 +929,167 @@ function RescheduleModal({
           submitLabel="Reagendar"
         />
       </form>
+    </ModalShell>
+  );
+}
+
+// ── ParticipantsModal ─────────────────────────────────────────────────────────
+
+function ParticipantsModal({
+  cls,
+  students,
+  onClose,
+}: {
+  cls: Class;
+  students: Student[];
+  onClose: () => void;
+}) {
+  const [participants, setParticipants] = useState<ClassParticipant[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [addStudentId, setAddStudentId] = useState("");
+  const [adding, setAdding] = useState(false);
+  const [removingId, setRemovingId] = useState<string | null>(null);
+
+  useEffect(() => {
+    getClassParticipants(cls.id)
+      .then(setParticipants)
+      .catch((err) =>
+        setError(
+          err instanceof ApiRequestError
+            ? err.message
+            : "Error al cargar participantes",
+        ),
+      )
+      .finally(() => setLoading(false));
+  }, [cls.id]);
+
+  const participantIds = useMemo(
+    () => new Set(participants.map((p) => p.studentId)),
+    [participants],
+  );
+
+  const availableStudents = students.filter((s) => !participantIds.has(s.id));
+
+  async function handleAdd() {
+    if (!addStudentId) return;
+    setAdding(true);
+    setError(null);
+    try {
+      const p = await addParticipant(cls.id, { studentId: addStudentId });
+      setParticipants((prev) => [...prev, p]);
+      setAddStudentId("");
+    } catch (err) {
+      setError(
+        err instanceof ApiRequestError
+          ? err.message
+          : "Error al agregar participante",
+      );
+    } finally {
+      setAdding(false);
+    }
+  }
+
+  async function handleRemove(studentId: string) {
+    setRemovingId(studentId);
+    setError(null);
+    try {
+      await removeParticipant(cls.id, studentId);
+      setParticipants((prev) => prev.filter((p) => p.studentId !== studentId));
+    } catch (err) {
+      setError(
+        err instanceof ApiRequestError
+          ? err.message
+          : "Error al quitar participante",
+      );
+    } finally {
+      setRemovingId(null);
+    }
+  }
+
+  return (
+    <ModalShell
+      title={`Participantes — ${fmtDate(cls.scheduledAt)} ${fmtTime(cls.scheduledAt)}`}
+      onClose={onClose}
+    >
+      <div className="px-6 py-5 space-y-4">
+        {error && (
+          <p className="text-sm text-red-600 bg-red-50 px-4 py-2 rounded-lg">
+            {error}
+          </p>
+        )}
+
+        {/* Agregar participante */}
+        <div className="flex gap-2">
+          <select
+            value={addStudentId}
+            onChange={(e) => setAddStudentId(e.target.value)}
+            className="flex-1 px-3 py-2 text-sm border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-fia-primary bg-white"
+          >
+            <option value="">Agregar alumno…</option>
+            {availableStudents.map((s) => (
+              <option key={s.id} value={s.id}>
+                {s.fullName}
+              </option>
+            ))}
+          </select>
+          <button
+            onClick={() => void handleAdd()}
+            disabled={!addStudentId || adding}
+            className="px-4 py-2 bg-fia-primary text-white text-sm font-semibold rounded-xl hover:bg-fia-primary-dark transition-colors disabled:opacity-60"
+          >
+            {adding ? "…" : <Plus size={16} />}
+          </button>
+        </div>
+
+        {/* Lista de participantes */}
+        {loading ? (
+          <div className="flex justify-center py-6">
+            <div className="w-6 h-6 border-4 border-fia-primary border-t-transparent rounded-full animate-spin" />
+          </div>
+        ) : participants.length === 0 ? (
+          <p className="text-sm text-gray-400 text-center py-4">
+            Todavía no hay participantes.
+          </p>
+        ) : (
+          <ul className="divide-y divide-gray-100">
+            {participants.map((p) => (
+              <li
+                key={p.id}
+                className="flex items-center justify-between py-2.5"
+              >
+                <div>
+                  <p className="text-sm font-medium text-fia-neutral-dark">
+                    {p.student.fullName}
+                  </p>
+                  <p className="text-xs text-gray-400">
+                    {p.appliedRate
+                      ? `Tarifa: ${p.student.currency} ${Number(p.appliedRate).toFixed(2)}`
+                      : `Tarifa base: ${p.student.currency} ${Number(p.student.classRate).toFixed(2)}`}
+                  </p>
+                </div>
+                <button
+                  onClick={() => void handleRemove(p.studentId)}
+                  disabled={removingId === p.studentId}
+                  title="Quitar participante"
+                  className="p-1.5 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors disabled:opacity-60"
+                >
+                  <Trash2 size={14} />
+                </button>
+              </li>
+            ))}
+          </ul>
+        )}
+
+        <div className="pt-1">
+          <button
+            onClick={onClose}
+            className="w-full py-2.5 border border-gray-200 text-gray-600 text-sm font-medium rounded-xl hover:bg-gray-50 transition-colors"
+          >
+            Cerrar
+          </button>
+        </div>
+      </div>
     </ModalShell>
   );
 }

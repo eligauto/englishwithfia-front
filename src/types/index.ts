@@ -48,6 +48,8 @@ export type UserRole = 'OWNER' | 'ADMIN';
 
 export type ClassModality = 'IN_PERSON' | 'ONLINE';
 
+export type ClassType = 'INDIVIDUAL' | 'GROUP';
+
 export type ClassStatus = 'SCHEDULED' | 'TAUGHT' | 'CANCELLED' | 'RESCHEDULED' | 'ABSENT';
 
 export type Currency = 'ARS' | 'EUR' | 'USD' | 'UYU' | 'BRL' | 'GBP' | 'OTHER';
@@ -141,11 +143,12 @@ export type UpdateStudentData = Partial<CreateStudentData>;
 /** Entidad Class tal como la devuelve el backend */
 export interface Class {
   id: string;
-  studentId: string;
+  classType: ClassType;             // INDIVIDUAL (default) o GROUP
+  studentId: string | null;         // null para clases GROUP
   scheduledAt: string;              // ISO 8601
   duration: number;                 // minutos
   status: ClassStatus;
-  appliedRate: string | null;       // Decimal como string, e.g. "45.00"
+  appliedRate: string | null;       // Decimal como string, e.g. "45.00" (INDIVIDUAL)
   currency: Currency;               // moneda heredada del alumno al momento de crear la clase
   chargeGenerated: boolean;
   notes: string | null;
@@ -154,10 +157,30 @@ export interface Class {
   updatedAt: string;
 }
 
-export interface CreateClassData {
+export interface ClassParticipant {
+  id: string;
+  classId: string;
   studentId: string;
-  scheduledAt: string;   // ISO 8601
-  duration: number;      // minutos
+  appliedRate: string | null;       // tarifa por participante (override del classRate del alumno)
+  createdAt: string;                // ISO 8601
+  student: {
+    fullName: string;
+    classRate: string;
+    currency: Currency;
+  };
+}
+
+export interface AddParticipantData {
+  studentId: string;
+  appliedRate?: number;             // override de tarifa opcional
+}
+
+export interface CreateClassData {
+  classType?: ClassType;            // omitir = INDIVIDUAL
+  studentId?: string;               // obligatorio para INDIVIDUAL, omitir para GROUP
+  participants?: { studentId: string; appliedRate?: number }[]; // mínimo 1 para GROUP
+  scheduledAt: string;              // ISO 8601
+  duration: number;                 // minutos
   notes?: string;
 }
 

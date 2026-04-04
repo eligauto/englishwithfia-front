@@ -24,6 +24,8 @@ import type {
   AnalyticsData,
   Class,
   ClassStatus,
+  ClassParticipant,
+  AddParticipantData,
   CreateClassData,
   RescheduleClassData,
   Charge,
@@ -323,6 +325,40 @@ export async function absentDecision(
   return apiFetch<Class>(
     `/classes/${id}/absent-decision`,
     { method: "POST", body: JSON.stringify({ chargeable }) },
+    true,
+  );
+}
+
+// ── Class Participants ────────────────────────────────────────────────────────
+
+export async function getClassParticipants(
+  classId: string,
+): Promise<ClassParticipant[]> {
+  return apiFetch<ClassParticipant[]>(
+    `/classes/${classId}/participants`,
+    undefined,
+    true,
+  );
+}
+
+export async function addParticipant(
+  classId: string,
+  data: AddParticipantData,
+): Promise<ClassParticipant> {
+  return apiFetch<ClassParticipant>(
+    `/classes/${classId}/participants`,
+    { method: "POST", body: JSON.stringify(data) },
+    true,
+  );
+}
+
+export async function removeParticipant(
+  classId: string,
+  studentId: string,
+): Promise<void> {
+  await apiFetch<void>(
+    `/classes/${classId}/participants/${studentId}`,
+    { method: "DELETE" },
     true,
   );
 }
