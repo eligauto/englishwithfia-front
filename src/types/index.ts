@@ -67,17 +67,34 @@ export type PaymentMethod = 'CASH' | 'BANK_TRANSFER' | 'CARD' | 'DIGITAL_WALLET'
 
 // ── Organization ──────────────────────────────────────────────────────────────
 
+export type VocabularyPreset = 'EDUCATION' | 'HEALTH' | 'FITNESS' | 'COACHING' | 'GENERIC';
+
+/** Etiquetas de nombre resueltas server-side desde el preset activo */
+export interface VocabularyLabels {
+  studentSingular: string; // e.g. "alumno", "paciente", "atleta", "cliente"
+  studentPlural: string;   // e.g. "alumnos", "pacientes"
+  sessionSingular: string; // e.g. "clase", "consulta", "sesión"
+  sessionPlural: string;   // e.g. "clases", "consultas"
+}
+
 export interface Organization {
   id: string;
   name: string;
-  timezone: string; // IANA tz string, e.g. "America/Buenos_Aires"
+  timezone: string;            // IANA tz string, e.g. "America/Buenos_Aires"
+  notificationEmail: string | null;
+  dailyBriefingHour: number;   // hora local 0–23
+  vocabularyPreset: VocabularyPreset; // default: "EDUCATION"
+  vocabularyLabels: VocabularyLabels; // computado server-side, no almacenado
   createdAt: string; // ISO 8601
   updatedAt: string;
 }
 
 export interface UpdateOrganizationData {
   name?: string;
-  timezone?: string; // IANA tz string
+  timezone?: string;           // IANA tz string
+  vocabularyPreset?: VocabularyPreset;
+  notificationEmail?: string | null;
+  dailyBriefingHour?: number;
 }
 
 export interface OrganizationMember {

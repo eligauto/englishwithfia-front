@@ -9,6 +9,7 @@ export const ROUTES = {
     CHARGES: "/admin/charges",
     PACKS: "/admin/packs",
     SCHEDULES: "/admin/schedules",
+    SETTINGS: "/admin/settings",
   },
   PORTAL: "/portal",
 } as const;

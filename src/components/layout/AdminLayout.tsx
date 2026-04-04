@@ -8,6 +8,7 @@ import {
   Receipt,
   Package,
   CalendarClock,
+  Settings,
   LogOut,
 } from "lucide-react";
 import { useAuth } from "../../contexts/AuthContext";
@@ -39,6 +40,12 @@ const NAV_ITEMS = [
     icon: CalendarClock,
     end: false,
   },
+  {
+    label: "Configuración",
+    href: ROUTES.ADMIN.SETTINGS,
+    icon: Settings,
+    end: false,
+  },
 ];
 
 export function AdminLayout() {
@@ -46,11 +53,16 @@ export function AdminLayout() {
   const [org, setOrg] = useState<Organization | null>(null);
 
   useEffect(() => {
-    getOrganization().then(setOrg).catch(() => {});
+    getOrganization()
+      .then(setOrg)
+      .catch(() => {});
   }, []);
 
   const displayName = user?.email
-    ? user.email.split("@")[0].replace(/[._-]/g, " ").replace(/\b\w/g, (c) => c.toUpperCase())
+    ? user.email
+        .split("@")[0]
+        .replace(/[._-]/g, " ")
+        .replace(/\b\w/g, (c) => c.toUpperCase())
     : "Usuario";
   const initial = displayName[0]?.toUpperCase() ?? "U";
 

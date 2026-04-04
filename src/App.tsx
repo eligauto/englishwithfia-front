@@ -11,6 +11,7 @@ import { ChargesPage } from "./pages/admin/ChargesPage";
 import { PacksPage } from "./pages/admin/PacksPage";
 import { SchedulesPage } from "./pages/admin/SchedulesPage";
 import { PortalPage } from "./pages/PortalPage";
+import { SettingsPage } from "./pages/admin/SettingsPage";
 import { ROUTES } from "./constants/routes";
 
 export function App() {
@@ -47,6 +48,7 @@ export function App() {
                 path={ROUTES.ADMIN.SCHEDULES}
                 element={<SchedulesPage />}
               />
+              <Route path={ROUTES.ADMIN.SETTINGS} element={<SettingsPage />} />
             </Route>
           </Route>
         </Routes>
