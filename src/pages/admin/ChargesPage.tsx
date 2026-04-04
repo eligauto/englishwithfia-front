@@ -16,6 +16,7 @@ import type {
   FinancialStatus,
   UpdateChargeStatusData,
   Currency,
+  PaymentMethod,
 } from "../../types";
 import { cn } from "../../utils/cn";
 
@@ -277,6 +278,9 @@ export function ChargesPage() {
                 <th className="text-left px-6 py-3 text-xs font-semibold text-gray-400 uppercase tracking-wider">
                   Promesa / Pago
                 </th>
+                <th className="text-left px-6 py-3 text-xs font-semibold text-gray-400 uppercase tracking-wider">
+                  Método
+                </th>
                 <th className="px-6 py-3" />
               </tr>
             </thead>
@@ -307,6 +311,11 @@ export function ChargesPage() {
                         : charge.paidAt
                           ? fmtDate(charge.paidAt)
                           : "—"}
+                    </td>
+                    <td className="px-6 py-4 text-gray-500">
+                      {charge.paymentMethod
+                        ? PAYMENT_METHOD_LABELS[charge.paymentMethod]
+                        : "—"}
                     </td>
                     <td className="px-6 py-4 text-right">
                       {!isTerminal && (
@@ -345,12 +354,21 @@ export function ChargesPage() {
 
 // ── UpdateChargeModal ─────────────────────────────────────────────────────────
 
+const PAYMENT_METHOD_LABELS: Record<PaymentMethod, string> = {
+  CASH: "Efectivo",
+  BANK_TRANSFER: "Transferencia",
+  CARD: "Tarjeta",
+  DIGITAL_WALLET: "Billetera digital",
+  OTHER: "Otro",
+};
+
 interface UpdateFormData {
   financialStatus: FinancialStatus;
   notes: string;
   promisedPaymentDate: string;
   packId: string;
   paymentCurrency: Currency;
+  paymentMethod: PaymentMethod | "";
 }
 
 function UpdateChargeModal({
@@ -382,6 +400,7 @@ function UpdateChargeModal({
       promisedPaymentDate: "",
       packId: "",
       paymentCurrency: charge.currency,
+      paymentMethod: "" as PaymentMethod | "",
     },
   });
 
@@ -404,6 +423,7 @@ function UpdateChargeModal({
       }
       if (data.financialStatus === "PAID") {
         payload.paymentCurrency = data.paymentCurrency;
+        if (data.paymentMethod) payload.paymentMethod = data.paymentMethod;
       }
       onUpdated(await updateChargeStatus(charge.id, payload));
     } catch (err) {
@@ -511,32 +531,36 @@ function UpdateChargeModal({
           </div>
         )}
 
-        {/* PAID — moneda de pago recibido */}
+        {/* PAID — moneda y método de pago */}
         {selectedStatus === "PAID" && (
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Moneda recibida
-            </label>
-            <select
-              {...register("paymentCurrency")}
-              className="w-full px-4 py-2.5 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-fia-primary bg-white"
-            >
-              {(
-                [
-                  "ARS",
-                  "USD",
-                  "EUR",
-                  "UYU",
-                  "BRL",
-                  "GBP",
-                  "OTHER",
-                ] as Currency[]
-              ).map((c) => (
-                <option key={c} value={c}>
-                  {c}
-                </option>
-              ))}
-            </select>
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Moneda recibida
+              </label>
+              <select
+                {...register("paymentCurrency")}
+                className="w-full px-4 py-2.5 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-fia-primary bg-white"
+              >
+                {(["ARS", "USD", "EUR", "UYU", "BRL", "GBP", "OTHER"] as Currency[]).map((c) => (
+                  <option key={c} value={c}>{c}</option>
+                ))}
+              </select>
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Método de pago
+              </label>
+              <select
+                {...register("paymentMethod")}
+                className="w-full px-4 py-2.5 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-fia-primary bg-white"
+              >
+                <option value="">Sin especificar</option>
+                {(Object.keys(PAYMENT_METHOD_LABELS) as PaymentMethod[]).map((m) => (
+                  <option key={m} value={m}>{PAYMENT_METHOD_LABELS[m]}</option>
+                ))}
+              </select>
+            </div>
           </div>
         )}
 

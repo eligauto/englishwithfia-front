@@ -63,6 +63,8 @@ export type FinancialStatus =
   | 'ABSENT_CHARGEABLE'
   | 'ABSENT_NON_CHARGEABLE';
 
+export type PaymentMethod = 'CASH' | 'BANK_TRANSFER' | 'CARD' | 'DIGITAL_WALLET' | 'OTHER';
+
 // ── Organization ──────────────────────────────────────────────────────────────
 
 export interface Organization {
@@ -196,9 +198,10 @@ export interface Charge {
   id: string;
   studentId: string;
   classId: string;
-  amount: string;                   // Decimal como string, e.g. "45.00"
-  currency: Currency;               // moneda del cargo (nunca mutable)
-  paymentCurrency: Currency | null; // moneda en la que se recibió el pago (solo cuando PAID)
+  amount: string;                     // Decimal como string, e.g. "45.00"
+  currency: Currency;                 // moneda del cargo (nunca mutable)
+  paymentCurrency: Currency | null;   // moneda en la que se recibió el pago (solo cuando PAID)
+  paymentMethod: PaymentMethod | null; // cómo se recibió el pago (solo cuando PAID)
   financialStatus: FinancialStatus;
   generatedAt: string;              // ISO 8601
   promisedPaymentDate: string | null;
@@ -210,10 +213,11 @@ export interface Charge {
 /** Payload para PATCH /charges/:id/status */
 export interface UpdateChargeStatusData {
   financialStatus: FinancialStatus;
-  notes?: string;                   // obligatorio cuando financialStatus = DEFERRED
-  promisedPaymentDate?: string;     // ISO 8601, opcional para DEFERRED
-  packId?: string;                  // obligatorio cuando financialStatus = PACK_COVERED
-  paymentCurrency?: Currency;       // moneda de pago recibido (cuando financialStatus = PAID)
+  notes?: string;                    // obligatorio cuando financialStatus = DEFERRED
+  promisedPaymentDate?: string;      // ISO 8601, opcional para DEFERRED
+  packId?: string;                   // obligatorio cuando financialStatus = PACK_COVERED
+  paymentCurrency?: Currency;        // moneda de pago recibido (cuando financialStatus = PAID)
+  paymentMethod?: PaymentMethod;     // método de pago (cuando financialStatus = PAID)
 }
 // ── Admin — Packs ─────────────────────────────────────────────────────────────
 
