@@ -69,10 +69,10 @@ export function AdminLayout() {
   return (
     <div className="flex min-h-screen bg-gray-50">
       {/* Sidebar */}
-      <aside className="w-60 shrink-0 bg-fia-neutral-dark flex flex-col">
+      <aside className="w-60 shrink-0 bg-app-neutral-dark flex flex-col">
         <div className="px-6 py-5 border-b border-white/10">
           <p className="text-white font-bold text-lg leading-tight">
-            {org?.name ?? "English with Fia"}
+            {org?.name ?? "Practiq"}
           </p>
           <p className="text-white/50 text-xs mt-0.5">
             Panel de administración
@@ -89,7 +89,7 @@ export function AdminLayout() {
                 cn(
                   "flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors",
                   isActive
-                    ? "bg-fia-primary text-white"
+                    ? "bg-app-primary text-white"
                     : "text-white/70 hover:bg-white/10 hover:text-white",
                 )
               }
@@ -102,7 +102,7 @@ export function AdminLayout() {
 
         <div className="px-4 py-4 border-t border-white/10">
           <div className="flex items-center gap-3 mb-3 px-1">
-            <div className="w-8 h-8 rounded-full bg-fia-primary flex items-center justify-center text-white text-xs font-bold shrink-0">
+            <div className="w-8 h-8 rounded-full bg-app-primary flex items-center justify-center text-white text-xs font-bold shrink-0">
               {initial}
             </div>
             <div className="min-w-0">

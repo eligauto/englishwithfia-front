@@ -18,16 +18,16 @@ function ServiceCard({ service }: ServiceCardProps) {
   return (
     <article className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 hover:shadow-md hover:-translate-y-1 transition-all duration-200 flex flex-col gap-4">
       <div>
-        <span className="inline-block px-3 py-1 text-xs font-semibold bg-fia-primary-light text-fia-primary rounded-full mb-3">
+        <span className="inline-block px-3 py-1 text-xs font-semibold bg-app-primary-light text-app-primary rounded-full mb-3">
           {service.level}
         </span>
-        <h3 className="text-lg font-bold text-fia-neutral-dark">{service.title}</h3>
+        <h3 className="text-lg font-bold text-app-neutral-dark">{service.title}</h3>
         <p className="mt-2 text-sm text-gray-500 leading-relaxed">{service.description}</p>
       </div>
       <div
         className={cn(
           'mt-auto flex items-center gap-2 text-xs font-medium',
-          service.modality === 'online' ? 'text-fia-primary' : 'text-fia-secondary',
+          service.modality === 'online' ? 'text-app-primary' : 'text-app-secondary',
         )}
       >
         <Icon size={14} />
@@ -39,11 +39,11 @@ function ServiceCard({ service }: ServiceCardProps) {
 
 export function ServicesSection() {
   return (
-    <section id="services" className="py-20 bg-fia-neutral-light">
+    <section id="services" className="py-20 bg-app-neutral-light">
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center mb-12">
-          <h2 className="text-3xl sm:text-4xl font-bold text-fia-neutral-dark">
-            ¿Qué tipo de <span className="text-fia-primary">clases</span> ofrezco?
+          <h2 className="text-3xl sm:text-4xl font-bold text-app-neutral-dark">
+            ¿Qué tipo de <span className="text-app-primary">clases</span> ofrezco?
           </h2>
           <p className="mt-4 text-gray-500 max-w-xl mx-auto">
             Cada clase está adaptada a tu nivel, ritmo y objetivos. Sin fórmulas genéricas, respetando tu estilo de aprendizaje.

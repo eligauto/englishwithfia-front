@@ -9,9 +9,9 @@ const ICON_MAP: Record<string, React.ComponentType<{ size?: number; className?: 
 
 export function Footer() {
   return (
-    <footer className="bg-fia-neutral-dark text-gray-400 py-10 mt-20">
+    <footer className="bg-app-neutral-dark text-gray-400 py-10 mt-20">
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col items-center gap-6">
-        <p className="text-fia-white text-xl font-bold">{SITE.name}</p>
+        <p className="text-app-white text-xl font-bold">{SITE.name}</p>
 
         <div className="flex items-center gap-5">
           {SOCIAL_LINKS.map((link) => {
@@ -23,7 +23,7 @@ export function Footer() {
                 target="_blank"
                 rel="noopener noreferrer"
                 aria-label={link.label}
-                className="hover:text-fia-primary transition-colors"
+                className="hover:text-app-primary transition-colors"
               >
                 {Icon && <Icon size={22} />}
               </a>

@@ -31,12 +31,12 @@ export function ContactSection() {
   }
 
   return (
-    <section id="contact" className="py-20 bg-fia-neutral-light">
+    <section id="contact" className="py-20 bg-app-neutral-light">
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 grid md:grid-cols-2 gap-12 items-start">
         {/* Info */}
         <div className="space-y-4">
-          <h2 className="text-3xl sm:text-4xl font-bold text-fia-neutral-dark">
-            <span className="text-fia-primary">{CONTACT.heading}</span>
+          <h2 className="text-3xl sm:text-4xl font-bold text-app-neutral-dark">
+            <span className="text-app-primary">{CONTACT.heading}</span>
           </h2>
           <p className="text-gray-500 leading-relaxed">{CONTACT.subheading}</p>
           <div className="pt-4 space-y-2 text-sm text-gray-500">
@@ -63,7 +63,7 @@ export function ContactSection() {
               {...register('name', { required: 'El nombre es obligatorio' })}
               placeholder={CONTACT.namePlaceholder}
               className={cn(
-                'w-full px-4 py-3 rounded-xl border text-sm focus:outline-none focus:ring-2 focus:ring-fia-primary transition',
+                'w-full px-4 py-3 rounded-xl border text-sm focus:outline-none focus:ring-2 focus:ring-app-primary transition',
                 errors.name ? 'border-red-400' : 'border-gray-200',
               )}
             />
@@ -79,7 +79,7 @@ export function ContactSection() {
               type="email"
               placeholder={CONTACT.emailPlaceholder}
               className={cn(
-                'w-full px-4 py-3 rounded-xl border text-sm focus:outline-none focus:ring-2 focus:ring-fia-primary transition',
+                'w-full px-4 py-3 rounded-xl border text-sm focus:outline-none focus:ring-2 focus:ring-app-primary transition',
                 errors.email ? 'border-red-400' : 'border-gray-200',
               )}
             />
@@ -92,7 +92,7 @@ export function ContactSection() {
               placeholder={CONTACT.messagePlaceholder}
               rows={4}
               className={cn(
-                'w-full px-4 py-3 rounded-xl border text-sm focus:outline-none focus:ring-2 focus:ring-fia-primary transition resize-none',
+                'w-full px-4 py-3 rounded-xl border text-sm focus:outline-none focus:ring-2 focus:ring-app-primary transition resize-none',
                 errors.message ? 'border-red-400' : 'border-gray-200',
               )}
             />
@@ -102,7 +102,7 @@ export function ContactSection() {
           <button
             type="submit"
             disabled={isSubmitting}
-            className="w-full flex items-center justify-center gap-2 px-6 py-3 bg-fia-primary text-white font-semibold rounded-xl hover:bg-fia-primary-dark transition-colors disabled:opacity-60"
+            className="w-full flex items-center justify-center gap-2 px-6 py-3 bg-app-primary text-white font-semibold rounded-xl hover:bg-app-primary-dark transition-colors disabled:opacity-60"
           >
             <Send size={16} />
             {isSubmitting ? 'Enviando...' : CONTACT.submitLabel}

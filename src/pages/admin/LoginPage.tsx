@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Navigate, useNavigate } from 'react-router-dom';
+import { Link, Navigate, useNavigate } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { useAuth } from '../../contexts/AuthContext';
 import { ApiRequestError } from '../../services/api';
@@ -38,10 +38,10 @@ export function LoginPage() {
   }
 
   return (
-    <div className="min-h-screen bg-fia-neutral-light flex items-center justify-center px-4">
+    <div className="min-h-screen bg-app-neutral-light flex items-center justify-center px-4">
       <div className="w-full max-w-sm">
         <div className="text-center mb-8">
-          <h1 className="text-2xl font-bold text-fia-neutral-dark">English with Fia</h1>
+          <h1 className="text-2xl font-bold text-app-neutral-dark">Practiq</h1>
           <p className="text-sm text-gray-500 mt-1">Panel de administración</p>
         </div>
 
@@ -63,7 +63,7 @@ export function LoginPage() {
               type="email"
               autoComplete="email"
               className={cn(
-                'w-full px-4 py-3 rounded-xl border text-sm focus:outline-none focus:ring-2 focus:ring-fia-primary transition',
+                'w-full px-4 py-3 rounded-xl border text-sm focus:outline-none focus:ring-2 focus:ring-app-primary transition',
                 errors.email ? 'border-red-400' : 'border-gray-200',
               )}
             />
@@ -79,7 +79,7 @@ export function LoginPage() {
               type="password"
               autoComplete="current-password"
               className={cn(
-                'w-full px-4 py-3 rounded-xl border text-sm focus:outline-none focus:ring-2 focus:ring-fia-primary transition',
+                'w-full px-4 py-3 rounded-xl border text-sm focus:outline-none focus:ring-2 focus:ring-app-primary transition',
                 errors.password ? 'border-red-400' : 'border-gray-200',
               )}
             />
@@ -91,11 +91,18 @@ export function LoginPage() {
           <button
             type="submit"
             disabled={isSubmitting}
-            className="w-full py-3 bg-fia-primary text-white text-sm font-semibold rounded-xl hover:bg-fia-primary-dark transition-colors disabled:opacity-60"
+            className="w-full py-3 bg-app-primary text-white text-sm font-semibold rounded-xl hover:bg-app-primary-dark transition-colors disabled:opacity-60"
           >
             {isSubmitting ? 'Ingresando...' : 'Ingresar'}
           </button>
         </form>
+
+        <p className="text-center text-sm text-gray-500 mt-6">
+          ¿No tenés cuenta?{' '}
+          <Link to={ROUTES.ADMIN.REGISTER} className="text-app-primary font-medium hover:underline">
+            Registrate
+          </Link>
+        </p>
       </div>
     </div>
   );

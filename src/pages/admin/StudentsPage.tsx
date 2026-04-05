@@ -111,10 +111,10 @@ export function StudentsPage() {
     <div className="p-8">
       {/* Cabecera */}
       <div className="flex items-center justify-between mb-6">
-        <h1 className="text-2xl font-bold text-fia-neutral-dark">Alumnos</h1>
+        <h1 className="text-2xl font-bold text-app-neutral-dark">Alumnos</h1>
         <button
           onClick={() => setModalStudent(null)}
-          className="flex items-center gap-2 px-4 py-2 bg-fia-primary text-white text-sm font-semibold rounded-xl hover:bg-fia-primary-dark transition-colors"
+          className="flex items-center gap-2 px-4 py-2 bg-app-primary text-white text-sm font-semibold rounded-xl hover:bg-app-primary-dark transition-colors"
         >
           <Plus size={16} />
           Nuevo alumno
@@ -132,14 +132,14 @@ export function StudentsPage() {
           placeholder="Buscar por nombre o email…"
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          className="w-full pl-9 pr-4 py-2.5 text-sm border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-fia-primary"
+          className="w-full pl-9 pr-4 py-2.5 text-sm border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-app-primary"
         />
       </div>
 
       {/* Estado: cargando */}
       {loading && (
         <div className="flex justify-center py-16">
-          <div className="w-8 h-8 border-4 border-fia-primary border-t-transparent rounded-full animate-spin" />
+          <div className="w-8 h-8 border-4 border-app-primary border-t-transparent rounded-full animate-spin" />
         </div>
       )}
 
@@ -186,7 +186,7 @@ export function StudentsPage() {
                   key={student.id}
                   className="hover:bg-gray-50/60 transition-colors"
                 >
-                  <td className="px-6 py-4 font-medium text-fia-neutral-dark">
+                  <td className="px-6 py-4 font-medium text-app-neutral-dark">
                     {student.fullName}
                   </td>
                   <td className="px-6 py-4 text-gray-500">
@@ -210,7 +210,7 @@ export function StudentsPage() {
                       </button>
                       <button
                         onClick={() => setModalStudent(student)}
-                        className="p-1.5 text-gray-400 hover:text-fia-primary hover:bg-fia-primary-light rounded-lg transition-colors"
+                        className="p-1.5 text-gray-400 hover:text-app-primary hover:bg-app-primary-light rounded-lg transition-colors"
                         aria-label="Editar alumno"
                       >
                         <Pencil size={15} />
@@ -310,7 +310,7 @@ function PortalModal({
       <div className="absolute inset-0 bg-black/40" onClick={onClose} />
       <div className="relative bg-white rounded-2xl shadow-xl w-full max-w-md">
         <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100">
-          <h2 className="text-base font-semibold text-fia-neutral-dark">
+          <h2 className="text-base font-semibold text-app-neutral-dark">
             Portal — {student.fullName}
           </h2>
           <button onClick={onClose} className="p-1 text-gray-400 hover:text-gray-600 rounded-lg transition-colors">
@@ -333,7 +333,7 @@ function PortalModal({
               <button
                 onClick={() => void handleGenerate()}
                 disabled={loading}
-                className="w-full py-2.5 bg-fia-primary text-white text-sm font-semibold rounded-xl hover:bg-fia-primary-dark transition-colors disabled:opacity-60"
+                className="w-full py-2.5 bg-app-primary text-white text-sm font-semibold rounded-xl hover:bg-app-primary-dark transition-colors disabled:opacity-60"
               >
                 {loading ? "Generando…" : "Generar link de acceso"}
               </button>
@@ -352,7 +352,7 @@ function PortalModal({
                 />
                 <button
                   onClick={() => void handleCopy()}
-                  className="px-3 py-2 bg-fia-primary text-white text-xs font-semibold rounded-xl hover:bg-fia-primary-dark transition-colors"
+                  className="px-3 py-2 bg-app-primary text-white text-xs font-semibold rounded-xl hover:bg-app-primary-dark transition-colors"
                 >
                   {copied ? "¡Copiado!" : "Copiar"}
                 </button>
@@ -426,7 +426,7 @@ function StudentModal({ student, onClose, onSaved }: StudentModalProps) {
       {/* Dialog */}
       <div className="relative bg-white rounded-2xl shadow-xl w-full max-w-md">
         <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100">
-          <h2 className="text-base font-semibold text-fia-neutral-dark">
+          <h2 className="text-base font-semibold text-app-neutral-dark">
             {student ? "Editar alumno" : "Nuevo alumno"}
           </h2>
           <button
@@ -454,7 +454,7 @@ function StudentModal({ student, onClose, onSaved }: StudentModalProps) {
                 required: "El nombre es obligatorio",
               })}
               className={cn(
-                "w-full px-4 py-2.5 rounded-xl border text-sm focus:outline-none focus:ring-2 focus:ring-fia-primary transition",
+                "w-full px-4 py-2.5 rounded-xl border text-sm focus:outline-none focus:ring-2 focus:ring-app-primary transition",
                 errors.fullName ? "border-red-400" : "border-gray-200",
               )}
             />
@@ -477,7 +477,7 @@ function StudentModal({ student, onClose, onSaved }: StudentModalProps) {
               })}
               type="email"
               className={cn(
-                "w-full px-4 py-2.5 rounded-xl border text-sm focus:outline-none focus:ring-2 focus:ring-fia-primary transition",
+                "w-full px-4 py-2.5 rounded-xl border text-sm focus:outline-none focus:ring-2 focus:ring-app-primary transition",
                 errors.email ? "border-red-400" : "border-gray-200",
               )}
             />
@@ -496,7 +496,7 @@ function StudentModal({ student, onClose, onSaved }: StudentModalProps) {
             <input
               {...register("phone")}
               type="tel"
-              className="w-full px-4 py-2.5 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-fia-primary transition"
+              className="w-full px-4 py-2.5 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-app-primary transition"
             />
           </div>
 
@@ -508,7 +508,7 @@ function StudentModal({ student, onClose, onSaved }: StudentModalProps) {
             <div className="flex gap-2">
               <select
                 {...register("currency")}
-                className="px-3 py-2.5 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-fia-primary bg-white w-24 shrink-0"
+                className="px-3 py-2.5 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-app-primary bg-white w-24 shrink-0"
               >
                 {(
                   [
@@ -538,7 +538,7 @@ function StudentModal({ student, onClose, onSaved }: StudentModalProps) {
                 step="0.01"
                 min="0"
                 className={cn(
-                  "flex-1 px-4 py-2.5 rounded-xl border text-sm focus:outline-none focus:ring-2 focus:ring-fia-primary transition",
+                  "flex-1 px-4 py-2.5 rounded-xl border text-sm focus:outline-none focus:ring-2 focus:ring-app-primary transition",
                   errors.classRate ? "border-red-400" : "border-gray-200",
                 )}
               />
@@ -560,7 +560,7 @@ function StudentModal({ student, onClose, onSaved }: StudentModalProps) {
                 required: "La modalidad es obligatoria",
               })}
               className={cn(
-                "w-full px-4 py-2.5 rounded-xl border text-sm focus:outline-none focus:ring-2 focus:ring-fia-primary transition bg-white",
+                "w-full px-4 py-2.5 rounded-xl border text-sm focus:outline-none focus:ring-2 focus:ring-app-primary transition bg-white",
                 errors.modality ? "border-red-400" : "border-gray-200",
               )}
             >
@@ -586,7 +586,7 @@ function StudentModal({ student, onClose, onSaved }: StudentModalProps) {
             <button
               type="submit"
               disabled={isSubmitting}
-              className="flex-1 py-2.5 bg-fia-primary text-white text-sm font-semibold rounded-xl hover:bg-fia-primary-dark transition-colors disabled:opacity-60"
+              className="flex-1 py-2.5 bg-app-primary text-white text-sm font-semibold rounded-xl hover:bg-app-primary-dark transition-colors disabled:opacity-60"
             >
               {isSubmitting ? "Guardando…" : "Guardar"}
             </button>

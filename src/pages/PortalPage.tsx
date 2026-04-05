@@ -121,18 +121,18 @@ export function PortalPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-fia-neutral-light flex items-center justify-center">
-        <div className="w-10 h-10 border-4 border-fia-primary border-t-transparent rounded-full animate-spin" />
+      <div className="min-h-screen bg-app-neutral-light flex items-center justify-center">
+        <div className="w-10 h-10 border-4 border-app-primary border-t-transparent rounded-full animate-spin" />
       </div>
     );
   }
 
   if (error) {
     return (
-      <div className="min-h-screen bg-fia-neutral-light flex items-center justify-center p-6">
+      <div className="min-h-screen bg-app-neutral-light flex items-center justify-center p-6">
         <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-8 max-w-md text-center space-y-3">
           <p className="text-2xl">🔒</p>
-          <p className="text-base font-semibold text-fia-neutral-dark">Sin acceso</p>
+          <p className="text-base font-semibold text-app-neutral-dark">Sin acceso</p>
           <p className="text-sm text-gray-500">{error}</p>
         </div>
       </div>
@@ -147,15 +147,14 @@ export function PortalPage() {
     }, {});
 
   return (
-    <div className="min-h-screen bg-fia-neutral-light">
+    <div className="min-h-screen bg-app-neutral-light">
       {/* Header */}
       <header className="bg-white border-b border-gray-100 shadow-sm">
         <div className="max-w-3xl mx-auto px-6 py-5 flex items-center justify-between">
           <div>
             <p className="text-xs text-gray-400 uppercase tracking-wider mb-0.5">Portal del alumno</p>
-            <h1 className="text-xl font-bold text-fia-neutral-dark">{profile?.fullName}</h1>
+            <h1 className="text-xl font-bold text-app-neutral-dark">{profile?.fullName}</h1>
           </div>
-          <p className="text-sm font-semibold text-fia-primary">English with Fia</p>
         </div>
       </header>
 
@@ -187,7 +186,7 @@ export function PortalPage() {
                 className={cn(
                   "flex-1 py-2 text-sm font-medium rounded-xl transition-colors",
                   tab === t
-                    ? "bg-fia-primary text-white"
+                    ? "bg-app-primary text-white"
                     : "text-gray-500 hover:text-gray-700 hover:bg-gray-50",
                 )}
               >
@@ -318,7 +317,7 @@ function PacksTab({ packs }: { packs: PortalPack[] }) {
             </div>
             <div className="h-2 bg-gray-100 rounded-full overflow-hidden">
               <div
-                className="h-full bg-fia-primary rounded-full transition-all"
+                className="h-full bg-app-primary rounded-full transition-all"
                 style={{ width: `${Math.round((pack.usedClasses / pack.totalClasses) * 100)}%` }}
               />
             </div>

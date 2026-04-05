@@ -7,13 +7,13 @@ export default {
   theme: {
     extend: {
       colors: {
-        'fia-primary': '#556B4A',
-        'fia-primary-dark': '#3E5034',
-        'fia-primary-light': '#EEF2EC',
-        'fia-secondary': '#C4A87A',
-        'fia-neutral-dark': '#2C382A',
-        'fia-neutral-light': '#F5F3EE',
-        'fia-white': '#FFFFFF',
+        'app-primary': '#556B4A',
+        'app-primary-dark': '#3E5034',
+        'app-primary-light': '#EEF2EC',
+        'app-secondary': '#C4A87A',
+        'app-neutral-dark': '#2C382A',
+        'app-neutral-light': '#F5F3EE',
+        'app-white': '#FFFFFF',
       },
       fontFamily: {
         sans: ['Inter', 'system-ui', 'sans-serif'],

@@ -19,7 +19,7 @@ function KpiCard({ icon: Icon, label, value, colorClass }: KpiCardProps) {
         <Icon size={20} />
       </div>
       <div>
-        <p className="text-2xl font-bold text-fia-neutral-dark leading-none">
+        <p className="text-2xl font-bold text-app-neutral-dark leading-none">
           {value}
         </p>
         <p className="text-xs text-gray-500 mt-1">{label}</p>
@@ -65,14 +65,14 @@ export function DashboardPage() {
   if (!data) {
     return (
       <div className="flex items-center justify-center h-64">
-        <div className="w-8 h-8 border-4 border-fia-primary border-t-transparent rounded-full animate-spin" />
+        <div className="w-8 h-8 border-4 border-app-primary border-t-transparent rounded-full animate-spin" />
       </div>
     );
   }
 
   return (
     <div className="p-8">
-      <h1 className="text-2xl font-bold text-fia-neutral-dark mb-6">
+      <h1 className="text-2xl font-bold text-app-neutral-dark mb-6">
         Dashboard
       </h1>
 
@@ -88,7 +88,7 @@ export function DashboardPage() {
                 minimumFractionDigits: 2,
                 maximumFractionDigits: 2,
               })}
-              colorClass="bg-fia-secondary/20 text-fia-secondary"
+              colorClass="bg-app-secondary/20 text-app-secondary"
             />
           ))
         ) : (
@@ -96,7 +96,7 @@ export function DashboardPage() {
             icon={DollarSign}
             label="Deuda pendiente"
             value="$0,00"
-            colorClass="bg-fia-secondary/20 text-fia-secondary"
+            colorClass="bg-app-secondary/20 text-app-secondary"
           />
         )}
         <KpiCard
@@ -127,7 +127,7 @@ export function DashboardPage() {
           icon={CalendarCheck}
           label="Clases programadas hoy"
           value={data.todayScheduledCount}
-          colorClass="bg-fia-primary-light text-fia-primary"
+          colorClass="bg-app-primary-light text-app-primary"
         />
       </div>
 
@@ -137,12 +137,12 @@ export function DashboardPage() {
           {data.todayExpectedRevenueByCurrency.map((item) => (
             <div
               key={item.currency}
-              className="bg-fia-primary-light rounded-xl px-4 py-2 flex items-center gap-2"
+              className="bg-app-primary-light rounded-xl px-4 py-2 flex items-center gap-2"
             >
-              <span className="text-xs text-fia-primary font-medium">
+              <span className="text-xs text-app-primary font-medium">
                 Ingreso esperado hoy
               </span>
-              <span className="text-sm font-bold text-fia-primary">
+              <span className="text-sm font-bold text-app-primary">
                 {item.currency}{" "}
                 {item.amount.toLocaleString("es-AR", {
                   minimumFractionDigits: 2,
@@ -157,7 +157,7 @@ export function DashboardPage() {
       <div className="grid lg:grid-cols-2 gap-6">
         {/* Top deudores */}
         <section className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
-          <h2 className="text-sm font-semibold text-fia-neutral-dark mb-4">
+          <h2 className="text-sm font-semibold text-app-neutral-dark mb-4">
             Top deudores por moneda
           </h2>
           {(data.topDebtorsByCurrency?.length ?? 0) === 0 ? (
@@ -185,7 +185,7 @@ export function DashboardPage() {
 
         {/* Próximas promesas de pago */}
         <section className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
-          <h2 className="text-sm font-semibold text-fia-neutral-dark mb-4">
+          <h2 className="text-sm font-semibold text-app-neutral-dark mb-4">
             Promesas de pago (próximos 7 días)
           </h2>
           {data.upcomingPromises.length === 0 ? (
@@ -203,7 +203,7 @@ export function DashboardPage() {
                       "es-AR",
                     )}
                   </span>
-                  <span className="font-semibold text-fia-secondary shrink-0">
+                  <span className="font-semibold text-app-secondary shrink-0">
                     {fmt(p.amount, p.currency)}
                   </span>
                 </li>

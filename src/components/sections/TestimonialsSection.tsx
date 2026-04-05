@@ -10,7 +10,7 @@ const AUTOPLAY_DELAY = 5000;
 function TestimonialCard({ item }: { item: TestimonialItem }) {
   return (
     <article className="w-full shrink-0 bg-white rounded-2xl p-8 shadow-sm border border-gray-100 flex flex-col gap-5">
-      <Quote size={32} className="text-fia-primary opacity-30" />
+      <Quote size={32} className="text-app-primary opacity-30" />
       <p className="text-base text-gray-600 leading-relaxed italic flex-1">
         "{item.quote}"
       </p>
@@ -23,9 +23,9 @@ function TestimonialCard({ item }: { item: TestimonialItem }) {
           />
         )}
         <div>
-          <p className="text-sm font-semibold text-fia-neutral-dark">{item.name}</p>
+          <p className="text-sm font-semibold text-app-neutral-dark">{item.name}</p>
           {item.since && (
-            <p className="text-xs text-fia-secondary">{item.since}</p>
+            <p className="text-xs text-app-secondary">{item.since}</p>
           )}
           {item.origin && (
             <p className="flex items-center gap-1 mt-0.5 text-xs text-gray-400">
@@ -65,8 +65,8 @@ export function TestimonialsSection() {
     <section id="testimonials" className="py-20 bg-white">
       <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center mb-12">
-          <h2 className="text-3xl sm:text-4xl font-bold text-fia-neutral-dark">
-            Lo que dicen mis <span className="text-fia-primary">alumnos</span>
+          <h2 className="text-3xl sm:text-4xl font-bold text-app-neutral-dark">
+            Lo que dicen mis <span className="text-app-primary">alumnos</span>
           </h2>
           <p className="mt-4 text-gray-500 max-w-xl mx-auto">
             Resultados reales de personas que decidieron dar el paso.
@@ -95,7 +95,7 @@ export function TestimonialsSection() {
           <button
             onClick={prev}
             aria-label="Testimonio anterior"
-            className="absolute left-0 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-white border border-gray-200 shadow-sm flex items-center justify-center text-fia-neutral-dark hover:bg-fia-primary-light hover:border-fia-primary transition-colors"
+            className="absolute left-0 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-white border border-gray-200 shadow-sm flex items-center justify-center text-app-neutral-dark hover:bg-app-primary-light hover:border-app-primary transition-colors"
           >
             <ChevronLeft size={20} />
           </button>
@@ -104,7 +104,7 @@ export function TestimonialsSection() {
           <button
             onClick={next}
             aria-label="Siguiente testimonio"
-            className="absolute right-0 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-white border border-gray-200 shadow-sm flex items-center justify-center text-fia-neutral-dark hover:bg-fia-primary-light hover:border-fia-primary transition-colors"
+            className="absolute right-0 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-white border border-gray-200 shadow-sm flex items-center justify-center text-app-neutral-dark hover:bg-app-primary-light hover:border-app-primary transition-colors"
           >
             <ChevronRight size={20} />
           </button>
@@ -122,8 +122,8 @@ export function TestimonialsSection() {
               className={cn(
                 'h-2 rounded-full transition-all duration-300',
                 i === current
-                  ? 'w-6 bg-fia-primary'
-                  : 'w-2 bg-gray-300 hover:bg-fia-secondary',
+                  ? 'w-6 bg-app-primary'
+                  : 'w-2 bg-gray-300 hover:bg-app-secondary',
               )}
             />
           ))}

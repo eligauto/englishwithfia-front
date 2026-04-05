@@ -183,7 +183,7 @@ export function ChargesPage() {
     <div className="p-8">
       {/* Cabecera */}
       <div className="flex items-center justify-between mb-6">
-        <h1 className="text-2xl font-bold text-fia-neutral-dark">Cargos</h1>
+        <h1 className="text-2xl font-bold text-app-neutral-dark">Cargos</h1>
         <div className="flex items-center gap-3">
           <button
             onClick={() => void handleExport()}
@@ -212,7 +212,7 @@ export function ChargesPage() {
         <select
           value={filterStudentId}
           onChange={(e) => setFilterStudentId(e.target.value)}
-          className="px-3 py-2 text-sm border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-fia-primary bg-white"
+          className="px-3 py-2 text-sm border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-app-primary bg-white"
         >
           <option value="">Todos los alumnos</option>
           {students.map((s) => (
@@ -227,7 +227,7 @@ export function ChargesPage() {
           onChange={(e) =>
             setFilterStatus(e.target.value as FinancialStatus | "")
           }
-          className="px-3 py-2 text-sm border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-fia-primary bg-white"
+          className="px-3 py-2 text-sm border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-app-primary bg-white"
         >
           <option value="">Todos los estados</option>
           {(Object.keys(STATUS_LABELS) as FinancialStatus[]).map((s) => (
@@ -241,7 +241,7 @@ export function ChargesPage() {
       {/* Estados de carga */}
       {loading && (
         <div className="flex justify-center py-16">
-          <div className="w-8 h-8 border-4 border-fia-primary border-t-transparent rounded-full animate-spin" />
+          <div className="w-8 h-8 border-4 border-app-primary border-t-transparent rounded-full animate-spin" />
         </div>
       )}
       {!loading && error && (
@@ -292,7 +292,7 @@ export function ChargesPage() {
                     key={charge.id}
                     className="hover:bg-gray-50/60 transition-colors"
                   >
-                    <td className="px-6 py-4 font-medium text-fia-neutral-dark">
+                    <td className="px-6 py-4 font-medium text-app-neutral-dark">
                       {studentMap[charge.studentId] ?? "—"}
                     </td>
                     <td className="px-6 py-4 text-gray-500">
@@ -321,7 +321,7 @@ export function ChargesPage() {
                       {!isTerminal && (
                         <button
                           onClick={() => setTarget(charge)}
-                          className="px-3 py-1.5 text-xs font-medium text-fia-primary border border-fia-primary rounded-lg hover:bg-fia-primary-light transition-colors"
+                          className="px-3 py-1.5 text-xs font-medium text-app-primary border border-app-primary rounded-lg hover:bg-app-primary-light transition-colors"
                         >
                           Actualizar
                         </button>
@@ -467,7 +467,7 @@ function UpdateChargeModal({
           </label>
           <select
             {...register("financialStatus")}
-            className="w-full px-4 py-2.5 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-fia-primary bg-white"
+            className="w-full px-4 py-2.5 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-app-primary bg-white"
           >
             {transitions.map((t) => (
               <option key={t} value={t}>
@@ -496,7 +496,7 @@ function UpdateChargeModal({
                       : false,
                 })}
                 className={cn(
-                  "w-full px-4 py-2.5 rounded-xl border text-sm focus:outline-none focus:ring-2 focus:ring-fia-primary bg-white",
+                  "w-full px-4 py-2.5 rounded-xl border text-sm focus:outline-none focus:ring-2 focus:ring-app-primary bg-white",
                   errors.packId ? "border-red-400" : "border-gray-200",
                 )}
               >
@@ -526,7 +526,7 @@ function UpdateChargeModal({
             <input
               {...register("promisedPaymentDate")}
               type="date"
-              className="w-full px-4 py-2.5 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-fia-primary"
+              className="w-full px-4 py-2.5 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-app-primary"
             />
           </div>
         )}
@@ -540,7 +540,7 @@ function UpdateChargeModal({
               </label>
               <select
                 {...register("paymentCurrency")}
-                className="w-full px-4 py-2.5 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-fia-primary bg-white"
+                className="w-full px-4 py-2.5 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-app-primary bg-white"
               >
                 {(["ARS", "USD", "EUR", "UYU", "BRL", "GBP", "OTHER"] as Currency[]).map((c) => (
                   <option key={c} value={c}>{c}</option>
@@ -553,7 +553,7 @@ function UpdateChargeModal({
               </label>
               <select
                 {...register("paymentMethod")}
-                className="w-full px-4 py-2.5 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-fia-primary bg-white"
+                className="w-full px-4 py-2.5 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-app-primary bg-white"
               >
                 <option value="">Sin especificar</option>
                 {(Object.keys(PAYMENT_METHOD_LABELS) as PaymentMethod[]).map((m) => (
@@ -581,7 +581,7 @@ function UpdateChargeModal({
             })}
             rows={2}
             className={cn(
-              "w-full px-4 py-2.5 rounded-xl border text-sm focus:outline-none focus:ring-2 focus:ring-fia-primary resize-none",
+              "w-full px-4 py-2.5 rounded-xl border text-sm focus:outline-none focus:ring-2 focus:ring-app-primary resize-none",
               errors.notes ? "border-red-400" : "border-gray-200",
             )}
           />
@@ -605,7 +605,7 @@ function UpdateChargeModal({
               isSubmitting ||
               (selectedStatus === "PACK_COVERED" && availablePacks.length === 0)
             }
-            className="flex-1 py-2.5 bg-fia-primary text-white text-sm font-semibold rounded-xl hover:bg-fia-primary-dark transition-colors disabled:opacity-60"
+            className="flex-1 py-2.5 bg-app-primary text-white text-sm font-semibold rounded-xl hover:bg-app-primary-dark transition-colors disabled:opacity-60"
           >
             {isSubmitting ? "Guardando…" : "Guardar"}
           </button>
@@ -631,7 +631,7 @@ function ModalShell({
       <div className="absolute inset-0 bg-black/40" onClick={onClose} />
       <div className="relative bg-white rounded-2xl shadow-xl w-full max-w-md">
         <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100">
-          <h2 className="text-base font-semibold text-fia-neutral-dark">
+          <h2 className="text-base font-semibold text-app-neutral-dark">
             {title}
           </h2>
           <button

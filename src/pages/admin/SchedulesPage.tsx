@@ -101,7 +101,7 @@ function SlotEditor({
           <select
             value={slot.dayOfWeek}
             onChange={(e) => updateSlot(i, { dayOfWeek: e.target.value as DayOfWeek })}
-            className="flex-1 px-3 py-2 text-sm border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-fia-primary bg-white"
+            className="flex-1 px-3 py-2 text-sm border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-app-primary bg-white"
           >
             {ALL_DAYS.map(({ value, label }) => (
               <option key={value} value={value}>{label}</option>
@@ -111,7 +111,7 @@ function SlotEditor({
             type="time"
             value={slot.timeOfDay}
             onChange={(e) => updateSlot(i, { timeOfDay: e.target.value })}
-            className="w-28 px-3 py-2 text-sm border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-fia-primary bg-white"
+            className="w-28 px-3 py-2 text-sm border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-app-primary bg-white"
           />
           <button
             type="button"
@@ -125,7 +125,7 @@ function SlotEditor({
       <button
         type="button"
         onClick={addSlot}
-        className="flex items-center gap-1.5 text-xs text-fia-primary hover:text-fia-primary-dark transition-colors"
+        className="flex items-center gap-1.5 text-xs text-app-primary hover:text-app-primary-dark transition-colors"
       >
         <Plus size={13} />
         Agregar día / hora
@@ -181,7 +181,7 @@ function ScheduleModal({
     <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4">
       <div className="bg-white rounded-2xl shadow-xl w-full max-w-md">
         <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100">
-          <h2 className="text-base font-semibold text-fia-neutral-dark">
+          <h2 className="text-base font-semibold text-app-neutral-dark">
             {initial ? 'Editar horario' : 'Nuevo horario recurrente'}
           </h2>
           <button onClick={onClose} className="text-gray-400 hover:text-gray-600 transition-colors">
@@ -195,7 +195,7 @@ function ScheduleModal({
             <label className="block text-xs font-medium text-gray-600 mb-1">Alumno *</label>
             <select
               {...register('studentId', { required: 'Requerido' })}
-              className="w-full px-3 py-2 text-sm border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-fia-primary bg-white"
+              className="w-full px-3 py-2 text-sm border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-app-primary bg-white"
             >
               <option value="">Seleccionar alumno…</option>
               {students.map((s) => (
@@ -235,7 +235,7 @@ function ScheduleModal({
               min={15}
               step={15}
               {...register('duration', { required: 'Requerido', min: 15 })}
-              className="w-full px-3 py-2 text-sm border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-fia-primary bg-white"
+              className="w-full px-3 py-2 text-sm border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-app-primary bg-white"
             />
           </div>
 
@@ -248,7 +248,7 @@ function ScheduleModal({
               type="text"
               placeholder="45.00"
               {...register('appliedRate')}
-              className="w-full px-3 py-2 text-sm border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-fia-primary bg-white"
+              className="w-full px-3 py-2 text-sm border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-app-primary bg-white"
             />
           </div>
 
@@ -258,7 +258,7 @@ function ScheduleModal({
             <textarea
               rows={2}
               {...register('notes')}
-              className="w-full px-3 py-2 text-sm border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-fia-primary bg-white resize-none"
+              className="w-full px-3 py-2 text-sm border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-app-primary bg-white resize-none"
             />
           </div>
 
@@ -273,7 +273,7 @@ function ScheduleModal({
             <button
               type="submit"
               disabled={isSubmitting || !slotsValid}
-              className="px-4 py-2 rounded-xl bg-fia-primary text-white text-sm font-semibold hover:bg-fia-primary-dark transition-colors disabled:opacity-60"
+              className="px-4 py-2 rounded-xl bg-app-primary text-white text-sm font-semibold hover:bg-app-primary-dark transition-colors disabled:opacity-60"
             >
               {isSubmitting ? 'Guardando…' : 'Guardar'}
             </button>
@@ -307,7 +307,7 @@ function GenerateModal({
     <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4">
       <div className="bg-white rounded-2xl shadow-xl w-full max-w-sm">
         <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100">
-          <h2 className="text-base font-semibold text-fia-neutral-dark">Generar clases</h2>
+          <h2 className="text-base font-semibold text-app-neutral-dark">Generar clases</h2>
           <button onClick={onClose} className="text-gray-400 hover:text-gray-600 transition-colors">
             <X size={18} />
           </button>
@@ -328,7 +328,7 @@ function GenerateModal({
               <input
                 type="date"
                 {...register('from', { required: 'Requerido' })}
-                className="w-full px-3 py-2 text-sm border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-fia-primary bg-white"
+                className="w-full px-3 py-2 text-sm border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-app-primary bg-white"
               />
               {errors.from && (
                 <p className="text-xs text-red-500 mt-1">{errors.from.message}</p>
@@ -339,7 +339,7 @@ function GenerateModal({
               <input
                 type="date"
                 {...register('to', { required: 'Requerido' })}
-                className="w-full px-3 py-2 text-sm border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-fia-primary bg-white"
+                className="w-full px-3 py-2 text-sm border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-app-primary bg-white"
               />
               {errors.to && (
                 <p className="text-xs text-red-500 mt-1">{errors.to.message}</p>
@@ -358,7 +358,7 @@ function GenerateModal({
             <button
               type="submit"
               disabled={isSubmitting}
-              className="px-4 py-2 rounded-xl bg-fia-primary text-white text-sm font-semibold hover:bg-fia-primary-dark transition-colors disabled:opacity-60"
+              className="px-4 py-2 rounded-xl bg-app-primary text-white text-sm font-semibold hover:bg-app-primary-dark transition-colors disabled:opacity-60"
             >
               {isSubmitting ? 'Generando…' : 'Generar clases'}
             </button>
@@ -456,14 +456,14 @@ export function SchedulesPage() {
       {/* Header */}
       <div className="flex items-center justify-between gap-4 flex-wrap">
         <div>
-          <h1 className="text-2xl font-bold text-fia-neutral-dark">Horarios recurrentes</h1>
+          <h1 className="text-2xl font-bold text-app-neutral-dark">Horarios recurrentes</h1>
           <p className="text-sm text-gray-500 mt-1">
             Plantillas de clases periódicas por alumno
           </p>
         </div>
         <button
           onClick={() => setModal({ type: 'create' })}
-          className="flex items-center gap-2 px-4 py-2 rounded-xl bg-fia-primary text-white text-sm font-semibold hover:bg-fia-primary-dark transition-colors"
+          className="flex items-center gap-2 px-4 py-2 rounded-xl bg-app-primary text-white text-sm font-semibold hover:bg-app-primary-dark transition-colors"
         >
           <Plus size={16} />
           Nuevo horario
@@ -485,7 +485,7 @@ export function SchedulesPage() {
           <select
             value={filterStudentId}
             onChange={(e) => setFilterStudentId(e.target.value)}
-            className="px-3 py-2 text-sm border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-fia-primary bg-white"
+            className="px-3 py-2 text-sm border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-app-primary bg-white"
           >
             <option value="">Todos</option>
             {students.map((s) => (
@@ -500,7 +500,7 @@ export function SchedulesPage() {
           <select
             value={filterActive}
             onChange={(e) => setFilterActive(e.target.value as typeof filterActive)}
-            className="px-3 py-2 text-sm border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-fia-primary bg-white"
+            className="px-3 py-2 text-sm border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-app-primary bg-white"
           >
             <option value="all">Todos</option>
             <option value="active">Activos</option>
@@ -512,7 +512,7 @@ export function SchedulesPage() {
       {/* Table */}
       {loading ? (
         <div className="flex justify-center py-16">
-          <div className="w-8 h-8 border-4 border-fia-primary border-t-transparent rounded-full animate-spin" />
+          <div className="w-8 h-8 border-4 border-app-primary border-t-transparent rounded-full animate-spin" />
         </div>
       ) : schedules.length === 0 ? (
         <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-12 text-center">
@@ -520,7 +520,7 @@ export function SchedulesPage() {
           <p className="text-gray-500 text-sm">No hay horarios recurrentes.</p>
           <button
             onClick={() => setModal({ type: 'create' })}
-            className="mt-4 px-4 py-2 rounded-xl bg-fia-primary text-white text-sm font-semibold hover:bg-fia-primary-dark transition-colors"
+            className="mt-4 px-4 py-2 rounded-xl bg-app-primary text-white text-sm font-semibold hover:bg-app-primary-dark transition-colors"
           >
             Crear el primero
           </button>
@@ -541,7 +541,7 @@ export function SchedulesPage() {
             <tbody>
               {schedules.map((s) => (
                 <tr key={s.id} className="border-b border-gray-50 last:border-0 hover:bg-gray-50/60 transition-colors">
-                  <td className="px-5 py-3 font-medium text-fia-neutral-dark">
+                  <td className="px-5 py-3 font-medium text-app-neutral-dark">
                     {studentName(students, s.studentId)}
                   </td>
                   <td className="px-5 py-3 text-gray-600 text-xs leading-relaxed">
@@ -566,7 +566,7 @@ export function SchedulesPage() {
                         title="Generar clases"
                         onClick={() => setModal({ type: 'generate', schedule: s })}
                         disabled={!s.isActive}
-                        className="p-1.5 rounded-lg text-fia-primary hover:bg-fia-primary-light transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+                        className="p-1.5 rounded-lg text-app-primary hover:bg-app-primary-light transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
                       >
                         <PlayCircle size={16} />
                       </button>

@@ -16,16 +16,16 @@ export function AboutSection() {
 
         {/* Content */}
         <div className="space-y-6">
-          <h2 className="text-3xl sm:text-4xl font-bold text-fia-neutral-dark">
+          <h2 className="text-3xl sm:text-4xl font-bold text-app-neutral-dark">
             {ABOUT.heading}{' '}
-            <span className="text-fia-primary">{ABOUT.headingHighlight}</span>
+            <span className="text-app-primary">{ABOUT.headingHighlight}</span>
           </h2>
           <p className="text-gray-500 leading-relaxed whitespace-pre-line">{ABOUT.bio}</p>
 
           <ul className="grid grid-cols-2 gap-3">
             {ABOUT.highlights.map((item) => (
-              <li key={item} className="flex items-center gap-2 text-sm font-medium text-fia-neutral-dark">
-                <CheckCircle size={18} className="text-fia-primary shrink-0" />
+              <li key={item} className="flex items-center gap-2 text-sm font-medium text-app-neutral-dark">
+                <CheckCircle size={18} className="text-app-primary shrink-0" />
                 {item}
               </li>
             ))}

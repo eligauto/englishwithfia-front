@@ -92,12 +92,12 @@ export function PacksPage() {
     <div className="p-8">
       {/* Cabecera */}
       <div className="flex items-center justify-between mb-6">
-        <h1 className="text-2xl font-bold text-fia-neutral-dark">
+        <h1 className="text-2xl font-bold text-app-neutral-dark">
           Packs prepagos
         </h1>
         <button
           onClick={() => setShowCreate(true)}
-          className="flex items-center gap-2 px-4 py-2 bg-fia-primary text-white text-sm font-semibold rounded-xl hover:bg-fia-primary-dark transition-colors"
+          className="flex items-center gap-2 px-4 py-2 bg-app-primary text-white text-sm font-semibold rounded-xl hover:bg-app-primary-dark transition-colors"
         >
           <Plus size={16} />
           Nuevo pack
@@ -109,7 +109,7 @@ export function PacksPage() {
         <select
           value={filterStudentId}
           onChange={(e) => setFilterStudentId(e.target.value)}
-          className="px-3 py-2 text-sm border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-fia-primary bg-white"
+          className="px-3 py-2 text-sm border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-app-primary bg-white"
         >
           <option value="">Todos los alumnos</option>
           {students.map((s) => (
@@ -124,7 +124,7 @@ export function PacksPage() {
           onChange={(e) =>
             setFilterActive(e.target.value as "all" | "active" | "inactive")
           }
-          className="px-3 py-2 text-sm border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-fia-primary bg-white"
+          className="px-3 py-2 text-sm border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-app-primary bg-white"
         >
           <option value="all">Todos</option>
           <option value="active">Activos</option>
@@ -135,7 +135,7 @@ export function PacksPage() {
       {/* Estados de carga */}
       {loading && (
         <div className="flex justify-center py-16">
-          <div className="w-8 h-8 border-4 border-fia-primary border-t-transparent rounded-full animate-spin" />
+          <div className="w-8 h-8 border-4 border-app-primary border-t-transparent rounded-full animate-spin" />
         </div>
       )}
       {!loading && error && (
@@ -187,7 +187,7 @@ export function PacksPage() {
                   key={pack.id}
                   className="hover:bg-gray-50/60 transition-colors"
                 >
-                  <td className="px-6 py-4 font-medium text-fia-neutral-dark">
+                  <td className="px-6 py-4 font-medium text-app-neutral-dark">
                     {studentMap[pack.studentId] ?? "—"}
                   </td>
                   <td className="px-6 py-4 text-gray-700">
@@ -365,7 +365,7 @@ function CreatePackModal({
           <select
             {...register("studentId", { required: "El alumno es obligatorio" })}
             className={cn(
-              "w-full px-4 py-2.5 rounded-xl border text-sm focus:outline-none focus:ring-2 focus:ring-fia-primary bg-white",
+              "w-full px-4 py-2.5 rounded-xl border text-sm focus:outline-none focus:ring-2 focus:ring-app-primary bg-white",
               errors.studentId ? "border-red-400" : "border-gray-200",
             )}
           >
@@ -400,7 +400,7 @@ function CreatePackModal({
               type="number"
               min="1"
               className={cn(
-                "w-full px-4 py-2.5 rounded-xl border text-sm focus:outline-none focus:ring-2 focus:ring-fia-primary",
+                "w-full px-4 py-2.5 rounded-xl border text-sm focus:outline-none focus:ring-2 focus:ring-app-primary",
                 errors.totalClasses ? "border-red-400" : "border-gray-200",
               )}
             />
@@ -417,7 +417,7 @@ function CreatePackModal({
             </label>
             <select
               {...register("currency")}
-              className="w-full px-3 py-2.5 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-fia-primary bg-white"
+              className="w-full px-3 py-2.5 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-app-primary bg-white"
             >
               {(
                 [
@@ -453,7 +453,7 @@ function CreatePackModal({
               step="0.01"
               min="0"
               className={cn(
-                "w-full px-4 py-2.5 rounded-xl border text-sm focus:outline-none focus:ring-2 focus:ring-fia-primary",
+                "w-full px-4 py-2.5 rounded-xl border text-sm focus:outline-none focus:ring-2 focus:ring-app-primary",
                 errors.amountPaid ? "border-red-400" : "border-gray-200",
               )}
             />
@@ -467,7 +467,7 @@ function CreatePackModal({
 
         {/* Hint precio por clase */}
         {pricePerClass !== null && (
-          <p className="text-xs text-fia-primary font-medium -mt-1">
+          <p className="text-xs text-app-primary font-medium -mt-1">
             {selectedStudent
               ? `Tarifa del alumno: ${selectedStudent.currency} ${pricePerClass.toLocaleString("es-AR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} / clase — monto calculado automáticamente`
               : `Precio por clase: ${pricePerClass.toLocaleString("es-AR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}
@@ -482,7 +482,7 @@ function CreatePackModal({
           <input
             {...register("expiresAt")}
             type="date"
-            className="w-full px-4 py-2.5 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-fia-primary"
+            className="w-full px-4 py-2.5 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-app-primary"
           />
         </div>
 
@@ -494,7 +494,7 @@ function CreatePackModal({
           <textarea
             {...register("notes")}
             rows={2}
-            className="w-full px-4 py-2.5 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-fia-primary resize-none"
+            className="w-full px-4 py-2.5 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-app-primary resize-none"
           />
         </div>
 
@@ -510,7 +510,7 @@ function CreatePackModal({
           <button
             type="submit"
             disabled={isSubmitting}
-            className="flex-1 py-2.5 bg-fia-primary text-white text-sm font-semibold rounded-xl hover:bg-fia-primary-dark transition-colors disabled:opacity-60"
+            className="flex-1 py-2.5 bg-app-primary text-white text-sm font-semibold rounded-xl hover:bg-app-primary-dark transition-colors disabled:opacity-60"
           >
             {isSubmitting ? "Guardando…" : "Crear pack"}
           </button>
@@ -536,7 +536,7 @@ function ModalShell({
       <div className="absolute inset-0 bg-black/40" onClick={onClose} />
       <div className="relative bg-white rounded-2xl shadow-xl w-full max-w-md">
         <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100">
-          <h2 className="text-base font-semibold text-fia-neutral-dark">
+          <h2 className="text-base font-semibold text-app-neutral-dark">
             {title}
           </h2>
           <button

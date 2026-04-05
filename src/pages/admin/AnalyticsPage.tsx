@@ -144,7 +144,7 @@ function Kpi({
         <Icon size={20} />
       </div>
       <div>
-        <p className="text-2xl font-bold text-fia-neutral-dark leading-none">
+        <p className="text-2xl font-bold text-app-neutral-dark leading-none">
           {value.toLocaleString("es-AR")}
         </p>
         <p className="text-xs text-gray-500 mt-1">{label}</p>
@@ -221,7 +221,7 @@ export function AnalyticsPage() {
     <div className="p-8 space-y-6">
       <div className="flex items-center justify-between gap-4 flex-wrap">
         <div>
-          <h1 className="text-2xl font-bold text-fia-neutral-dark">
+          <h1 className="text-2xl font-bold text-app-neutral-dark">
             Analytics
           </h1>
           <p className="text-sm text-gray-500 mt-1">
@@ -236,7 +236,7 @@ export function AnalyticsPage() {
               type="date"
               value={from}
               onChange={(e) => setFrom(e.target.value)}
-              className="mt-1 block px-3 py-2 text-sm border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-fia-primary bg-white"
+              className="mt-1 block px-3 py-2 text-sm border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-app-primary bg-white"
             />
           </label>
           <label className="text-xs text-gray-500">
@@ -245,13 +245,13 @@ export function AnalyticsPage() {
               type="date"
               value={to}
               onChange={(e) => setTo(e.target.value)}
-              className="mt-1 block px-3 py-2 text-sm border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-fia-primary bg-white"
+              className="mt-1 block px-3 py-2 text-sm border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-app-primary bg-white"
             />
           </label>
           <button
             onClick={() => void fetchAnalytics(from, to)}
             disabled={loading}
-            className="h-10 px-4 rounded-xl bg-fia-primary text-white text-sm font-semibold hover:bg-fia-primary-dark transition-colors disabled:opacity-60"
+            className="h-10 px-4 rounded-xl bg-app-primary text-white text-sm font-semibold hover:bg-app-primary-dark transition-colors disabled:opacity-60"
           >
             {loading ? "Cargando..." : "Aplicar"}
           </button>
@@ -288,7 +288,7 @@ export function AnalyticsPage() {
           label="Cargos generados"
           value={totals.charges}
           icon={Receipt}
-          color="bg-fia-secondary/20 text-fia-secondary"
+          color="bg-app-secondary/20 text-app-secondary"
         />
         <Kpi
           label="Cargos pendientes"
@@ -300,7 +300,7 @@ export function AnalyticsPage() {
 
       {loading && (
         <div className="flex justify-center py-16">
-          <div className="w-8 h-8 border-4 border-fia-primary border-t-transparent rounded-full animate-spin" />
+          <div className="w-8 h-8 border-4 border-app-primary border-t-transparent rounded-full animate-spin" />
         </div>
       )}
 
@@ -309,7 +309,7 @@ export function AnalyticsPage() {
           {/* Row 1: bar charts */}
           <div className="grid xl:grid-cols-2 gap-6">
             <section className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
-              <h2 className="text-sm font-semibold text-fia-neutral-dark mb-4">
+              <h2 className="text-sm font-semibold text-app-neutral-dark mb-4">
                 Cargos por mes
               </h2>
               <ResponsiveContainer width="100%" height={260}>
@@ -349,7 +349,7 @@ export function AnalyticsPage() {
             </section>
 
             <section className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
-              <h2 className="text-sm font-semibold text-fia-neutral-dark mb-4">
+              <h2 className="text-sm font-semibold text-app-neutral-dark mb-4">
                 Clases por mes
               </h2>
               <ResponsiveContainer width="100%" height={260}>
@@ -394,7 +394,7 @@ export function AnalyticsPage() {
           {/* Row 2: pie chart + student table */}
           <div className="grid xl:grid-cols-2 gap-6">
             <section className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
-              <h2 className="text-sm font-semibold text-fia-neutral-dark mb-4">
+              <h2 className="text-sm font-semibold text-app-neutral-dark mb-4">
                 Distribución de estados financieros
               </h2>
               {data.chargeStatusBreakdown.length === 0 ? (
@@ -458,7 +458,7 @@ export function AnalyticsPage() {
             </section>
 
             <section className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 overflow-x-auto">
-              <h2 className="text-sm font-semibold text-fia-neutral-dark mb-4">
+              <h2 className="text-sm font-semibold text-app-neutral-dark mb-4">
                 Breakdown por alumno
               </h2>
               {data.studentBreakdown.length === 0 ? (

@@ -57,7 +57,7 @@ const API_URL = /^https?:\/\//i.test(RAW_API_URL)
   ? RAW_API_URL.replace(/\/$/, "")
   : `https://${RAW_API_URL.replace(/\/$/, "")}`;
 
-export const TOKEN_KEY = "fia_admin_token";
+export const TOKEN_KEY = "practiq_token";
 
 function getAuthHeaders(): Record<string, string> {
   const token = localStorage.getItem(TOKEN_KEY);
@@ -166,6 +166,17 @@ export async function fetchTestimonials(): Promise<TestimonialItem[]> {
 
 interface LoginResponse {
   accessToken: string;
+}
+
+/**
+ * POST /auth/register — crea usuario + organización en un solo paso, devuelve el JWT.
+ */
+export async function register(email: string, password: string): Promise<string> {
+  const { accessToken } = await apiFetch<LoginResponse>("/auth/register", {
+    method: "POST",
+    body: JSON.stringify({ email, password }),
+  });
+  return accessToken;
 }
 
 /**

@@ -228,7 +228,7 @@ export function ClassesPage() {
     <div className="p-8">
       {/* Cabecera */}
       <div className="flex items-center justify-between mb-6">
-        <h1 className="text-2xl font-bold text-fia-neutral-dark">Clases</h1>
+        <h1 className="text-2xl font-bold text-app-neutral-dark">Clases</h1>
         <div className="flex items-center gap-2">
           <button
             onClick={() => void handleExport()}
@@ -240,7 +240,7 @@ export function ClassesPage() {
           </button>
           <button
             onClick={() => setShowCreate(true)}
-            className="flex items-center gap-2 px-4 py-2 bg-fia-primary text-white text-sm font-semibold rounded-xl hover:bg-fia-primary-dark transition-colors"
+            className="flex items-center gap-2 px-4 py-2 bg-app-primary text-white text-sm font-semibold rounded-xl hover:bg-app-primary-dark transition-colors"
           >
             <Plus size={16} />
             Nueva clase
@@ -253,7 +253,7 @@ export function ClassesPage() {
         <select
           value={filterStudentId}
           onChange={(e) => setFilterStudentId(e.target.value)}
-          className="px-3 py-2 text-sm border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-fia-primary bg-white"
+          className="px-3 py-2 text-sm border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-app-primary bg-white"
         >
           <option value="">Todos los alumnos</option>
           {students.map((s) => (
@@ -266,7 +266,7 @@ export function ClassesPage() {
         <select
           value={filterStatus}
           onChange={(e) => setFilterStatus(e.target.value as ClassStatus | "")}
-          className="px-3 py-2 text-sm border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-fia-primary bg-white"
+          className="px-3 py-2 text-sm border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-app-primary bg-white"
         >
           <option value="">Todos los estados</option>
           {(Object.keys(STATUS_LABELS) as ClassStatus[]).map((s) => (
@@ -280,7 +280,7 @@ export function ClassesPage() {
       {/* Estados de carga */}
       {loading && (
         <div className="flex justify-center py-16">
-          <div className="w-8 h-8 border-4 border-fia-primary border-t-transparent rounded-full animate-spin" />
+          <div className="w-8 h-8 border-4 border-app-primary border-t-transparent rounded-full animate-spin" />
         </div>
       )}
       {!loading && error && (
@@ -329,7 +329,7 @@ export function ClassesPage() {
                   key={cls.id}
                   className="hover:bg-gray-50/60 transition-colors"
                 >
-                  <td className="px-6 py-4 font-medium text-fia-neutral-dark">
+                  <td className="px-6 py-4 font-medium text-app-neutral-dark">
                     {cls.classType === "GROUP" ? (
                       <span className="inline-flex items-center gap-1.5">
                         <span className="inline-flex px-2 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-700">
@@ -478,7 +478,7 @@ function ClassActions({
         <button
           onClick={() => onReschedule(cls)}
           title="Reagendar"
-          className="p-1.5 text-gray-400 hover:text-fia-primary hover:bg-fia-primary-light rounded-lg transition-colors"
+          className="p-1.5 text-gray-400 hover:text-app-primary hover:bg-app-primary-light rounded-lg transition-colors"
         >
           <CalendarClock size={15} />
         </button>
@@ -527,7 +527,7 @@ function ModalShell({
       <div className="absolute inset-0 bg-black/40" onClick={onClose} />
       <div className="relative bg-white rounded-2xl shadow-xl w-full max-w-md">
         <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100">
-          <h2 className="text-base font-semibold text-fia-neutral-dark">
+          <h2 className="text-base font-semibold text-app-neutral-dark">
             {title}
           </h2>
           <button
@@ -564,7 +564,7 @@ function ModalActions({
       <button
         type="submit"
         disabled={isSubmitting}
-        className="flex-1 py-2.5 bg-fia-primary text-white text-sm font-semibold rounded-xl hover:bg-fia-primary-dark transition-colors disabled:opacity-60"
+        className="flex-1 py-2.5 bg-app-primary text-white text-sm font-semibold rounded-xl hover:bg-app-primary-dark transition-colors disabled:opacity-60"
       >
         {isSubmitting ? "Guardando…" : submitLabel}
       </button>
@@ -670,7 +670,7 @@ function CreateClassModal({
                   {...register("classType")}
                   type="radio"
                   value={t}
-                  className="accent-fia-primary"
+                  className="accent-app-primary"
                 />
                 <span className="text-sm text-gray-700">
                   {t === "INDIVIDUAL" ? "Individual" : "Grupal"}
@@ -694,7 +694,7 @@ function CreateClassModal({
                   "El alumno es obligatorio",
               })}
               className={cn(
-                "w-full px-4 py-2.5 rounded-xl border text-sm focus:outline-none focus:ring-2 focus:ring-fia-primary bg-white",
+                "w-full px-4 py-2.5 rounded-xl border text-sm focus:outline-none focus:ring-2 focus:ring-app-primary bg-white",
                 errors.studentId ? "border-red-400" : "border-gray-200",
               )}
             >
@@ -722,7 +722,7 @@ function CreateClassModal({
               <select
                 value={addParticipantId}
                 onChange={(e) => setAddParticipantId(e.target.value)}
-                className="flex-1 px-3 py-2 text-sm border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-fia-primary bg-white"
+                className="flex-1 px-3 py-2 text-sm border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-app-primary bg-white"
               >
                 <option value="">Agregar alumno…</option>
                 {availableToAdd.map((s) => (
@@ -735,7 +735,7 @@ function CreateClassModal({
                 type="button"
                 onClick={handleAddGroupParticipant}
                 disabled={!addParticipantId}
-                className="px-3 py-2 bg-fia-primary text-white text-sm font-semibold rounded-xl hover:bg-fia-primary-dark transition-colors disabled:opacity-60"
+                className="px-3 py-2 bg-app-primary text-white text-sm font-semibold rounded-xl hover:bg-app-primary-dark transition-colors disabled:opacity-60"
               >
                 <Plus size={16} />
               </button>
@@ -772,7 +772,7 @@ function CreateClassModal({
             })}
             type="datetime-local"
             className={cn(
-              "w-full px-4 py-2.5 rounded-xl border text-sm focus:outline-none focus:ring-2 focus:ring-fia-primary",
+              "w-full px-4 py-2.5 rounded-xl border text-sm focus:outline-none focus:ring-2 focus:ring-app-primary",
               errors.scheduledAt ? "border-red-400" : "border-gray-200",
             )}
           />
@@ -800,7 +800,7 @@ function CreateClassModal({
             min="15"
             step="15"
             className={cn(
-              "w-full px-4 py-2.5 rounded-xl border text-sm focus:outline-none focus:ring-2 focus:ring-fia-primary",
+              "w-full px-4 py-2.5 rounded-xl border text-sm focus:outline-none focus:ring-2 focus:ring-app-primary",
               errors.duration ? "border-red-400" : "border-gray-200",
             )}
           />
@@ -819,7 +819,7 @@ function CreateClassModal({
           <textarea
             {...register("notes")}
             rows={2}
-            className="w-full px-4 py-2.5 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-fia-primary resize-none"
+            className="w-full px-4 py-2.5 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-app-primary resize-none"
           />
         </div>
 
@@ -901,7 +901,7 @@ function RescheduleModal({
             })}
             type="datetime-local"
             className={cn(
-              "w-full px-4 py-2.5 rounded-xl border text-sm focus:outline-none focus:ring-2 focus:ring-fia-primary",
+              "w-full px-4 py-2.5 rounded-xl border text-sm focus:outline-none focus:ring-2 focus:ring-app-primary",
               errors.scheduledAt ? "border-red-400" : "border-gray-200",
             )}
           />
@@ -919,7 +919,7 @@ function RescheduleModal({
           <textarea
             {...register("notes")}
             rows={2}
-            className="w-full px-4 py-2.5 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-fia-primary resize-none"
+            className="w-full px-4 py-2.5 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-app-primary resize-none"
           />
         </div>
 
@@ -1024,7 +1024,7 @@ function ParticipantsModal({
           <select
             value={addStudentId}
             onChange={(e) => setAddStudentId(e.target.value)}
-            className="flex-1 px-3 py-2 text-sm border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-fia-primary bg-white"
+            className="flex-1 px-3 py-2 text-sm border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-app-primary bg-white"
           >
             <option value="">Agregar alumno…</option>
             {availableStudents.map((s) => (
@@ -1036,7 +1036,7 @@ function ParticipantsModal({
           <button
             onClick={() => void handleAdd()}
             disabled={!addStudentId || adding}
-            className="px-4 py-2 bg-fia-primary text-white text-sm font-semibold rounded-xl hover:bg-fia-primary-dark transition-colors disabled:opacity-60"
+            className="px-4 py-2 bg-app-primary text-white text-sm font-semibold rounded-xl hover:bg-app-primary-dark transition-colors disabled:opacity-60"
           >
             {adding ? "…" : <Plus size={16} />}
           </button>
@@ -1045,7 +1045,7 @@ function ParticipantsModal({
         {/* Lista de participantes */}
         {loading ? (
           <div className="flex justify-center py-6">
-            <div className="w-6 h-6 border-4 border-fia-primary border-t-transparent rounded-full animate-spin" />
+            <div className="w-6 h-6 border-4 border-app-primary border-t-transparent rounded-full animate-spin" />
           </div>
         ) : participants.length === 0 ? (
           <p className="text-sm text-gray-400 text-center py-4">
@@ -1059,7 +1059,7 @@ function ParticipantsModal({
                 className="flex items-center justify-between py-2.5"
               >
                 <div>
-                  <p className="text-sm font-medium text-fia-neutral-dark">
+                  <p className="text-sm font-medium text-app-neutral-dark">
                     {p.student.fullName}
                   </p>
                   <p className="text-xs text-gray-400">
@@ -1163,7 +1163,7 @@ function AbsentDecisionModal({
           <button
             onClick={() => void decide(true)}
             disabled={submitting}
-            className="flex-1 py-2.5 bg-fia-primary text-white text-sm font-semibold rounded-xl hover:bg-fia-primary-dark transition-colors disabled:opacity-60"
+            className="flex-1 py-2.5 bg-app-primary text-white text-sm font-semibold rounded-xl hover:bg-app-primary-dark transition-colors disabled:opacity-60"
           >
             Cobrar
           </button>

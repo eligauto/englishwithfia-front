@@ -2,6 +2,7 @@ export const ROUTES = {
   HOME: "/",
   ADMIN: {
     LOGIN: "/admin/login",
+    REGISTER: "/admin/register",
     DASHBOARD: "/admin",
     ANALYTICS: "/admin/analytics",
     STUDENTS: "/admin/students",

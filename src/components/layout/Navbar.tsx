@@ -7,11 +7,11 @@ export function Navbar() {
   const [isOpen, setIsOpen] = useState(false);
 
   return (
-    <header className="fixed top-0 left-0 right-0 z-50 bg-fia-white/90 backdrop-blur-sm border-b border-gray-100 shadow-sm">
+    <header className="fixed top-0 left-0 right-0 z-50 bg-app-white/90 backdrop-blur-sm border-b border-gray-100 shadow-sm">
       <nav className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
-          <a href="#hero" className="text-xl font-bold text-fia-primary">
+          <a href="#hero" className="text-xl font-bold text-app-primary">
             {SITE.name}
           </a>
 
@@ -21,7 +21,7 @@ export function Navbar() {
               <li key={link.href}>
                 <a
                   href={link.href}
-                  className="text-sm font-medium text-fia-neutral-dark hover:text-fia-primary transition-colors"
+                  className="text-sm font-medium text-app-neutral-dark hover:text-app-primary transition-colors"
                 >
                   {link.label}
                 </a>
@@ -32,7 +32,7 @@ export function Navbar() {
           {/* CTA Desktop */}
           <a
             href="#contact"
-            className="hidden md:inline-flex items-center px-4 py-2 rounded-lg bg-fia-primary text-white text-sm font-semibold hover:bg-fia-primary-dark transition-colors"
+            className="hidden md:inline-flex items-center px-4 py-2 rounded-lg bg-app-primary text-white text-sm font-semibold hover:bg-app-primary-dark transition-colors"
           >
             Contactarme
           </a>
@@ -41,7 +41,7 @@ export function Navbar() {
           <button
             onClick={() => setIsOpen((v) => !v)}
             aria-label="Abrir menú"
-            className="md:hidden p-2 rounded-lg text-fia-neutral-dark hover:bg-gray-100 transition-colors"
+            className="md:hidden p-2 rounded-lg text-app-neutral-dark hover:bg-gray-100 transition-colors"
           >
             {isOpen ? <X size={22} /> : <Menu size={22} />}
           </button>
@@ -60,7 +60,7 @@ export function Navbar() {
                 <a
                   href={link.href}
                   onClick={() => setIsOpen(false)}
-                  className="block px-3 py-2 rounded-lg text-sm font-medium text-fia-neutral-dark hover:bg-gray-100 hover:text-fia-primary transition-colors"
+                  className="block px-3 py-2 rounded-lg text-sm font-medium text-app-neutral-dark hover:bg-gray-100 hover:text-app-primary transition-colors"
                 >
                   {link.label}
                 </a>

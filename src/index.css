@@ -10,6 +10,6 @@
   }
 
   body {
-    @apply font-sans text-fia-neutral-dark bg-fia-neutral-light antialiased;
+    @apply font-sans text-app-neutral-dark bg-app-neutral-light antialiased;
   }
 }

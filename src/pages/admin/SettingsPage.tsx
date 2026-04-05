@@ -145,7 +145,7 @@ export function SettingsPage() {
   if (loading) {
     return (
       <div className="p-8 flex justify-center">
-        <div className="w-8 h-8 border-4 border-fia-primary border-t-transparent rounded-full animate-spin" />
+        <div className="w-8 h-8 border-4 border-app-primary border-t-transparent rounded-full animate-spin" />
       </div>
     );
   }
@@ -166,13 +166,13 @@ export function SettingsPage() {
 
   return (
     <div className="p-8 max-w-2xl">
-      <h1 className="text-2xl font-bold text-fia-neutral-dark mb-8">
+      <h1 className="text-2xl font-bold text-app-neutral-dark mb-8">
         Configuración
       </h1>
 
       {/* ── Sección: Organización ── */}
       <section className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 mb-6">
-        <h2 className="text-base font-semibold text-fia-neutral-dark mb-4">
+        <h2 className="text-base font-semibold text-app-neutral-dark mb-4">
           Organización
         </h2>
         <form onSubmit={handleSubmit(handleSaveOrg)} className="space-y-4">
@@ -183,7 +183,7 @@ export function SettingsPage() {
             <input
               {...register("name", { required: "El nombre es obligatorio" })}
               className={cn(
-                "w-full px-4 py-2.5 rounded-xl border text-sm focus:outline-none focus:ring-2 focus:ring-fia-primary transition",
+                "w-full px-4 py-2.5 rounded-xl border text-sm focus:outline-none focus:ring-2 focus:ring-app-primary transition",
                 errors.name ? "border-red-400" : "border-gray-200",
               )}
             />
@@ -196,7 +196,7 @@ export function SettingsPage() {
             <button
               type="submit"
               disabled={isSubmitting}
-              className="px-5 py-2.5 bg-fia-primary text-white text-sm font-semibold rounded-xl hover:bg-fia-primary-dark transition-colors disabled:opacity-60"
+              className="px-5 py-2.5 bg-app-primary text-white text-sm font-semibold rounded-xl hover:bg-app-primary-dark transition-colors disabled:opacity-60"
             >
               {isSubmitting ? "Guardando…" : "Guardar nombre"}
             </button>
@@ -213,7 +213,7 @@ export function SettingsPage() {
       {/* ── Sección: Terminología ── */}
       <section className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
         <div className="mb-4">
-          <h2 className="text-base font-semibold text-fia-neutral-dark">
+          <h2 className="text-base font-semibold text-app-neutral-dark">
             Terminología
           </h2>
           <p className="text-sm text-gray-500 mt-0.5">
@@ -234,7 +234,7 @@ export function SettingsPage() {
                 className={cn(
                   "w-full text-left px-4 py-3.5 rounded-xl border-2 transition-all flex items-start gap-3",
                   isSelected
-                    ? "border-fia-primary bg-fia-primary-light"
+                    ? "border-app-primary bg-app-primary-light"
                     : "border-gray-200 hover:border-gray-300 bg-white",
                 )}
               >
@@ -244,13 +244,13 @@ export function SettingsPage() {
                     <span
                       className={cn(
                         "text-sm font-semibold",
-                        isSelected ? "text-fia-neutral-dark" : "text-gray-700",
+                        isSelected ? "text-app-neutral-dark" : "text-gray-700",
                       )}
                     >
                       {preset.label}
                     </span>
                     {isCurrent && (
-                      <span className="text-xs bg-fia-primary text-white px-2 py-0.5 rounded-full">
+                      <span className="text-xs bg-app-primary text-white px-2 py-0.5 rounded-full">
                         Activo
                       </span>
                     )}
@@ -274,7 +274,7 @@ export function SettingsPage() {
                   </div>
                 </div>
                 {isSelected && (
-                  <div className="shrink-0 w-5 h-5 rounded-full bg-fia-primary flex items-center justify-center mt-0.5">
+                  <div className="shrink-0 w-5 h-5 rounded-full bg-app-primary flex items-center justify-center mt-0.5">
                     <Check size={11} className="text-white" />
                   </div>
                 )}
@@ -305,7 +305,7 @@ export function SettingsPage() {
             type="button"
             onClick={() => void handleSavePreset()}
             disabled={presetSaving || !presetChanged}
-            className="px-5 py-2.5 bg-fia-primary text-white text-sm font-semibold rounded-xl hover:bg-fia-primary-dark transition-colors disabled:opacity-50"
+            className="px-5 py-2.5 bg-app-primary text-white text-sm font-semibold rounded-xl hover:bg-app-primary-dark transition-colors disabled:opacity-50"
           >
             {presetSaving ? "Guardando…" : "Guardar terminología"}
           </button>
