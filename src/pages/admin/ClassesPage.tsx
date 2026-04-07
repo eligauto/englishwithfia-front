@@ -73,7 +73,6 @@ function fmtDate(iso: string) {
     day: "2-digit",
     month: "2-digit",
     year: "numeric",
-    timeZone: "UTC",
   });
 }
 
@@ -81,7 +80,6 @@ function fmtTime(iso: string) {
   return new Date(iso).toLocaleTimeString("es-AR", {
     hour: "2-digit",
     minute: "2-digit",
-    timeZone: "UTC",
   });
 }
 
