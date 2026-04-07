@@ -139,10 +139,6 @@ export function ClassesPage() {
         studentId: filterStudentId || undefined,
         status: filterStatus || undefined,
       });
-      cls.sort(
-        (a, b) =>
-          new Date(b.scheduledAt).getTime() - new Date(a.scheduledAt).getTime(),
-      );
       setClasses(cls);
       setError(null);
     } catch (err) {
