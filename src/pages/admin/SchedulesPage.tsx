@@ -12,6 +12,7 @@ import {
   updateSchedule,
 } from '../../services/api';
 import type {
+  ClassType,
   CreateScheduleData,
   DayOfWeek,
   GenerateClassesData,
@@ -68,6 +69,7 @@ function ActiveBadge({ isActive }: { isActive: boolean }) {
 // ── Schedule form ─────────────────────────────────────────────────────────────
 
 interface ScheduleFormValues {
+  classType: ClassType;
   studentId: string;
   slots: ScheduleSlotInput[];
   duration: number;
@@ -151,10 +153,12 @@ function ScheduleModal({
     register,
     handleSubmit,
     control,
+    watch,
     setValue,
     formState: { errors, isSubmitting },
   } = useForm<ScheduleFormValues>({
     defaultValues: {
+      classType: initial?.classType ?? 'INDIVIDUAL',
       studentId: initial?.studentId ?? '',
       slots: initial?.slots.map((s) => ({ dayOfWeek: s.dayOfWeek, timeOfDay: s.timeOfDay })) ?? [{ dayOfWeek: 'MONDAY', timeOfDay: '' }],
       duration: initial?.duration ?? 60,
@@ -163,12 +167,14 @@ function ScheduleModal({
     },
   });
 
+  const classType = watch('classType');
   const slots = useWatch({ control, name: 'slots' });
   const slotsValid = slots.length > 0 && slots.every((s) => s.timeOfDay !== '');
 
   async function onSubmit(values: ScheduleFormValues) {
     const payload: CreateScheduleData = {
-      studentId: values.studentId,
+      classType: values.classType,
+      ...(values.classType === 'INDIVIDUAL' ? { studentId: values.studentId } : {}),
       slots: values.slots,
       duration: Number(values.duration),
       ...(values.appliedRate ? { appliedRate: values.appliedRate } : {}),
@@ -190,11 +196,32 @@ function ScheduleModal({
         </div>
 
         <form onSubmit={handleSubmit(onSubmit)} className="px-6 py-5 space-y-4">
-          {/* Alumno */}
+          {/* Tipo */}
+          <div>
+            <label className="block text-xs font-medium text-gray-600 mb-2">Tipo *</label>
+            <div className="flex gap-4">
+              {(['INDIVIDUAL', 'GROUP'] as ClassType[]).map((t) => (
+                <label key={t} className="flex items-center gap-2 cursor-pointer">
+                  <input
+                    {...register('classType')}
+                    type="radio"
+                    value={t}
+                    className="accent-app-primary"
+                  />
+                  <span className="text-sm text-gray-700">
+                    {t === 'INDIVIDUAL' ? 'Individual' : 'Grupal'}
+                  </span>
+                </label>
+              ))}
+            </div>
+          </div>
+
+          {/* Alumno — solo INDIVIDUAL */}
+          {classType === 'INDIVIDUAL' && (
           <div>
             <label className="block text-xs font-medium text-gray-600 mb-1">Alumno *</label>
             <select
-              {...register('studentId', { required: 'Requerido' })}
+              {...register('studentId', { validate: (v) => classType !== 'INDIVIDUAL' || !!v || 'Requerido' })}
               className="w-full px-3 py-2 text-sm border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-app-primary bg-white"
             >
               <option value="">Seleccionar alumno…</option>
@@ -208,6 +235,7 @@ function ScheduleModal({
               <p className="text-xs text-red-500 mt-1">{errors.studentId.message}</p>
             )}
           </div>
+          )}
 
           {/* Slots */}
           <div>
@@ -444,10 +472,17 @@ export function SchedulesPage() {
   async function handleGenerate(schedule: Schedule, data: GenerateClassesData) {
     const result = await generateClasses(schedule.id, data);
     setModal(null);
+    const parts: string[] = [];
+    if (result.generated > 0)
+      parts.push(`${result.generated} clase${result.generated === 1 ? '' : 's'} generada${result.generated === 1 ? '' : 's'}`);
+    if (result.restored > 0)
+      parts.push(`${result.restored} reactivada${result.restored === 1 ? '' : 's'}`);
+    if (result.skipped > 0)
+      parts.push(`${result.skipped} omitida${result.skipped === 1 ? '' : 's'}`);
     flash(
-      result.generated === 0
-        ? `No se crearon clases nuevas (${result.skipped} ya existían)`
-        : `${result.generated} clase${result.generated === 1 ? '' : 's'} generada${result.generated === 1 ? '' : 's'}${result.skipped > 0 ? ` · ${result.skipped} omitida${result.skipped === 1 ? '' : 's'}` : ''}`,
+      parts.length > 0
+        ? parts.join(' · ')
+        : 'No se realizaron cambios',
     );
   }
 
@@ -542,7 +577,9 @@ export function SchedulesPage() {
               {schedules.map((s) => (
                 <tr key={s.id} className="border-b border-gray-50 last:border-0 hover:bg-gray-50/60 transition-colors">
                   <td className="px-5 py-3 font-medium text-app-neutral-dark">
-                    {studentName(students, s.studentId)}
+                    {s.studentId
+                      ? studentName(students, s.studentId)
+                      : <span className="inline-flex px-2 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-700">Grupal</span>}
                   </td>
                   <td className="px-5 py-3 text-gray-600 text-xs leading-relaxed">
                     {s.slots.length === 0
@@ -616,7 +653,7 @@ export function SchedulesPage() {
       {modal?.type === 'generate' && (
         <GenerateModal
           schedule={modal.schedule}
-          studentFullName={studentName(students, modal.schedule.studentId)}
+          studentFullName={modal.schedule.studentId ? studentName(students, modal.schedule.studentId) : 'Clase grupal'}
           onClose={() => setModal(null)}
           onGenerate={(data) => handleGenerate(modal.schedule, data)}
         />

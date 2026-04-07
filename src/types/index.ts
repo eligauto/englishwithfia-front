@@ -181,6 +181,8 @@ export interface ClassParticipant {
   classId: string;
   studentId: string;
   appliedRate: string | null;       // tarifa por participante (override del classRate del alumno)
+  attendance: "PRESENT" | "ABSENT"; // default "PRESENT"; se puede cambiar mientras la clase está SCHEDULED
+  effectiveRate: string;            // appliedRate ?? student.classRate — siempre tiene valor
   createdAt: string;                // ISO 8601
   student: {
     fullName: string;
@@ -395,7 +397,8 @@ export interface ScheduleSlot {
 /** Entidad Schedule tal como la devuelve el backend */
 export interface Schedule {
   id: string;
-  studentId: string;
+  classType: ClassType;       // INDIVIDUAL (default) | GROUP
+  studentId: string | null;   // null para schedules GROUP
   slots: ScheduleSlot[];  // uno por cada (día, hora) — permite horarios distintos por día
   duration: number;           // minutos
   appliedRate: string | null; // Decimal como string; null = usa la tarifa del alumno
@@ -411,7 +414,8 @@ export interface ScheduleSlotInput {
 }
 
 export interface CreateScheduleData {
-  studentId: string;
+  classType?: ClassType;      // INDIVIDUAL (default) | GROUP
+  studentId?: string;         // requerido para INDIVIDUAL, omitir para GROUP
   slots: ScheduleSlotInput[];
   duration: number;
   appliedRate?: string;
@@ -428,6 +432,7 @@ export interface GenerateClassesData {
 /** Respuesta de POST /schedules/:id/generate */
 export interface GenerateResult {
   generated: number;
+  restored: number;  // clases CANCELLED reactivadas a SCHEDULED
   skipped: number;
   classes: Class[];
 }

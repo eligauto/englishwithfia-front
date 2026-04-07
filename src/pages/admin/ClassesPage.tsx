@@ -24,6 +24,7 @@ import {
   getClassParticipants,
   addParticipant,
   removeParticipant,
+  updateParticipant,
   ApiRequestError,
 } from "../../services/api";
 import type {
@@ -611,7 +612,9 @@ function CreateClassModal({
     () => Object.fromEntries(students.map((s) => [s.id, s.fullName])),
     [students],
   );
-  const availableToAdd = students.filter((s) => !groupParticipants.includes(s.id));
+  const availableToAdd = students.filter(
+    (s) => !groupParticipants.includes(s.id),
+  );
 
   function handleAddGroupParticipant() {
     if (!addParticipantId) return;
@@ -622,7 +625,9 @@ function CreateClassModal({
   async function onSubmit(data: CreateClassFormData) {
     setSubmitError(null);
     if (data.classType === "GROUP" && groupParticipants.length === 0) {
-      setSubmitError("Debés agregar al menos un participante para una clase grupal.");
+      setSubmitError(
+        "Debés agregar al menos un participante para una clase grupal.",
+      );
       return;
     }
     try {
@@ -632,7 +637,9 @@ function CreateClassModal({
         duration: data.duration,
         ...(data.classType === "INDIVIDUAL"
           ? { studentId: data.studentId }
-          : { participants: groupParticipants.map((id) => ({ studentId: id })) }),
+          : {
+              participants: groupParticipants.map((id) => ({ studentId: id })),
+            }),
         ...(data.notes.trim() ? { notes: data.notes.trim() } : {}),
       };
       onCreated(await createClass(payload));
@@ -737,15 +744,26 @@ function CreateClassModal({
               </button>
             </div>
             {groupParticipants.length === 0 ? (
-              <p className="text-xs text-gray-400">Agregá al menos un alumno.</p>
+              <p className="text-xs text-gray-400">
+                Agregá al menos un alumno.
+              </p>
             ) : (
               <ul className="space-y-1">
                 {groupParticipants.map((id) => (
-                  <li key={id} className="flex items-center justify-between px-3 py-1.5 bg-purple-50 rounded-lg">
-                    <span className="text-sm text-purple-800">{studentNameMap[id]}</span>
+                  <li
+                    key={id}
+                    className="flex items-center justify-between px-3 py-1.5 bg-purple-50 rounded-lg"
+                  >
+                    <span className="text-sm text-purple-800">
+                      {studentNameMap[id]}
+                    </span>
                     <button
                       type="button"
-                      onClick={() => setGroupParticipants((prev) => prev.filter((p) => p !== id))}
+                      onClick={() =>
+                        setGroupParticipants((prev) =>
+                          prev.filter((p) => p !== id),
+                        )
+                      }
                       className="text-purple-400 hover:text-red-500 transition-colors"
                     >
                       <X size={14} />
@@ -946,6 +964,9 @@ function ParticipantsModal({
   const [addStudentId, setAddStudentId] = useState("");
   const [adding, setAdding] = useState(false);
   const [removingId, setRemovingId] = useState<string | null>(null);
+  const [togglingId, setTogglingId] = useState<string | null>(null);
+
+  const canEditAttendance = cls.status === "SCHEDULED";
 
   useEffect(() => {
     getClassParticipants(cls.id)
@@ -972,8 +993,10 @@ function ParticipantsModal({
     setAdding(true);
     setError(null);
     try {
-      const p = await addParticipant(cls.id, { studentId: addStudentId });
-      setParticipants((prev) => [...prev, p]);
+      // Re-fetch the full list so we get the populated `student` relation
+      await addParticipant(cls.id, { studentId: addStudentId });
+      const updated = await getClassParticipants(cls.id);
+      setParticipants(updated);
       setAddStudentId("");
     } catch (err) {
       setError(
@@ -1003,6 +1026,30 @@ function ParticipantsModal({
     }
   }
 
+  async function handleToggleAttendance(
+    studentId: string,
+    next: "PRESENT" | "ABSENT",
+  ) {
+    setTogglingId(studentId);
+    setError(null);
+    try {
+      const updated = await updateParticipant(cls.id, studentId, {
+        attendance: next,
+      });
+      setParticipants((prev) =>
+        prev.map((p) => (p.studentId === studentId ? { ...p, ...updated } : p)),
+      );
+    } catch (err) {
+      setError(
+        err instanceof ApiRequestError
+          ? err.message
+          : "Error al actualizar asistencia",
+      );
+    } finally {
+      setTogglingId(null);
+    }
+  }
+
   return (
     <ModalShell
       title={`Participantes — ${fmtDate(cls.scheduledAt)} ${fmtTime(cls.scheduledAt)}`}
@@ -1015,28 +1062,30 @@ function ParticipantsModal({
           </p>
         )}
 
-        {/* Agregar participante */}
-        <div className="flex gap-2">
-          <select
-            value={addStudentId}
-            onChange={(e) => setAddStudentId(e.target.value)}
-            className="flex-1 px-3 py-2 text-sm border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-app-primary bg-white"
-          >
-            <option value="">Agregar alumno…</option>
-            {availableStudents.map((s) => (
-              <option key={s.id} value={s.id}>
-                {s.fullName}
-              </option>
-            ))}
-          </select>
-          <button
-            onClick={() => void handleAdd()}
-            disabled={!addStudentId || adding}
-            className="px-4 py-2 bg-app-primary text-white text-sm font-semibold rounded-xl hover:bg-app-primary-dark transition-colors disabled:opacity-60"
-          >
-            {adding ? "…" : <Plus size={16} />}
-          </button>
-        </div>
+        {/* Agregar participante — solo mientras SCHEDULED */}
+        {canEditAttendance && (
+          <div className="flex gap-2">
+            <select
+              value={addStudentId}
+              onChange={(e) => setAddStudentId(e.target.value)}
+              className="flex-1 px-3 py-2 text-sm border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-app-primary bg-white"
+            >
+              <option value="">Agregar alumno…</option>
+              {availableStudents.map((s) => (
+                <option key={s.id} value={s.id}>
+                  {s.fullName}
+                </option>
+              ))}
+            </select>
+            <button
+              onClick={() => void handleAdd()}
+              disabled={!addStudentId || adding}
+              className="px-4 py-2 bg-app-primary text-white text-sm font-semibold rounded-xl hover:bg-app-primary-dark transition-colors disabled:opacity-60"
+            >
+              {adding ? "…" : <Plus size={16} />}
+            </button>
+          </div>
+        )}
 
         {/* Lista de participantes */}
         {loading ? (
@@ -1052,26 +1101,75 @@ function ParticipantsModal({
             {participants.map((p) => (
               <li
                 key={p.id}
-                className="flex items-center justify-between py-2.5"
+                className="flex items-center justify-between py-2.5 gap-3"
               >
-                <div>
-                  <p className="text-sm font-medium text-app-neutral-dark">
+                <div className="min-w-0 flex-1">
+                  <p className="text-sm font-medium text-app-neutral-dark truncate">
                     {p.student.fullName}
                   </p>
                   <p className="text-xs text-gray-400">
-                    {p.appliedRate
-                      ? `Tarifa: ${p.student.currency} ${Number(p.appliedRate).toFixed(2)}`
-                      : `Tarifa base: ${p.student.currency} ${Number(p.student.classRate).toFixed(2)}`}
+                    {`${p.student.currency} ${Number(p.effectiveRate).toFixed(2)}`}
                   </p>
                 </div>
-                <button
-                  onClick={() => void handleRemove(p.studentId)}
-                  disabled={removingId === p.studentId}
-                  title="Quitar participante"
-                  className="p-1.5 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors disabled:opacity-60"
-                >
-                  <Trash2 size={14} />
-                </button>
+
+                {/* Attendance toggle — solo mientras SCHEDULED */}
+                {canEditAttendance ? (
+                  <div className="flex gap-1 shrink-0">
+                    <button
+                      type="button"
+                      onClick={() =>
+                        void handleToggleAttendance(p.studentId, "PRESENT")
+                      }
+                      disabled={togglingId === p.studentId}
+                      className={cn(
+                        "px-2.5 py-1 text-xs font-medium rounded-lg transition-colors",
+                        p.attendance === "PRESENT"
+                          ? "bg-green-600 text-white"
+                          : "bg-gray-100 text-gray-500 hover:bg-gray-200",
+                      )}
+                    >
+                      Presente
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() =>
+                        void handleToggleAttendance(p.studentId, "ABSENT")
+                      }
+                      disabled={togglingId === p.studentId}
+                      className={cn(
+                        "px-2.5 py-1 text-xs font-medium rounded-lg transition-colors",
+                        p.attendance === "ABSENT"
+                          ? "bg-yellow-500 text-white"
+                          : "bg-gray-100 text-gray-500 hover:bg-gray-200",
+                      )}
+                    >
+                      Ausente
+                    </button>
+                  </div>
+                ) : (
+                  <span
+                    className={cn(
+                      "shrink-0 inline-flex px-2 py-0.5 rounded-full text-xs font-medium",
+                      p.attendance === "ABSENT"
+                        ? "bg-yellow-100 text-yellow-700"
+                        : "bg-green-100 text-green-700",
+                    )}
+                  >
+                    {p.attendance === "ABSENT" ? "Ausente" : "Presente"}
+                  </span>
+                )}
+
+                {/* Quitar — solo mientras SCHEDULED */}
+                {canEditAttendance && (
+                  <button
+                    onClick={() => void handleRemove(p.studentId)}
+                    disabled={removingId === p.studentId}
+                    title="Quitar participante"
+                    className="p-1.5 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors disabled:opacity-60 shrink-0"
+                  >
+                    <Trash2 size={14} />
+                  </button>
+                )}
               </li>
             ))}
           </ul>
@@ -1106,6 +1204,31 @@ function AbsentDecisionModal({
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
 
+  // GROUP: per-participant decisions
+  const [participants, setParticipants] = useState<ClassParticipant[]>([]);
+  const [loadingParticipants, setLoadingParticipants] = useState(
+    cls.classType === "GROUP",
+  );
+  // map studentId -> chargeable (default true)
+  const [decisions, setDecisions] = useState<Record<string, boolean>>({});
+
+  useEffect(() => {
+    if (cls.classType !== "GROUP") return;
+    getClassParticipants(cls.id)
+      .then((pts) => {
+        setParticipants(pts);
+        setDecisions(Object.fromEntries(pts.map((p) => [p.studentId, true])));
+      })
+      .catch((err) =>
+        setSubmitError(
+          err instanceof ApiRequestError
+            ? err.message
+            : "Error al cargar participantes",
+        ),
+      )
+      .finally(() => setLoadingParticipants(false));
+  }, [cls.id, cls.classType]);
+
   async function decide(chargeable: boolean) {
     setSubmitting(true);
     setSubmitError(null);
@@ -1121,8 +1244,33 @@ function AbsentDecisionModal({
     }
   }
 
+  async function decideGroup() {
+    setSubmitting(true);
+    setSubmitError(null);
+    try {
+      const participantsPayload = participants.map((p) => ({
+        studentId: p.studentId,
+        chargeable: decisions[p.studentId] ?? true,
+      }));
+      // top-level chargeable = majority default (true); individual overrides sent explicitly
+      onDecided(await absentDecision(cls.id, true, participantsPayload));
+    } catch (err) {
+      setSubmitError(
+        err instanceof ApiRequestError
+          ? err.message
+          : "Error al registrar la decisión",
+      );
+      setSubmitting(false);
+    }
+  }
+
+  const title =
+    cls.classType === "GROUP"
+      ? "Clase grupal ausente"
+      : `Clase ausente — ${studentName}`;
+
   return (
-    <ModalShell title={`Clase ausente — ${studentName}`} onClose={onClose}>
+    <ModalShell title={title} onClose={onClose}>
       <div className="px-6 py-5 space-y-4">
         {submitError && (
           <p className="text-sm text-red-600 bg-red-50 px-4 py-2 rounded-lg">
@@ -1131,39 +1279,129 @@ function AbsentDecisionModal({
         )}
 
         <p className="text-sm text-gray-600">
-          El alumno no asistió a la clase del{" "}
+          Clase del{" "}
           <strong>
             {fmtDate(cls.scheduledAt)} a las {fmtTime(cls.scheduledAt)}
           </strong>
           .
         </p>
-        <p className="text-sm text-gray-600">
-          ¿Querés cobrar esta clase de todas formas?
-        </p>
 
-        <div className="flex gap-3 pt-2">
-          <button
-            onClick={onClose}
-            disabled={submitting}
-            className="flex-1 py-2.5 border border-gray-200 text-gray-600 text-sm font-medium rounded-xl hover:bg-gray-50 transition-colors disabled:opacity-60"
-          >
-            Cancelar
-          </button>
-          <button
-            onClick={() => void decide(false)}
-            disabled={submitting}
-            className="flex-1 py-2.5 bg-gray-100 text-gray-700 text-sm font-semibold rounded-xl hover:bg-gray-200 transition-colors disabled:opacity-60"
-          >
-            No cobrar
-          </button>
-          <button
-            onClick={() => void decide(true)}
-            disabled={submitting}
-            className="flex-1 py-2.5 bg-app-primary text-white text-sm font-semibold rounded-xl hover:bg-app-primary-dark transition-colors disabled:opacity-60"
-          >
-            Cobrar
-          </button>
-        </div>
+        {cls.classType === "GROUP" ? (
+          <>
+            <p className="text-sm text-gray-600">
+              Decidí si cobrar a cada participante:
+            </p>
+            {loadingParticipants ? (
+              <div className="flex justify-center py-4">
+                <div className="w-6 h-6 border-4 border-app-primary border-t-transparent rounded-full animate-spin" />
+              </div>
+            ) : participants.length === 0 ? (
+              <p className="text-sm text-gray-400 text-center py-2">
+                Sin participantes registrados.
+              </p>
+            ) : (
+              <ul className="divide-y divide-gray-100 rounded-xl border border-gray-100 overflow-hidden">
+                {participants.map((p) => (
+                  <li
+                    key={p.studentId}
+                    className="flex items-center justify-between px-4 py-2.5"
+                  >
+                    <div>
+                      <p className="text-sm font-medium text-app-neutral-dark">
+                        {p.student.fullName}
+                      </p>
+                      <p className="text-xs text-gray-400">
+                        {p.student.currency}{" "}
+                        {Number(p.effectiveRate).toFixed(2)}
+                      </p>
+                    </div>
+                    <div className="flex gap-2">
+                      <button
+                        type="button"
+                        onClick={() =>
+                          setDecisions((d) => ({
+                            ...d,
+                            [p.studentId]: false,
+                          }))
+                        }
+                        className={cn(
+                          "px-3 py-1 text-xs font-medium rounded-lg transition-colors",
+                          decisions[p.studentId] === false
+                            ? "bg-gray-700 text-white"
+                            : "bg-gray-100 text-gray-600 hover:bg-gray-200",
+                        )}
+                      >
+                        No cobrar
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() =>
+                          setDecisions((d) => ({
+                            ...d,
+                            [p.studentId]: true,
+                          }))
+                        }
+                        className={cn(
+                          "px-3 py-1 text-xs font-medium rounded-lg transition-colors",
+                          decisions[p.studentId] !== false
+                            ? "bg-app-primary text-white"
+                            : "bg-gray-100 text-gray-600 hover:bg-gray-200",
+                        )}
+                      >
+                        Cobrar
+                      </button>
+                    </div>
+                  </li>
+                ))}
+              </ul>
+            )}
+            <div className="flex gap-3 pt-2">
+              <button
+                onClick={onClose}
+                disabled={submitting}
+                className="flex-1 py-2.5 border border-gray-200 text-gray-600 text-sm font-medium rounded-xl hover:bg-gray-50 transition-colors disabled:opacity-60"
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={() => void decideGroup()}
+                disabled={submitting || loadingParticipants}
+                className="flex-1 py-2.5 bg-app-primary text-white text-sm font-semibold rounded-xl hover:bg-app-primary-dark transition-colors disabled:opacity-60"
+              >
+                {submitting ? "Guardando…" : "Confirmar"}
+              </button>
+            </div>
+          </>
+        ) : (
+          <>
+            <p className="text-sm text-gray-600">
+              El alumno no asistió. ¿Querés cobrar esta clase de todas formas?
+            </p>
+            <div className="flex gap-3 pt-2">
+              <button
+                onClick={onClose}
+                disabled={submitting}
+                className="flex-1 py-2.5 border border-gray-200 text-gray-600 text-sm font-medium rounded-xl hover:bg-gray-50 transition-colors disabled:opacity-60"
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={() => void decide(false)}
+                disabled={submitting}
+                className="flex-1 py-2.5 bg-gray-100 text-gray-700 text-sm font-semibold rounded-xl hover:bg-gray-200 transition-colors disabled:opacity-60"
+              >
+                No cobrar
+              </button>
+              <button
+                onClick={() => void decide(true)}
+                disabled={submitting}
+                className="flex-1 py-2.5 bg-app-primary text-white text-sm font-semibold rounded-xl hover:bg-app-primary-dark transition-colors disabled:opacity-60"
+              >
+                Cobrar
+              </button>
+            </div>
+          </>
+        )}
       </div>
     </ModalShell>
   );

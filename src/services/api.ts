@@ -338,10 +338,18 @@ export async function rescheduleClass(
 export async function absentDecision(
   id: string,
   chargeable: boolean,
+  participants?: { studentId: string; chargeable: boolean }[],
 ): Promise<Class> {
   return apiFetch<Class>(
     `/classes/${id}/absent-decision`,
-    { method: "POST", body: JSON.stringify({ chargeable }) },
+    {
+      method: "POST",
+      body: JSON.stringify(
+        participants && participants.length > 0
+          ? { chargeable, participants }
+          : { chargeable },
+      ),
+    },
     true,
   );
 }
@@ -376,6 +384,23 @@ export async function removeParticipant(
   await apiFetch<void>(
     `/classes/${classId}/participants/${studentId}`,
     { method: "DELETE" },
+    true,
+  );
+}
+
+export interface UpdateParticipantData {
+  attendance?: "PRESENT" | "ABSENT";
+  appliedRate?: string;
+}
+
+export async function updateParticipant(
+  classId: string,
+  studentId: string,
+  data: UpdateParticipantData,
+): Promise<ClassParticipant> {
+  return apiFetch<ClassParticipant>(
+    `/classes/${classId}/participants/${studentId}`,
+    { method: "PATCH", body: JSON.stringify(data) },
     true,
   );
 }
