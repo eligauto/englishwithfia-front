@@ -87,15 +87,13 @@ export function PortalPage() {
   const [charges, setCharges] = useState<PortalCharge[]>([]);
   const [packs, setPacks] = useState<PortalPack[]>([]);
   const [tab, setTab] = useState<Tab>("classes");
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const [loading, setLoading] = useState(!!token);
+  const [error, setError] = useState<string | null>(
+    token ? null : "Link de acceso inválido. Pedile uno nuevo a tu profesor/a.",
+  );
 
   useEffect(() => {
-    if (!token) {
-      setError("Link de acceso inválido. Pedile uno nuevo a tu profesor/a.");
-      setLoading(false);
-      return;
-    }
+    if (!token) return;
 
     Promise.all([
       getPortalMe(token),
@@ -105,15 +103,31 @@ export function PortalPage() {
     ])
       .then(([prof, cls, chg, pks]) => {
         setProfile(prof);
-        setClasses(cls.sort((a, b) => new Date(b.scheduledAt).getTime() - new Date(a.scheduledAt).getTime()));
-        setCharges(chg.sort((a, b) => new Date(b.generatedAt).getTime() - new Date(a.generatedAt).getTime()));
+        setClasses(
+          cls.sort(
+            (a, b) =>
+              new Date(b.scheduledAt).getTime() -
+              new Date(a.scheduledAt).getTime(),
+          ),
+        );
+        setCharges(
+          chg.sort(
+            (a, b) =>
+              new Date(b.generatedAt).getTime() -
+              new Date(a.generatedAt).getTime(),
+          ),
+        );
         setPacks(pks);
       })
       .catch((err) => {
         if (err instanceof ApiRequestError && err.statusCode === 401) {
-          setError("El link de acceso no es válido o fue revocado. Pedile uno nuevo a tu profesor/a.");
+          setError(
+            "El link de acceso no es válido o fue revocado. Pedile uno nuevo a tu profesor/a.",
+          );
         } else {
-          setError("No se pudo cargar tu información. Intentá de nuevo más tarde.");
+          setError(
+            "No se pudo cargar tu información. Intentá de nuevo más tarde.",
+          );
         }
       })
       .finally(() => setLoading(false));
@@ -132,7 +146,9 @@ export function PortalPage() {
       <div className="min-h-screen bg-app-neutral-light flex items-center justify-center p-6">
         <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-8 max-w-md text-center space-y-3">
           <p className="text-2xl">🔒</p>
-          <p className="text-base font-semibold text-app-neutral-dark">Sin acceso</p>
+          <p className="text-base font-semibold text-app-neutral-dark">
+            Sin acceso
+          </p>
           <p className="text-sm text-gray-500">{error}</p>
         </div>
       </div>
@@ -140,7 +156,11 @@ export function PortalPage() {
   }
 
   const pendingTotal = charges
-    .filter((c) => ["PENDING_PAYMENT", "DEFERRED", "ABSENT_CHARGEABLE"].includes(c.financialStatus))
+    .filter((c) =>
+      ["PENDING_PAYMENT", "DEFERRED", "ABSENT_CHARGEABLE"].includes(
+        c.financialStatus,
+      ),
+    )
     .reduce<Record<string, number>>((acc, c) => {
       acc[c.currency] = (acc[c.currency] ?? 0) + Number(c.amount);
       return acc;
@@ -152,22 +172,38 @@ export function PortalPage() {
       <header className="bg-white border-b border-gray-100 shadow-sm">
         <div className="max-w-3xl mx-auto px-6 py-5 flex items-center justify-between">
           <div>
-            <p className="text-xs text-gray-400 uppercase tracking-wider mb-0.5">Portal del alumno</p>
-            <h1 className="text-xl font-bold text-app-neutral-dark">{profile?.fullName}</h1>
+            <p className="text-xs text-gray-400 uppercase tracking-wider mb-0.5">
+              Portal del alumno
+            </p>
+            <h1 className="text-xl font-bold text-app-neutral-dark">
+              {profile?.fullName}
+            </h1>
           </div>
+          {profile?.meetingLink && (
+            <a
+              href={profile.meetingLink}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center gap-2 px-4 py-2 bg-app-primary text-white text-sm font-semibold rounded-xl hover:bg-app-primary-dark transition-colors"
+            >
+              Unirse a la clase
+            </a>
+          )}
         </div>
       </header>
 
       <div className="max-w-3xl mx-auto px-6 py-8 space-y-6">
-
         {/* Resumen deuda */}
         {Object.keys(pendingTotal).length > 0 && (
           <div className="bg-yellow-50 border border-yellow-200 rounded-2xl px-5 py-4">
-            <p className="text-sm font-semibold text-yellow-800 mb-1">Saldo pendiente</p>
+            <p className="text-sm font-semibold text-yellow-800 mb-1">
+              Saldo pendiente
+            </p>
             <div className="flex flex-wrap gap-3">
               {Object.entries(pendingTotal).map(([cur, amount]) => (
                 <span key={cur} className="text-sm font-bold text-yellow-700">
-                  {cur} {amount.toLocaleString("es-AR", { minimumFractionDigits: 2 })}
+                  {cur}{" "}
+                  {amount.toLocaleString("es-AR", { minimumFractionDigits: 2 })}
                 </span>
               ))}
             </div>
@@ -177,8 +213,16 @@ export function PortalPage() {
         {/* Tabs */}
         <div className="flex gap-1 bg-white rounded-2xl border border-gray-100 p-1 shadow-sm">
           {(["classes", "charges", "packs"] as Tab[]).map((t) => {
-            const labels = { classes: "Clases", charges: "Cargos", packs: "Packs" };
-            const counts = { classes: classes.length, charges: charges.length, packs: packs.length };
+            const labels = {
+              classes: "Clases",
+              charges: "Cargos",
+              packs: "Packs",
+            };
+            const counts = {
+              classes: classes.length,
+              charges: charges.length,
+              packs: packs.length,
+            };
             return (
               <button
                 key={t}
@@ -191,7 +235,12 @@ export function PortalPage() {
                 )}
               >
                 {labels[t]}
-                <span className={cn("ml-1.5 text-xs", tab === t ? "opacity-70" : "text-gray-400")}>
+                <span
+                  className={cn(
+                    "ml-1.5 text-xs",
+                    tab === t ? "opacity-70" : "text-gray-400",
+                  )}
+                >
                   {counts[t]}
                 </span>
               </button>
@@ -220,20 +269,46 @@ function ClassesTab({ classes }: { classes: PortalClass[] }) {
       <table className="w-full text-sm">
         <thead className="bg-gray-50 border-b border-gray-100">
           <tr>
-            <th className="text-left px-5 py-3 text-xs font-semibold text-gray-400 uppercase tracking-wider">Fecha y hora</th>
-            <th className="text-left px-5 py-3 text-xs font-semibold text-gray-400 uppercase tracking-wider">Duración</th>
-            <th className="text-left px-5 py-3 text-xs font-semibold text-gray-400 uppercase tracking-wider">Estado</th>
+            <th className="text-left px-5 py-3 text-xs font-semibold text-gray-400 uppercase tracking-wider">
+              Fecha y hora
+            </th>
+            <th className="text-left px-5 py-3 text-xs font-semibold text-gray-400 uppercase tracking-wider">
+              Duración
+            </th>
+            <th className="text-left px-5 py-3 text-xs font-semibold text-gray-400 uppercase tracking-wider">
+              Estado
+            </th>
+            <th className="px-5 py-3" />
           </tr>
         </thead>
         <tbody className="divide-y divide-gray-50">
           {classes.map((cls) => (
             <tr key={cls.id} className="hover:bg-gray-50/60 transition-colors">
-              <td className="px-5 py-3.5 text-gray-700">{fmtDateTime(cls.scheduledAt)}</td>
+              <td className="px-5 py-3.5 text-gray-700">
+                {fmtDateTime(cls.scheduledAt)}
+              </td>
               <td className="px-5 py-3.5 text-gray-500">{cls.duration} min</td>
               <td className="px-5 py-3.5">
-                <span className={cn("inline-flex px-2.5 py-0.5 rounded-full text-xs font-medium", CLASS_STATUS_COLORS[cls.status])}>
+                <span
+                  className={cn(
+                    "inline-flex px-2.5 py-0.5 rounded-full text-xs font-medium",
+                    CLASS_STATUS_COLORS[cls.status],
+                  )}
+                >
                   {CLASS_STATUS_LABELS[cls.status]}
                 </span>
+              </td>
+              <td className="px-5 py-3.5 text-right">
+                {cls.meetingLink && (
+                  <a
+                    href={cls.meetingLink}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-1.5 px-3 py-1 bg-app-primary text-white text-xs font-semibold rounded-lg hover:bg-app-primary-dark transition-colors"
+                  >
+                    Unirse
+                  </a>
+                )}
               </td>
             </tr>
           ))}
@@ -255,21 +330,36 @@ function ChargesTab({ charges }: { charges: PortalCharge[] }) {
       <table className="w-full text-sm">
         <thead className="bg-gray-50 border-b border-gray-100">
           <tr>
-            <th className="text-left px-5 py-3 text-xs font-semibold text-gray-400 uppercase tracking-wider">Fecha</th>
-            <th className="text-left px-5 py-3 text-xs font-semibold text-gray-400 uppercase tracking-wider">Monto</th>
-            <th className="text-left px-5 py-3 text-xs font-semibold text-gray-400 uppercase tracking-wider">Estado</th>
-            <th className="text-left px-5 py-3 text-xs font-semibold text-gray-400 uppercase tracking-wider">Vencimiento</th>
+            <th className="text-left px-5 py-3 text-xs font-semibold text-gray-400 uppercase tracking-wider">
+              Fecha
+            </th>
+            <th className="text-left px-5 py-3 text-xs font-semibold text-gray-400 uppercase tracking-wider">
+              Monto
+            </th>
+            <th className="text-left px-5 py-3 text-xs font-semibold text-gray-400 uppercase tracking-wider">
+              Estado
+            </th>
+            <th className="text-left px-5 py-3 text-xs font-semibold text-gray-400 uppercase tracking-wider">
+              Vencimiento
+            </th>
           </tr>
         </thead>
         <tbody className="divide-y divide-gray-50">
           {charges.map((chg) => (
             <tr key={chg.id} className="hover:bg-gray-50/60 transition-colors">
-              <td className="px-5 py-3.5 text-gray-500">{fmtDate(chg.generatedAt)}</td>
+              <td className="px-5 py-3.5 text-gray-500">
+                {fmtDate(chg.generatedAt)}
+              </td>
               <td className="px-5 py-3.5 text-gray-700 font-medium">
                 {chg.currency} {Number(chg.amount).toFixed(2)}
               </td>
               <td className="px-5 py-3.5">
-                <span className={cn("inline-flex px-2.5 py-0.5 rounded-full text-xs font-medium", CHARGE_STATUS_COLORS[chg.financialStatus])}>
+                <span
+                  className={cn(
+                    "inline-flex px-2.5 py-0.5 rounded-full text-xs font-medium",
+                    CHARGE_STATUS_COLORS[chg.financialStatus],
+                  )}
+                >
                   {CHARGE_STATUS_LABELS[chg.financialStatus]}
                 </span>
               </td>
@@ -298,15 +388,24 @@ function PacksTab({ packs }: { packs: PortalPack[] }) {
   return (
     <div className="space-y-3">
       {packs.map((pack) => (
-        <div key={pack.id} className="bg-white rounded-2xl border border-gray-100 shadow-sm px-5 py-4">
+        <div
+          key={pack.id}
+          className="bg-white rounded-2xl border border-gray-100 shadow-sm px-5 py-4"
+        >
           <div className="flex items-center justify-between mb-3">
-            <span className={cn(
-              "text-xs font-semibold px-2.5 py-0.5 rounded-full",
-              pack.isActive ? "bg-green-100 text-green-700" : "bg-gray-100 text-gray-500",
-            )}>
+            <span
+              className={cn(
+                "text-xs font-semibold px-2.5 py-0.5 rounded-full",
+                pack.isActive
+                  ? "bg-green-100 text-green-700"
+                  : "bg-gray-100 text-gray-500",
+              )}
+            >
               {pack.isActive ? "Activo" : "Inactivo"}
             </span>
-            <span className="text-xs text-gray-400">Comprado {fmtDate(pack.purchasedAt)}</span>
+            <span className="text-xs text-gray-400">
+              Comprado {fmtDate(pack.purchasedAt)}
+            </span>
           </div>
 
           {/* Barra de progreso */}
@@ -318,7 +417,9 @@ function PacksTab({ packs }: { packs: PortalPack[] }) {
             <div className="h-2 bg-gray-100 rounded-full overflow-hidden">
               <div
                 className="h-full bg-app-primary rounded-full transition-all"
-                style={{ width: `${Math.round((pack.usedClasses / pack.totalClasses) * 100)}%` }}
+                style={{
+                  width: `${Math.round((pack.usedClasses / pack.totalClasses) * 100)}%`,
+                }}
               />
             </div>
           </div>

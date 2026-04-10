@@ -10,7 +10,7 @@ export interface ServiceItem {
   title: string;
   description: string;
   level: string;
-  modality: 'online' | 'presencial' | 'ambos';
+  modality: "online" | "presencial" | "ambos";
 }
 
 export interface TestimonialItem {
@@ -44,45 +44,60 @@ export interface ApiResponse<T> {
 
 // ── Enums ─────────────────────────────────────────────────────────────────────
 
-export type UserRole = 'OWNER' | 'ADMIN';
+export type UserRole = "OWNER" | "ADMIN";
 
-export type ClassModality = 'IN_PERSON' | 'ONLINE';
+export type ClassModality = "IN_PERSON" | "ONLINE";
 
-export type ClassType = 'INDIVIDUAL' | 'GROUP';
+export type ClassType = "INDIVIDUAL" | "GROUP";
 
-export type ClassStatus = 'SCHEDULED' | 'TAUGHT' | 'CANCELLED' | 'RESCHEDULED' | 'ABSENT';
+export type ClassStatus =
+  | "SCHEDULED"
+  | "TAUGHT"
+  | "CANCELLED"
+  | "RESCHEDULED"
+  | "ABSENT";
 
-export type Currency = 'ARS' | 'EUR' | 'USD' | 'UYU' | 'BRL' | 'GBP' | 'OTHER';
+export type Currency = "ARS" | "EUR" | "USD" | "UYU" | "BRL" | "GBP" | "OTHER";
 
 export type FinancialStatus =
-  | 'PENDING_PAYMENT'
-  | 'PAID'
-  | 'DEFERRED'
-  | 'WAIVED'
-  | 'PACK_COVERED'
-  | 'ABSENT_CHARGEABLE'
-  | 'ABSENT_NON_CHARGEABLE';
+  | "PENDING_PAYMENT"
+  | "PAID"
+  | "DEFERRED"
+  | "WAIVED"
+  | "PACK_COVERED"
+  | "ABSENT_CHARGEABLE"
+  | "ABSENT_NON_CHARGEABLE";
 
-export type PaymentMethod = 'CASH' | 'BANK_TRANSFER' | 'CARD' | 'DIGITAL_WALLET' | 'OTHER';
+export type PaymentMethod =
+  | "CASH"
+  | "BANK_TRANSFER"
+  | "CARD"
+  | "DIGITAL_WALLET"
+  | "OTHER";
 
 // ── Organization ──────────────────────────────────────────────────────────────
 
-export type VocabularyPreset = 'EDUCATION' | 'HEALTH' | 'FITNESS' | 'COACHING' | 'GENERIC';
+export type VocabularyPreset =
+  | "EDUCATION"
+  | "HEALTH"
+  | "FITNESS"
+  | "COACHING"
+  | "GENERIC";
 
 /** Etiquetas de nombre resueltas server-side desde el preset activo */
 export interface VocabularyLabels {
   studentSingular: string; // e.g. "alumno", "paciente", "atleta", "cliente"
-  studentPlural: string;   // e.g. "alumnos", "pacientes"
+  studentPlural: string; // e.g. "alumnos", "pacientes"
   sessionSingular: string; // e.g. "clase", "consulta", "sesión"
-  sessionPlural: string;   // e.g. "clases", "consultas"
+  sessionPlural: string; // e.g. "clases", "consultas"
 }
 
 export interface Organization {
   id: string;
   name: string;
-  timezone: string;            // IANA tz string, e.g. "America/Buenos_Aires"
+  timezone: string; // IANA tz string, e.g. "America/Buenos_Aires"
   notificationEmail: string | null;
-  dailyBriefingHour: number;   // hora local 0–23
+  dailyBriefingHour: number; // hora local 0–23
   vocabularyPreset: VocabularyPreset; // default: "EDUCATION"
   vocabularyLabels: VocabularyLabels; // computado server-side, no almacenado
   createdAt: string; // ISO 8601
@@ -91,7 +106,7 @@ export interface Organization {
 
 export interface UpdateOrganizationData {
   name?: string;
-  timezone?: string;           // IANA tz string
+  timezone?: string; // IANA tz string
   vocabularyPreset?: VocabularyPreset;
   notificationEmail?: string | null;
   dailyBriefingHour?: number;
@@ -132,14 +147,15 @@ export interface Student {
   fullName: string;
   phone: string | null;
   email: string | null;
-  classRate: string;            // Decimal serializado como string, e.g. "45.00"
-  currency: Currency;           // moneda por defecto de los cargos
+  classRate: string; // Decimal serializado como string, e.g. "45.00"
+  currency: Currency; // moneda por defecto de los cargos
   modality: ClassModality;
   weeklyFrequency: number | null;
   classDuration: number | null; // minutos
   isActive: boolean;
   notes: string | null;
-  createdAt: string;            // ISO 8601
+  meetingLink: string | null; // URL de videollamada (Zoom, Meet, etc.)
+  createdAt: string; // ISO 8601
   updatedAt: string;
 }
 
@@ -153,6 +169,7 @@ export interface CreateStudentData {
   weeklyFrequency?: number;
   classDuration?: number;
   notes?: string;
+  meetingLink?: string;
 }
 
 export type UpdateStudentData = Partial<CreateStudentData>;
@@ -162,16 +179,17 @@ export type UpdateStudentData = Partial<CreateStudentData>;
 /** Entidad Class tal como la devuelve el backend */
 export interface Class {
   id: string;
-  classType: ClassType;             // INDIVIDUAL (default) o GROUP
-  studentId: string | null;         // null para clases GROUP
-  scheduledAt: string;              // ISO 8601
-  duration: number;                 // minutos
+  classType: ClassType; // INDIVIDUAL (default) o GROUP
+  studentId: string | null; // null para clases GROUP
+  scheduledAt: string; // ISO 8601
+  duration: number; // minutos
   status: ClassStatus;
-  appliedRate: string | null;       // Decimal como string, e.g. "45.00" (INDIVIDUAL)
-  currency: Currency;               // moneda heredada del alumno al momento de crear la clase
+  appliedRate: string | null; // Decimal como string, e.g. "45.00" (INDIVIDUAL)
+  currency: Currency; // moneda heredada del alumno al momento de crear la clase
   chargeGenerated: boolean;
   notes: string | null;
-  originalClassId: string | null;   // apunta a la clase reagendada de origen
+  student: StudentMeetingLink | null; // link del alumno (null para GROUP o si no está configurado)
+  originalClassId: string | null; // apunta a la clase reagendada de origen
   createdAt: string;
   updatedAt: string;
 }
@@ -180,10 +198,10 @@ export interface ClassParticipant {
   id: string;
   classId: string;
   studentId: string;
-  appliedRate: string | null;       // tarifa por participante (override del classRate del alumno)
+  appliedRate: string | null; // tarifa por participante (override del classRate del alumno)
   attendance: "PRESENT" | "ABSENT"; // default "PRESENT"; se puede cambiar mientras la clase está SCHEDULED
-  effectiveRate: string;            // appliedRate ?? student.classRate — siempre tiene valor
-  createdAt: string;                // ISO 8601
+  effectiveRate: string; // appliedRate ?? student.classRate — siempre tiene valor
+  createdAt: string; // ISO 8601
   student: {
     fullName: string;
     classRate: string;
@@ -193,21 +211,25 @@ export interface ClassParticipant {
 
 export interface AddParticipantData {
   studentId: string;
-  appliedRate?: number;             // override de tarifa opcional
+  appliedRate?: number; // override de tarifa opcional
 }
 
 export interface CreateClassData {
-  classType?: ClassType;            // omitir = INDIVIDUAL
-  studentId?: string;               // obligatorio para INDIVIDUAL, omitir para GROUP
+  classType?: ClassType; // omitir = INDIVIDUAL
+  studentId?: string; // obligatorio para INDIVIDUAL, omitir para GROUP
   participants?: { studentId: string; appliedRate?: number }[]; // mínimo 1 para GROUP
-  scheduledAt: string;              // ISO 8601
-  duration: number;                 // minutos
+  scheduledAt: string; // ISO 8601
+  duration: number; // minutos
   notes?: string;
 }
 
 export interface RescheduleClassData {
-  scheduledAt: string;   // ISO 8601 — nueva fecha/hora
+  scheduledAt: string; // ISO 8601 — nueva fecha/hora
   notes?: string;
+}
+
+interface StudentMeetingLink {
+  meetingLink: string | null;
 }
 
 // ── Admin — Charges ───────────────────────────────────────────────────────────
@@ -217,26 +239,26 @@ export interface Charge {
   id: string;
   studentId: string;
   classId: string;
-  amount: string;                     // Decimal como string, e.g. "45.00"
-  currency: Currency;                 // moneda del cargo (nunca mutable)
-  paymentCurrency: Currency | null;   // moneda en la que se recibió el pago (solo cuando PAID)
+  amount: string; // Decimal como string, e.g. "45.00"
+  currency: Currency; // moneda del cargo (nunca mutable)
+  paymentCurrency: Currency | null; // moneda en la que se recibió el pago (solo cuando PAID)
   paymentMethod: PaymentMethod | null; // cómo se recibió el pago (solo cuando PAID)
   financialStatus: FinancialStatus;
-  generatedAt: string;              // ISO 8601
+  generatedAt: string; // ISO 8601
   promisedPaymentDate: string | null;
   paidAt: string | null;
   notes: string | null;
-  packId: string | null;            // poblado cuando financialStatus = PACK_COVERED
+  packId: string | null; // poblado cuando financialStatus = PACK_COVERED
   updatedAt: string;
 }
 /** Payload para PATCH /charges/:id/status */
 export interface UpdateChargeStatusData {
   financialStatus: FinancialStatus;
-  notes?: string;                    // obligatorio cuando financialStatus = DEFERRED
-  promisedPaymentDate?: string;      // ISO 8601, opcional para DEFERRED
-  packId?: string;                   // obligatorio cuando financialStatus = PACK_COVERED
-  paymentCurrency?: Currency;        // moneda de pago recibido (cuando financialStatus = PAID)
-  paymentMethod?: PaymentMethod;     // método de pago (cuando financialStatus = PAID)
+  notes?: string; // obligatorio cuando financialStatus = DEFERRED
+  promisedPaymentDate?: string; // ISO 8601, opcional para DEFERRED
+  packId?: string; // obligatorio cuando financialStatus = PACK_COVERED
+  paymentCurrency?: Currency; // moneda de pago recibido (cuando financialStatus = PAID)
+  paymentMethod?: PaymentMethod; // método de pago (cuando financialStatus = PAID)
 }
 // ── Admin — Packs ─────────────────────────────────────────────────────────────
 
@@ -246,10 +268,10 @@ export interface Pack {
   studentId: string;
   totalClasses: number;
   usedClasses: number;
-  availableClasses: number;         // computado: totalClasses - usedClasses
-  amountPaid: string;               // Decimal como string, e.g. "180.00"
-  currency: Currency;               // moneda del monto pagado
-  purchasedAt: string;              // ISO 8601
+  availableClasses: number; // computado: totalClasses - usedClasses
+  amountPaid: string; // Decimal como string, e.g. "180.00"
+  currency: Currency; // moneda del monto pagado
+  purchasedAt: string; // ISO 8601
   expiresAt: string | null;
   isActive: boolean;
   notes: string | null;
@@ -260,9 +282,9 @@ export interface Pack {
 export interface CreatePackData {
   studentId: string;
   totalClasses: number;
-  amountPaid: number;      // se envía como number; Prisma lo convierte a Decimal
+  amountPaid: number; // se envía como number; Prisma lo convierte a Decimal
   currency?: Currency;
-  expiresAt?: string;     // ISO 8601
+  expiresAt?: string; // ISO 8601
   notes?: string;
 }
 
@@ -271,7 +293,7 @@ export interface CreatePackData {
 export interface DebtorSummary {
   studentId: string;
   fullName: string;
-  totalDebt: number;      // ya convertido desde Decimal (suma multi-moneda, solo referencial)
+  totalDebt: number; // ya convertido desde Decimal (suma multi-moneda, solo referencial)
   chargesCount: number;
 }
 
@@ -292,9 +314,9 @@ export interface DeferredItem {
   chargeId: string;
   studentId: string;
   fullName: string;
-  amount: number;               // ya convertido desde Decimal
+  amount: number; // ya convertido desde Decimal
   currency: Currency;
-  promisedPaymentDate: string;  // ISO 8601
+  promisedPaymentDate: string; // ISO 8601
 }
 
 export interface TodayRevenueByCurrency {
@@ -303,16 +325,16 @@ export interface TodayRevenueByCurrency {
 }
 
 export interface DashboardMetrics {
-  totalPendingAmount: number;                     // suma multi-moneda (solo referencial)
-  pendingByCurrency: PendingByCurrencyItem[];     // deuda pendiente desglosada por moneda
+  totalPendingAmount: number; // suma multi-moneda (solo referencial)
+  pendingByCurrency: PendingByCurrencyItem[]; // deuda pendiente desglosada por moneda
   studentsWithDebt: number;
   activeDeferredPayments: number;
   taughtTodayUnpaid: number;
-  overduePromises: number;                        // DEFERRED donde promisedPaymentDate < ahora
-  upcomingPromises: DeferredItem[];               // promesas dentro de los próximos 7 días
-  topDebtors: DebtorSummary[];                    // top 5 por monto (multi-moneda, referencial)
+  overduePromises: number; // DEFERRED donde promisedPaymentDate < ahora
+  upcomingPromises: DeferredItem[]; // promesas dentro de los próximos 7 días
+  topDebtors: DebtorSummary[]; // top 5 por monto (multi-moneda, referencial)
   topDebtorsByCurrency: DebtorSummaryByCurrency[]; // top deudores por (alumno, moneda)
-  todayScheduledCount: number;                    // clases SCHEDULED hoy (timezone de la org)
+  todayScheduledCount: number; // clases SCHEDULED hoy (timezone de la org)
   todayExpectedRevenueByCurrency: TodayRevenueByCurrency[]; // ingresos esperados de las clases de hoy
 }
 
@@ -378,13 +400,13 @@ export type AnalyticsData = AnalyticsMetrics;
 // ── Admin — Schedules ─────────────────────────────────────────────────────────
 
 export type DayOfWeek =
-  | 'MONDAY'
-  | 'TUESDAY'
-  | 'WEDNESDAY'
-  | 'THURSDAY'
-  | 'FRIDAY'
-  | 'SATURDAY'
-  | 'SUNDAY';
+  | "MONDAY"
+  | "TUESDAY"
+  | "WEDNESDAY"
+  | "THURSDAY"
+  | "FRIDAY"
+  | "SATURDAY"
+  | "SUNDAY";
 
 /** Un slot de horario: un día de la semana + hora específica */
 export interface ScheduleSlot {
@@ -397,10 +419,10 @@ export interface ScheduleSlot {
 /** Entidad Schedule tal como la devuelve el backend */
 export interface Schedule {
   id: string;
-  classType: ClassType;       // INDIVIDUAL (default) | GROUP
-  studentId: string | null;   // null para schedules GROUP
-  slots: ScheduleSlot[];  // uno por cada (día, hora) — permite horarios distintos por día
-  duration: number;           // minutos
+  classType: ClassType; // INDIVIDUAL (default) | GROUP
+  studentId: string | null; // null para schedules GROUP
+  slots: ScheduleSlot[]; // uno por cada (día, hora) — permite horarios distintos por día
+  duration: number; // minutos
   appliedRate: string | null; // Decimal como string; null = usa la tarifa del alumno
   notes: string | null;
   isActive: boolean;
@@ -414,25 +436,27 @@ export interface ScheduleSlotInput {
 }
 
 export interface CreateScheduleData {
-  classType?: ClassType;      // INDIVIDUAL (default) | GROUP
-  studentId?: string;         // requerido para INDIVIDUAL, omitir para GROUP
+  classType?: ClassType; // INDIVIDUAL (default) | GROUP
+  studentId?: string; // requerido para INDIVIDUAL, omitir para GROUP
   slots: ScheduleSlotInput[];
   duration: number;
   appliedRate?: string;
   notes?: string;
 }
 
-export type UpdateScheduleData = Partial<Omit<CreateScheduleData, 'studentId'> & { isActive: boolean }>;
+export type UpdateScheduleData = Partial<
+  Omit<CreateScheduleData, "studentId"> & { isActive: boolean }
+>;
 
 export interface GenerateClassesData {
-  from: string;  // YYYY-MM-DD
-  to: string;    // YYYY-MM-DD (max 90 days range)
+  from: string; // YYYY-MM-DD
+  to: string; // YYYY-MM-DD (max 90 days range)
 }
 
 /** Respuesta de POST /schedules/:id/generate */
 export interface GenerateResult {
   generated: number;
-  restored: number;  // clases CANCELLED reactivadas a SCHEDULED
+  restored: number; // clases CANCELLED reactivadas a SCHEDULED
   skipped: number;
   classes: Class[];
 }
@@ -453,16 +477,18 @@ export interface PortalProfile {
   weeklyFrequency: number | null;
   currency: Currency;
   isActive: boolean;
+  meetingLink: string | null; // URL de videollamada si el profesional la configuró
 }
 
 /** Clase visible para el alumno — GET /portal/classes (sin appliedRate) */
 export interface PortalClass {
   id: string;
-  scheduledAt: string;   // ISO 8601
-  duration: number;       // minutos
+  scheduledAt: string; // ISO 8601
+  duration: number; // minutos
   status: ClassStatus;
   classType: ClassType;
   notes: string | null;
+  meetingLink: string | null;
   createdAt: string;
 }
 
@@ -470,7 +496,7 @@ export interface PortalClass {
 export interface PortalCharge {
   id: string;
   classId: string;
-  amount: string;                   // Decimal como string
+  amount: string; // Decimal como string
   currency: Currency;
   paymentCurrency: Currency | null;
   paymentMethod: PaymentMethod | null;

@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Plus, Pencil, UserX, Search, X, Link, Trash2 } from "lucide-react";
+import { Plus, Pencil, UserX, Search, X, Link, Trash2, Video } from "lucide-react";
 import { useForm } from "react-hook-form";
 import {
   getStudents,
@@ -28,6 +28,7 @@ interface StudentFormData {
   classRate: number;
   currency: Currency;
   modality: ClassModality;
+  meetingLink: string;
 }
 
 function toPayload(data: StudentFormData): CreateStudentData {
@@ -38,6 +39,9 @@ function toPayload(data: StudentFormData): CreateStudentData {
     modality: data.modality,
     ...(data.email.trim() ? { email: data.email.trim() } : {}),
     ...(data.phone.trim() ? { phone: data.phone.trim() } : {}),
+    ...(data.meetingLink.trim()
+      ? { meetingLink: data.meetingLink.trim() }
+      : {}),
   };
 }
 
@@ -200,6 +204,18 @@ export function StudentsPage() {
                   </td>
                   <td className="px-6 py-4">
                     <div className="flex items-center justify-end gap-1">
+                      {student.meetingLink && (
+                        <a
+                          href={student.meetingLink}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="p-1.5 text-gray-400 hover:text-violet-500 hover:bg-violet-50 rounded-lg transition-colors"
+                          aria-label="Unirse a la clase"
+                          title="Unirse a la clase"
+                        >
+                          <Video size={15} />
+                        </a>
+                      )}
                       <button
                         onClick={() => setPortalTarget(student)}
                         className="p-1.5 text-gray-400 hover:text-blue-500 hover:bg-blue-50 rounded-lg transition-colors"
@@ -277,14 +293,23 @@ function PortalModal({
       const { portalToken } = await generatePortalToken(student.id);
       setToken(portalToken);
     } catch (err) {
-      setError(err instanceof ApiRequestError ? err.message : "Error al generar el token");
+      setError(
+        err instanceof ApiRequestError
+          ? err.message
+          : "Error al generar el token",
+      );
     } finally {
       setLoading(false);
     }
   }
 
   async function handleRevoke() {
-    if (!confirm("¿Revocar el acceso al portal? El link actual dejará de funcionar.")) return;
+    if (
+      !confirm(
+        "¿Revocar el acceso al portal? El link actual dejará de funcionar.",
+      )
+    )
+      return;
     setRevoking(true);
     setError(null);
     try {
@@ -292,7 +317,11 @@ function PortalModal({
       setToken(null);
       onClose();
     } catch (err) {
-      setError(err instanceof ApiRequestError ? err.message : "Error al revocar el token");
+      setError(
+        err instanceof ApiRequestError
+          ? err.message
+          : "Error al revocar el token",
+      );
     } finally {
       setRevoking(false);
     }
@@ -313,14 +342,19 @@ function PortalModal({
           <h2 className="text-base font-semibold text-app-neutral-dark">
             Portal — {student.fullName}
           </h2>
-          <button onClick={onClose} className="p-1 text-gray-400 hover:text-gray-600 rounded-lg transition-colors">
+          <button
+            onClick={onClose}
+            className="p-1 text-gray-400 hover:text-gray-600 rounded-lg transition-colors"
+          >
             <X size={18} />
           </button>
         </div>
 
         <div className="px-6 py-5 space-y-4">
           {error && (
-            <p className="text-sm text-red-600 bg-red-50 px-4 py-2 rounded-lg">{error}</p>
+            <p className="text-sm text-red-600 bg-red-50 px-4 py-2 rounded-lg">
+              {error}
+            </p>
           )}
 
           {!token ? (
@@ -398,6 +432,7 @@ function StudentModal({ student, onClose, onSaved }: StudentModalProps) {
         : ("" as unknown as number),
       currency: student?.currency ?? "ARS",
       modality: student?.modality ?? "ONLINE",
+      meetingLink: student?.meetingLink ?? "",
     },
   });
 
@@ -570,6 +605,32 @@ function StudentModal({ student, onClose, onSaved }: StudentModalProps) {
             {errors.modality && (
               <p className="mt-1 text-xs text-red-500">
                 {errors.modality.message}
+              </p>
+            )}
+          </div>
+
+          {/* Link de videollamada */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Link de videollamada
+            </label>
+            <input
+              {...register("meetingLink", {
+                validate: (v) =>
+                  !v.trim() ||
+                  /^https?:\/\/.+/.test(v.trim()) ||
+                  "Debe ser una URL válida (https://…)",
+              })}
+              type="url"
+              placeholder="https://meet.google.com/…"
+              className={cn(
+                "w-full px-4 py-2.5 rounded-xl border text-sm focus:outline-none focus:ring-2 focus:ring-app-primary transition",
+                errors.meetingLink ? "border-red-400" : "border-gray-200",
+              )}
+            />
+            {errors.meetingLink && (
+              <p className="mt-1 text-xs text-red-500">
+                {errors.meetingLink.message}
               </p>
             )}
           </div>

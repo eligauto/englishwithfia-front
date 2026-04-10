@@ -11,6 +11,7 @@ import {
   Download,
   Users,
   Trash2,
+  Video,
 } from "lucide-react";
 import { useForm } from "react-hook-form";
 import {
@@ -355,15 +356,29 @@ export function ClassesPage() {
                       : "—"}
                   </td>
                   <td className="px-6 py-4">
-                    <ClassActions
-                      cls={cls}
-                      onMarkTaught={handleMarkTaught}
-                      onMarkAbsent={handleMarkAbsent}
-                      onCancel={handleCancel}
-                      onReschedule={setRescheduleTarget}
-                      onAbsentDecision={setAbsentTarget}
-                      onManageParticipants={setParticipantsTarget}
-                    />
+                    <div className="flex items-center justify-end gap-1">
+                      {cls.student?.meetingLink && (
+                        <a
+                          href={cls.student.meetingLink}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="p-1.5 text-gray-400 hover:text-violet-500 hover:bg-violet-50 rounded-lg transition-colors"
+                          aria-label="Unirse a la clase"
+                          title="Unirse a la clase"
+                        >
+                          <Video size={15} />
+                        </a>
+                      )}
+                      <ClassActions
+                        cls={cls}
+                        onMarkTaught={handleMarkTaught}
+                        onMarkAbsent={handleMarkAbsent}
+                        onCancel={handleCancel}
+                        onReschedule={setRescheduleTarget}
+                        onAbsentDecision={setAbsentTarget}
+                        onManageParticipants={setParticipantsTarget}
+                      />
+                    </div>
                   </td>
                 </tr>
               ))}
