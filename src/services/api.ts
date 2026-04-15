@@ -640,3 +640,44 @@ export async function getPortalCharges(
 export async function getPortalPacks(token: string): Promise<PortalPack[]> {
   return portalFetch<PortalPack[]>("/portal/packs", token);
 }
+
+// ── Google Calendar ──────────────────────────────────────────────────────────
+
+export interface GoogleCalendarStatus {
+  connected: boolean;
+}
+
+/** GET /google-calendar/status — verifica si la integración está activa. */
+export async function getGoogleCalendarStatus(): Promise<GoogleCalendarStatus> {
+  return apiFetch<GoogleCalendarStatus>(
+    "/google-calendar/status",
+    undefined,
+    true,
+  );
+}
+
+/** GET /google-calendar/connect — obtiene la URL de autorización OAuth. */
+export async function getGoogleCalendarConnectUrl(): Promise<string> {
+  const result = await apiFetch<{ authUrl: string }>(
+    "/google-calendar/connect",
+    undefined,
+    true,
+  );
+  return result.authUrl;
+}
+
+/**
+ * DELETE /google-calendar/connect — desconecta la integración.
+ * El endpoint retorna 204 No Content, por lo que se usa fetch directo
+ * en lugar de apiFetch (que intenta parsear JSON).
+ */
+export async function disconnectGoogleCalendar(): Promise<void> {
+  const response = await fetch(`${API_URL}/google-calendar/connect`, {
+    method: "DELETE",
+    headers: { ...getAuthHeaders() },
+  });
+  if (!response.ok) {
+    const json: unknown = await response.json().catch(() => ({}));
+    throw new ApiRequestError(json as ApiError);
+  }
+}

@@ -1,9 +1,13 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useForm } from "react-hook-form";
-import { Check } from "lucide-react";
+import { useSearchParams } from "react-router-dom";
+import { Check, Calendar, Loader2, AlertCircle, X } from "lucide-react";
 import {
   getOrganization,
   updateOrganization,
+  getGoogleCalendarStatus,
+  getGoogleCalendarConnectUrl,
+  disconnectGoogleCalendar,
   ApiRequestError,
 } from "../../services/api";
 import type { Organization, VocabularyPreset } from "../../types";
@@ -69,9 +73,23 @@ interface OrgFormData {
   name: string;
 }
 
+// ── Tipos de estado de Google Calendar ───────────────────────────────────────
+
+type GCalStatus = "loading" | "connected" | "disconnected" | "error";
+
+interface GCalToast {
+  type: "success" | "error";
+  message: string;
+}
+
+// Clave de sessionStorage usada para detectar el regreso desde el flujo OAuth
+const GCAL_CONNECTING_KEY = "gcal_connecting";
+
 // ── SettingsPage ──────────────────────────────────────────────────────────────
 
 export function SettingsPage() {
+  const [searchParams, setSearchParams] = useSearchParams();
+
   const [org, setOrg] = useState<Organization | null>(null);
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState<string | null>(null);
@@ -84,12 +102,28 @@ export function SettingsPage() {
 
   const [orgSuccess, setOrgSuccess] = useState(false);
 
+  // ── Google Calendar state ──
+  const [gcalStatus, setGCalStatus] = useState<GCalStatus>("loading");
+  const [gcalConnecting, setGCalConnecting] = useState(false);
+  const [gcalDisconnecting, setGCalDisconnecting] = useState(false);
+  const [gcalConfirmDisconnect, setGCalConfirmDisconnect] = useState(false);
+  const [gcalToast, setGCalToast] = useState<GCalToast | null>(null);
+
   const {
     register,
     handleSubmit,
     reset,
     formState: { errors, isSubmitting },
   } = useForm<OrgFormData>();
+
+  const refreshGCalStatus = useCallback(async () => {
+    try {
+      const { connected } = await getGoogleCalendarStatus();
+      setGCalStatus(connected ? "connected" : "disconnected");
+    } catch {
+      setGCalStatus("error");
+    }
+  }, []);
 
   useEffect(() => {
     getOrganization()
@@ -107,6 +141,78 @@ export function SettingsPage() {
       )
       .finally(() => setLoading(false));
   }, [reset]);
+
+  // Carga el estado de Google Calendar y maneja el regreso del flujo OAuth
+  useEffect(() => {
+    const oauthError = searchParams.get("error");
+    const wasConnecting = sessionStorage.getItem(GCAL_CONNECTING_KEY) === "1";
+
+    // Limpiar params de la URL si vienen del redirect OAuth
+    if (oauthError === "google_auth_failed" || wasConnecting) {
+      setSearchParams({}, { replace: true });
+    }
+
+    if (oauthError === "google_auth_failed") {
+      sessionStorage.removeItem(GCAL_CONNECTING_KEY);
+      setGCalStatus("disconnected");
+      setGCalToast({
+        type: "error",
+        message:
+          "No se pudo conectar con Google Calendar. Intentá de nuevo.",
+      });
+      void refreshGCalStatus();
+      return;
+    }
+
+    if (wasConnecting) {
+      sessionStorage.removeItem(GCAL_CONNECTING_KEY);
+      void refreshGCalStatus().then(() => {
+        setGCalToast({
+          type: "success",
+          message: "Google Calendar conectado correctamente.",
+        });
+      });
+      return;
+    }
+
+    void refreshGCalStatus();
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+  async function handleGCalConnect() {
+    setGCalConnecting(true);
+    try {
+      const authUrl = await getGoogleCalendarConnectUrl();
+      sessionStorage.setItem(GCAL_CONNECTING_KEY, "1");
+      window.location.href = authUrl;
+    } catch (err) {
+      setGCalConnecting(false);
+      const isConfigError =
+        err instanceof ApiRequestError && err.statusCode === 400;
+      setGCalToast({
+        type: "error",
+        message: isConfigError
+          ? "La integración no está disponible en este momento."
+          : "Error al iniciar la conexión con Google Calendar.",
+      });
+    }
+  }
+
+  async function handleGCalDisconnect() {
+    setGCalDisconnecting(true);
+    setGCalConfirmDisconnect(false);
+    try {
+      await disconnectGoogleCalendar();
+      setGCalStatus("disconnected");
+      setGCalToast({ type: "success", message: "Google Calendar desconectado." });
+    } catch {
+      setGCalToast({
+        type: "error",
+        message: "No se pudo desconectar Google Calendar. Intentá de nuevo.",
+      });
+    } finally {
+      setGCalDisconnecting(false);
+    }
+  }
 
   async function handleSaveOrg(data: OrgFormData) {
     setOrgSuccess(false);
@@ -315,6 +421,144 @@ export function SettingsPage() {
               Guardado
             </span>
           )}
+        </div>
+      </section>
+
+      {/* ── Sección: Integraciones ── */}
+      <section className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 mt-6">
+        <div className="mb-4">
+          <h2 className="text-base font-semibold text-app-neutral-dark">
+            Integraciones
+          </h2>
+        </div>
+
+        {/* Toast de Google Calendar */}
+        {gcalToast && (
+          <div
+            className={cn(
+              "flex items-start gap-3 px-4 py-3 rounded-xl mb-4 text-sm",
+              gcalToast.type === "success"
+                ? "bg-green-50 text-green-700"
+                : "bg-red-50 text-red-700",
+            )}
+          >
+            {gcalToast.type === "success" ? (
+              <Check size={16} className="shrink-0 mt-0.5" />
+            ) : (
+              <AlertCircle size={16} className="shrink-0 mt-0.5" />
+            )}
+            <span className="flex-1">{gcalToast.message}</span>
+            <button
+              type="button"
+              onClick={() => setGCalToast(null)}
+              className="shrink-0 opacity-60 hover:opacity-100 transition-opacity"
+            >
+              <X size={14} />
+            </button>
+          </div>
+        )}
+
+        {/* Card de Google Calendar */}
+        <div className="flex items-center gap-4 p-4 rounded-xl border border-gray-200">
+          {/* Ícono Google Calendar */}
+          <div className="w-10 h-10 rounded-lg bg-white border border-gray-200 flex items-center justify-center shrink-0 shadow-sm">
+            <svg viewBox="0 0 24 24" className="w-6 h-6" fill="none">
+              <rect x="3" y="4" width="18" height="17" rx="2" fill="#ffffff" stroke="#DADCE0" strokeWidth="1.5" />
+              <rect x="3" y="4" width="18" height="5" rx="2" fill="#1A73E8" />
+              <rect x="3" y="7" width="18" height="2" fill="#1A73E8" />
+              <path d="M8 3v3M16 3v3" stroke="#1A73E8" strokeWidth="1.5" strokeLinecap="round" />
+              <text x="12" y="18" textAnchor="middle" fontSize="7" fontWeight="700" fill="#1A73E8" fontFamily="Arial, sans-serif">G</text>
+            </svg>
+          </div>
+
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center gap-2 flex-wrap">
+              <span className="text-sm font-semibold text-app-neutral-dark">
+                Google Calendar
+              </span>
+              {gcalStatus === "connected" && (
+                <span className="inline-flex items-center gap-1 text-xs bg-green-100 text-green-700 px-2 py-0.5 rounded-full font-medium">
+                  <span className="w-1.5 h-1.5 rounded-full bg-green-500" />
+                  Conectado
+                </span>
+              )}
+            </div>
+            <p className="text-xs text-gray-500 mt-0.5">
+              {gcalStatus === "connected"
+                ? "Las clases nuevas se sincronizan automáticamente."
+                : "Sincronizá tus clases automáticamente con Google Calendar."}
+            </p>
+          </div>
+
+          {/* Acciones */}
+          <div className="shrink-0">
+            {gcalStatus === "loading" && (
+              <Loader2 size={18} className="animate-spin text-gray-400" />
+            )}
+
+            {gcalStatus === "error" && (
+              <button
+                type="button"
+                onClick={() => void refreshGCalStatus()}
+                className="text-xs text-gray-500 underline hover:text-gray-700"
+              >
+                Reintentar
+              </button>
+            )}
+
+            {gcalStatus === "disconnected" && (
+              <button
+                type="button"
+                onClick={() => void handleGCalConnect()}
+                disabled={gcalConnecting}
+                className="flex items-center gap-2 px-4 py-2 bg-app-primary text-white text-sm font-semibold rounded-xl hover:bg-app-primary-dark transition-colors disabled:opacity-60"
+              >
+                {gcalConnecting ? (
+                  <>
+                    <Loader2 size={14} className="animate-spin" />
+                    Conectando…
+                  </>
+                ) : (
+                  <>
+                    <Calendar size={14} />
+                    Conectar
+                  </>
+                )}
+              </button>
+            )}
+
+            {gcalStatus === "connected" && !gcalConfirmDisconnect && (
+              <button
+                type="button"
+                onClick={() => setGCalConfirmDisconnect(true)}
+                disabled={gcalDisconnecting}
+                className="px-4 py-2 text-sm font-medium text-gray-600 border border-gray-300 rounded-xl hover:border-red-300 hover:text-red-600 transition-colors disabled:opacity-60"
+              >
+                Desconectar
+              </button>
+            )}
+
+            {gcalStatus === "connected" && gcalConfirmDisconnect && (
+              <div className="flex items-center gap-2">
+                <span className="text-xs text-gray-500">¿Confirmar?</span>
+                <button
+                  type="button"
+                  onClick={() => void handleGCalDisconnect()}
+                  disabled={gcalDisconnecting}
+                  className="px-3 py-1.5 text-xs font-semibold bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors disabled:opacity-60"
+                >
+                  {gcalDisconnecting ? "Desconectando…" : "Sí, desconectar"}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setGCalConfirmDisconnect(false)}
+                  className="px-3 py-1.5 text-xs font-medium text-gray-600 border border-gray-300 rounded-lg hover:border-gray-400 transition-colors"
+                >
+                  Cancelar
+                </button>
+              </div>
+            )}
+          </div>
         </div>
       </section>
     </div>
