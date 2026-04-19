@@ -43,6 +43,8 @@ import type {
   PortalCharge,
   PortalPack,
   FinancialStatus,
+  ReplicateWeekRequest,
+  ReplicateWeekResult,
 } from "../types";
 
 const RAW_API_URL =
@@ -559,6 +561,18 @@ export async function generateClasses(
 ): Promise<GenerateResult> {
   return apiFetch<GenerateResult>(
     `/schedules/${id}/generate`,
+    { method: "POST", body: JSON.stringify(data) },
+    true,
+  );
+}
+
+// ── Replicar Semana ───────────────────────────────────────────────────────────
+
+export async function replicateWeek(
+  data: ReplicateWeekRequest,
+): Promise<ReplicateWeekResult> {
+  return apiFetch<ReplicateWeekResult>(
+    "/classes/replicate-week",
     { method: "POST", body: JSON.stringify(data) },
     true,
   );

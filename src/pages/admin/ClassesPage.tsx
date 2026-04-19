@@ -12,6 +12,7 @@ import {
   Users,
   Trash2,
   Video,
+  Copy,
 } from "lucide-react";
 import { useForm } from "react-hook-form";
 import {
@@ -26,6 +27,7 @@ import {
   addParticipant,
   removeParticipant,
   updateParticipant,
+  replicateWeek,
   ApiRequestError,
 } from "../../services/api";
 import type {
@@ -36,6 +38,7 @@ import type {
   ClassParticipant,
   CreateClassData,
   RescheduleClassData,
+  ReplicateWeekPreviewItem,
 } from "../../types";
 import { cn } from "../../utils/cn";
 
@@ -97,6 +100,7 @@ export function ClassesPage() {
   const [filterStatus, setFilterStatus] = useState<ClassStatus | "">("");
   const [exporting, setExporting] = useState(false);
   const [showCreate, setShowCreate] = useState(false);
+  const [showReplicate, setShowReplicate] = useState(false);
   const [rescheduleTarget, setRescheduleTarget] = useState<Class | null>(null);
   const [absentTarget, setAbsentTarget] = useState<Class | null>(null);
   const [participantsTarget, setParticipantsTarget] = useState<Class | null>(
@@ -235,6 +239,13 @@ export function ClassesPage() {
           >
             <Download size={15} />
             {exporting ? "Exportando…" : "Exportar CSV"}
+          </button>
+          <button
+            onClick={() => setShowReplicate(true)}
+            className="flex items-center gap-2 px-4 py-2 border border-gray-200 text-gray-600 text-sm font-medium rounded-xl hover:bg-gray-50 transition-colors"
+          >
+            <Copy size={15} />
+            Replicar semana
           </button>
           <button
             onClick={() => setShowCreate(true)}
@@ -434,6 +445,16 @@ export function ClassesPage() {
           cls={participantsTarget}
           students={students}
           onClose={() => setParticipantsTarget(null)}
+        />
+      )}
+
+      {showReplicate && (
+        <ReplicateWeekModal
+          onClose={() => setShowReplicate(false)}
+          onConfirmed={() => {
+            setShowReplicate(false);
+            void fetchFilteredClasses();
+          }}
         />
       )}
     </div>
@@ -1200,6 +1221,435 @@ function ParticipantsModal({
         </div>
       </div>
     </ModalShell>
+  );
+}
+
+// ── ReplicateWeekModal ────────────────────────────────────────────────────────
+
+function toLocalInput(iso: string): string {
+  const d = new Date(iso);
+  const pad = (n: number) => String(n).padStart(2, "0");
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+}
+
+function getMondayStr(date: Date): string {
+  const d = new Date(date);
+  const day = d.getDay();
+  const diff = day === 0 ? -6 : 1 - day;
+  d.setDate(d.getDate() + diff);
+  return d.toISOString().slice(0, 10);
+}
+
+function addDaysStr(dateStr: string, days: number): string {
+  const d = new Date(dateStr + "T12:00:00");
+  d.setDate(d.getDate() + days);
+  return d.toISOString().slice(0, 10);
+}
+
+function ReplicateWeekModal({
+  onClose,
+  onConfirmed,
+}: {
+  onClose: () => void;
+  onConfirmed: () => void;
+}) {
+  const todayMonday = getMondayStr(new Date());
+  const lastMonday = addDaysStr(todayMonday, -7);
+
+  const [sourceFrom, setSourceFrom] = useState(lastMonday);
+  const [targetFrom, setTargetFrom] = useState(todayMonday);
+  const [step, setStep] = useState<"setup" | "preview">("setup");
+  const [loading, setLoading] = useState(false);
+  const [confirming, setConfirming] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [previewItems, setPreviewItems] = useState<ReplicateWeekPreviewItem[]>(
+    [],
+  );
+  const [successMsg, setSuccessMsg] = useState<string | null>(null);
+
+  const sourceTo = addDaysStr(sourceFrom, 6);
+
+  const groupedByDay = useMemo(() => {
+    const map = new Map<string, ReplicateWeekPreviewItem[]>();
+    for (const item of previewItems) {
+      const day = item.scheduledAt.slice(0, 10);
+      if (!map.has(day)) map.set(day, []);
+      map.get(day)!.push(item);
+    }
+    return Array.from(map.entries()).sort(([a], [b]) => a.localeCompare(b));
+  }, [previewItems]);
+
+  async function handlePreview() {
+    setLoading(true);
+    setError(null);
+    try {
+      const result = await replicateWeek({
+        sourceFrom,
+        sourceTo,
+        targetFrom,
+        preview: true,
+      });
+      if (result.proposedClasses.length === 0) {
+        setError(
+          "No se encontraron clases replicables en la semana seleccionada.",
+        );
+        return;
+      }
+      setPreviewItems(
+        result.proposedClasses.map((item) => ({
+          ...item,
+          participants: [...item.participants],
+        })),
+      );
+      setStep("preview");
+    } catch (err) {
+      setError(
+        err instanceof ApiRequestError
+          ? err.message
+          : "Error al obtener el preview",
+      );
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  async function handleConfirm() {
+    setConfirming(true);
+    setError(null);
+    try {
+      const classes = previewItems.map((item) => ({
+        classType: item.classType,
+        ...(item.classType === "INDIVIDUAL" && item.studentId
+          ? { studentId: item.studentId }
+          : {}),
+        scheduledAt: item.scheduledAt,
+        duration: item.duration,
+        ...(item.appliedRate ? { appliedRate: item.appliedRate } : {}),
+        ...(item.notes ? { notes: item.notes } : {}),
+        ...(item.classType === "GROUP"
+          ? {
+              participants: item.participants.map((p) => ({
+                studentId: p.studentId,
+                ...(p.appliedRate ? { appliedRate: p.appliedRate } : {}),
+              })),
+            }
+          : {}),
+      }));
+      const result = await replicateWeek({
+        sourceFrom,
+        sourceTo,
+        targetFrom,
+        preview: false,
+        classes,
+      });
+      const skippedNote =
+        result.skipped > 0 ? ` (${result.skipped} ya existían)` : "";
+      setSuccessMsg(
+        `Se crearon ${result.created} clase${result.created !== 1 ? "s" : ""}${skippedNote}.`,
+      );
+    } catch (err) {
+      setError(
+        err instanceof ApiRequestError
+          ? err.message
+          : "Error al confirmar la replicación",
+      );
+      setConfirming(false);
+    }
+  }
+
+  function removeItem(sourceClassId: string) {
+    setPreviewItems((prev) =>
+      prev.filter((i) => i.sourceClassId !== sourceClassId),
+    );
+  }
+
+  function updateItem(
+    sourceClassId: string,
+    patch: Partial<ReplicateWeekPreviewItem>,
+  ) {
+    setPreviewItems((prev) =>
+      prev.map((i) =>
+        i.sourceClassId === sourceClassId ? { ...i, ...patch } : i,
+      ),
+    );
+  }
+
+  function removeParticipantFromItem(
+    sourceClassId: string,
+    studentId: string,
+  ) {
+    setPreviewItems((prev) =>
+      prev.map((i) =>
+        i.sourceClassId === sourceClassId
+          ? {
+              ...i,
+              participants: i.participants.filter(
+                (p) => p.studentId !== studentId,
+              ),
+            }
+          : i,
+      ),
+    );
+  }
+
+  if (successMsg) {
+    return (
+      <ModalShell title="Semana replicada" onClose={onConfirmed}>
+        <div className="px-6 py-8 text-center space-y-4">
+          <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center mx-auto">
+            <Check size={24} className="text-green-600" />
+          </div>
+          <p className="text-sm text-gray-700">{successMsg}</p>
+          <button
+            onClick={onConfirmed}
+            className="w-full py-2.5 bg-app-primary text-white text-sm font-semibold rounded-xl hover:bg-app-primary-dark transition-colors"
+          >
+            Cerrar
+          </button>
+        </div>
+      </ModalShell>
+    );
+  }
+
+  if (step === "setup") {
+    return (
+      <ModalShell title="Replicar semana" onClose={onClose}>
+        <div className="px-6 py-5 space-y-4">
+          {error && (
+            <p className="text-sm text-red-600 bg-red-50 px-4 py-2 rounded-lg">
+              {error}
+            </p>
+          )}
+          <p className="text-xs text-gray-500">
+            Copiá las clases de una semana a otra. Se replican clases con estado
+            SCHEDULED y TAUGHT. Las que ya existan en destino se saltean.
+          </p>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Semana de origen (inicio)
+            </label>
+            <input
+              type="date"
+              value={sourceFrom}
+              onChange={(e) => setSourceFrom(e.target.value)}
+              className="w-full px-4 py-2.5 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-app-primary"
+            />
+            <p className="mt-1 text-xs text-gray-400">
+              Cubre: {sourceFrom} → {sourceTo}
+            </p>
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Semana de destino (inicio)
+            </label>
+            <input
+              type="date"
+              value={targetFrom}
+              onChange={(e) => setTargetFrom(e.target.value)}
+              className="w-full px-4 py-2.5 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-app-primary"
+            />
+          </div>
+          <div className="flex gap-3 pt-2">
+            <button
+              type="button"
+              onClick={onClose}
+              className="flex-1 py-2.5 border border-gray-200 text-gray-600 text-sm font-medium rounded-xl hover:bg-gray-50 transition-colors"
+            >
+              Cancelar
+            </button>
+            <button
+              type="button"
+              onClick={() => void handlePreview()}
+              disabled={loading || !sourceFrom || !targetFrom}
+              className="flex-1 py-2.5 bg-app-primary text-white text-sm font-semibold rounded-xl hover:bg-app-primary-dark transition-colors disabled:opacity-60"
+            >
+              {loading ? "Cargando…" : "Ver preview"}
+            </button>
+          </div>
+        </div>
+      </ModalShell>
+    );
+  }
+
+  // Preview step — wider modal with scrollable body
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+      <div className="absolute inset-0 bg-black/40" onClick={onClose} />
+      <div className="relative bg-white rounded-2xl shadow-xl w-full max-w-2xl max-h-[90vh] flex flex-col">
+        <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100 shrink-0">
+          <div>
+            <h2 className="text-base font-semibold text-app-neutral-dark">
+              Preview — clases a crear
+            </h2>
+            <p className="text-xs text-gray-400 mt-0.5">
+              {sourceFrom} → {targetFrom} · {previewItems.length} clase
+              {previewItems.length !== 1 ? "s" : ""}
+            </p>
+          </div>
+          <button
+            onClick={onClose}
+            className="p-1 text-gray-400 hover:text-gray-600 rounded-lg transition-colors"
+          >
+            <X size={18} />
+          </button>
+        </div>
+
+        <div className="overflow-y-auto flex-1 px-6 py-4 space-y-5">
+          {error && (
+            <p className="text-sm text-red-600 bg-red-50 px-4 py-2 rounded-lg">
+              {error}
+            </p>
+          )}
+          {previewItems.length === 0 && (
+            <p className="text-sm text-gray-400 text-center py-8">
+              Quitaste todas las clases. Confirmá para no crear ninguna, o volvé
+              a ajustar la semana.
+            </p>
+          )}
+          {groupedByDay.map(([day, items]) => (
+            <div key={day}>
+              <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-2">
+                {new Date(day + "T12:00:00").toLocaleDateString("es-AR", {
+                  weekday: "long",
+                  day: "2-digit",
+                  month: "long",
+                })}
+              </p>
+              <div className="space-y-2">
+                {items.map((item) => (
+                  <PreviewItemRow
+                    key={item.sourceClassId}
+                    item={item}
+                    onRemove={() => removeItem(item.sourceClassId)}
+                    onChangeScheduledAt={(val) =>
+                      updateItem(item.sourceClassId, { scheduledAt: val })
+                    }
+                    onChangeAppliedRate={(val) =>
+                      updateItem(item.sourceClassId, {
+                        appliedRate: val || null,
+                      })
+                    }
+                    onRemoveParticipant={(studentId) =>
+                      removeParticipantFromItem(item.sourceClassId, studentId)
+                    }
+                  />
+                ))}
+              </div>
+            </div>
+          ))}
+        </div>
+
+        <div className="px-6 py-4 border-t border-gray-100 shrink-0 flex gap-3">
+          <button
+            type="button"
+            onClick={() => {
+              setStep("setup");
+              setError(null);
+            }}
+            className="flex-1 py-2.5 border border-gray-200 text-gray-600 text-sm font-medium rounded-xl hover:bg-gray-50 transition-colors"
+          >
+            Volver
+          </button>
+          <button
+            type="button"
+            onClick={() => void handleConfirm()}
+            disabled={confirming || previewItems.length === 0}
+            className="flex-1 py-2.5 bg-app-primary text-white text-sm font-semibold rounded-xl hover:bg-app-primary-dark transition-colors disabled:opacity-60"
+          >
+            {confirming
+              ? "Creando…"
+              : `Confirmar (${previewItems.length})`}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function PreviewItemRow({
+  item,
+  onRemove,
+  onChangeScheduledAt,
+  onChangeAppliedRate,
+  onRemoveParticipant,
+}: {
+  item: ReplicateWeekPreviewItem;
+  onRemove: () => void;
+  onChangeScheduledAt: (val: string) => void;
+  onChangeAppliedRate: (val: string) => void;
+  onRemoveParticipant: (studentId: string) => void;
+}) {
+  return (
+    <div className="border border-gray-100 rounded-xl p-3 space-y-2 bg-gray-50/50">
+      <div className="flex items-start justify-between gap-2">
+        <div className="flex-1 min-w-0">
+          {item.classType === "GROUP" ? (
+            <span className="inline-flex px-2 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-700">
+              Grupal
+            </span>
+          ) : (
+            <p className="text-sm font-medium text-app-neutral-dark truncate">
+              {item.fullName ?? "—"}
+            </p>
+          )}
+        </div>
+        <button
+          onClick={onRemove}
+          title="Quitar esta clase"
+          className="p-1 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors shrink-0"
+        >
+          <X size={14} />
+        </button>
+      </div>
+
+      <div className="grid grid-cols-2 gap-2">
+        <div>
+          <label className="block text-xs text-gray-400 mb-0.5">
+            Fecha y hora
+          </label>
+          <input
+            type="datetime-local"
+            value={toLocalInput(item.scheduledAt)}
+            onChange={(e) =>
+              onChangeScheduledAt(new Date(e.target.value).toISOString())
+            }
+            className="w-full px-2.5 py-1.5 text-xs border border-gray-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-app-primary bg-white"
+          />
+        </div>
+        <div>
+          <label className="block text-xs text-gray-400 mb-0.5">
+            Tarifa ({item.duration} min)
+          </label>
+          <input
+            type="text"
+            value={item.appliedRate ?? ""}
+            onChange={(e) => onChangeAppliedRate(e.target.value)}
+            placeholder="ej. 45.00"
+            className="w-full px-2.5 py-1.5 text-xs border border-gray-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-app-primary bg-white"
+          />
+        </div>
+      </div>
+
+      {item.classType === "GROUP" && item.participants.length > 0 && (
+        <div className="space-y-1">
+          {item.participants.map((p) => (
+            <div
+              key={p.studentId}
+              className="flex items-center justify-between px-2 py-1 bg-purple-50 rounded-lg"
+            >
+              <span className="text-xs text-purple-800">{p.fullName}</span>
+              <button
+                onClick={() => onRemoveParticipant(p.studentId)}
+                title="Quitar participante"
+                className="p-0.5 text-purple-400 hover:text-red-500 transition-colors"
+              >
+                <X size={12} />
+              </button>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
   );
 }
 

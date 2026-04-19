@@ -461,6 +461,51 @@ export interface GenerateResult {
   classes: Class[];
 }
 
+// ── Replicar Semana ───────────────────────────────────────────────────────────
+
+export interface ReplicateWeekPreviewParticipant {
+  studentId: string;
+  fullName: string;
+  appliedRate: string | null;
+}
+
+export interface ReplicateWeekPreviewItem {
+  sourceClassId: string;
+  classType: ClassType;
+  studentId: string | null;
+  fullName: string | null;
+  scheduledAt: string; // ISO 8601, ya shifteado a la semana destino
+  duration: number;
+  appliedRate: string | null;
+  notes: string | null;
+  participants: ReplicateWeekPreviewParticipant[];
+}
+
+export interface ReplicateWeekClassOverride {
+  classType?: ClassType;
+  studentId?: string;
+  scheduledAt: string;
+  duration: number;
+  appliedRate?: string;
+  notes?: string;
+  participants?: { studentId: string; appliedRate?: string }[];
+}
+
+export interface ReplicateWeekRequest {
+  sourceFrom: string; // YYYY-MM-DD
+  sourceTo: string;
+  targetFrom: string;
+  preview: boolean;
+  classes?: ReplicateWeekClassOverride[];
+}
+
+export interface ReplicateWeekResult {
+  preview: boolean;
+  proposedClasses: ReplicateWeekPreviewItem[];
+  created: number;
+  skipped: number;
+}
+
 // ── Portal del Alumno ─────────────────────────────────────────────────────────
 
 /** Respuesta de POST /students/:id/portal-token */
