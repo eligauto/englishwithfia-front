@@ -272,9 +272,10 @@ export function SettingsPage() {
 
   return (
     <div className="p-8 max-w-2xl">
-      <h1 className="text-2xl font-bold text-app-neutral-dark mb-8">
-        Configuración
-      </h1>
+      <div className="mb-8">
+        <h1 className="text-xl font-bold text-app-neutral-dark tracking-tight">Configuración</h1>
+        <p className="text-sm text-gray-400 mt-0.5">Preferencias de tu organización</p>
+      </div>
 
       {/* ── Sección: Organización ── */}
       <section className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 mb-6">

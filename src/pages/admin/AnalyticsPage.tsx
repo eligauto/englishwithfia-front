@@ -130,24 +130,26 @@ function Kpi({
   value,
   icon: Icon,
   color,
+  accent,
 }: {
   label: string;
   value: number;
   icon: typeof CalendarDays;
   color: string;
+  accent: string;
 }) {
   return (
-    <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5 flex items-center gap-4">
-      <div
-        className={`w-11 h-11 rounded-xl flex items-center justify-center shrink-0 ${color}`}
-      >
-        <Icon size={20} />
+    <div className={`bg-white rounded-xl border border-gray-100 shadow-sm hover:shadow-md transition-shadow p-5 flex items-start gap-4 border-l-2 ${accent}`}>
+      <div className={`w-9 h-9 rounded-lg flex items-center justify-center shrink-0 ${color}`}>
+        <Icon size={16} />
       </div>
-      <div>
-        <p className="text-2xl font-bold text-app-neutral-dark leading-none">
+      <div className="min-w-0">
+        <p className="text-[11px] font-medium text-gray-400 uppercase tracking-wide leading-none mb-1.5">
+          {label}
+        </p>
+        <p className="text-[22px] font-bold text-app-neutral-dark leading-none tabular-nums">
           {value.toLocaleString("es-AR")}
         </p>
-        <p className="text-xs text-gray-500 mt-1">{label}</p>
       </div>
     </div>
   );
@@ -221,10 +223,8 @@ export function AnalyticsPage() {
     <div className="p-8 space-y-6">
       <div className="flex items-center justify-between gap-4 flex-wrap">
         <div>
-          <h1 className="text-2xl font-bold text-app-neutral-dark">
-            Analytics
-          </h1>
-          <p className="text-sm text-gray-500 mt-1">
+          <h1 className="text-xl font-bold text-app-neutral-dark tracking-tight">Analytics</h1>
+          <p className="text-sm text-gray-400 mt-0.5">
             Tendencias históricas de clases y cobranza
           </p>
         </div>
@@ -271,30 +271,34 @@ export function AnalyticsPage() {
         </p>
       )}
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-3">
         <Kpi
           label="Clases totales"
           value={totals.classes}
           icon={CalendarDays}
-          color="bg-blue-100 text-blue-600"
+          color="bg-sky-50 text-sky-500"
+          accent="border-l-sky-400"
         />
         <Kpi
           label="Clases dictadas"
           value={totals.taught}
           icon={BookOpenCheck}
-          color="bg-green-100 text-green-600"
+          color="bg-app-primary-light text-app-primary"
+          accent="border-l-app-primary"
         />
         <Kpi
           label="Cargos generados"
           value={totals.charges}
           icon={Receipt}
-          color="bg-app-secondary/20 text-app-secondary"
+          color="bg-app-secondary/15 text-app-secondary"
+          accent="border-l-app-secondary"
         />
         <Kpi
           label="Cargos pendientes"
           value={totals.pendingCharges}
           icon={BarChart3}
-          color="bg-yellow-100 text-yellow-700"
+          color="bg-amber-50 text-amber-500"
+          accent="border-l-amber-400"
         />
       </div>
 
@@ -308,8 +312,8 @@ export function AnalyticsPage() {
         <div className="space-y-6">
           {/* Row 1: bar charts */}
           <div className="grid xl:grid-cols-2 gap-6">
-            <section className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
-              <h2 className="text-sm font-semibold text-app-neutral-dark mb-4">
+            <section className="bg-white rounded-xl border border-gray-100 shadow-sm p-6">
+              <h2 className="text-[12px] font-semibold text-app-neutral-dark mb-4 uppercase tracking-wide">
                 Cargos por mes
               </h2>
               <ResponsiveContainer width="100%" height={260}>
@@ -348,8 +352,8 @@ export function AnalyticsPage() {
               <ChartLegend series={CHARGE_SERIES} />
             </section>
 
-            <section className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
-              <h2 className="text-sm font-semibold text-app-neutral-dark mb-4">
+            <section className="bg-white rounded-xl border border-gray-100 shadow-sm p-6">
+              <h2 className="text-[12px] font-semibold text-app-neutral-dark mb-4 uppercase tracking-wide">
                 Clases por mes
               </h2>
               <ResponsiveContainer width="100%" height={260}>
@@ -393,8 +397,8 @@ export function AnalyticsPage() {
 
           {/* Row 2: pie chart + student table */}
           <div className="grid xl:grid-cols-2 gap-6">
-            <section className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
-              <h2 className="text-sm font-semibold text-app-neutral-dark mb-4">
+            <section className="bg-white rounded-xl border border-gray-100 shadow-sm p-6">
+              <h2 className="text-[12px] font-semibold text-app-neutral-dark mb-4 uppercase tracking-wide">
                 Distribución de estados financieros
               </h2>
               {data.chargeStatusBreakdown.length === 0 ? (
@@ -458,7 +462,7 @@ export function AnalyticsPage() {
             </section>
 
             <section className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 overflow-x-auto">
-              <h2 className="text-sm font-semibold text-app-neutral-dark mb-4">
+              <h2 className="text-[12px] font-semibold text-app-neutral-dark mb-4 uppercase tracking-wide">
                 Breakdown por alumno
               </h2>
               {data.studentBreakdown.length === 0 ? (

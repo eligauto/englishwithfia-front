@@ -230,28 +230,31 @@ export function ClassesPage() {
     <div className="p-8">
       {/* Cabecera */}
       <div className="flex items-center justify-between mb-6">
-        <h1 className="text-2xl font-bold text-app-neutral-dark">Clases</h1>
+        <div>
+          <h1 className="text-xl font-bold text-app-neutral-dark tracking-tight">Clases</h1>
+          <p className="text-sm text-gray-400 mt-0.5">Historial y gestión de clases</p>
+        </div>
         <div className="flex items-center gap-2">
           <button
             onClick={() => void handleExport()}
             disabled={exporting}
-            className="flex items-center gap-2 px-4 py-2 border border-gray-200 text-gray-600 text-sm font-medium rounded-xl hover:bg-gray-50 transition-colors disabled:opacity-60"
+            className="flex items-center gap-2 px-3.5 py-2 border border-gray-200 text-gray-600 text-sm font-medium rounded-lg hover:bg-gray-50 transition-colors disabled:opacity-60 cursor-pointer"
           >
-            <Download size={15} />
+            <Download size={14} />
             {exporting ? "Exportando…" : "Exportar CSV"}
           </button>
           <button
             onClick={() => setShowReplicate(true)}
-            className="flex items-center gap-2 px-4 py-2 border border-gray-200 text-gray-600 text-sm font-medium rounded-xl hover:bg-gray-50 transition-colors"
+            className="flex items-center gap-2 px-3.5 py-2 border border-gray-200 text-gray-600 text-sm font-medium rounded-lg hover:bg-gray-50 transition-colors cursor-pointer"
           >
-            <Copy size={15} />
+            <Copy size={14} />
             Replicar semana
           </button>
           <button
             onClick={() => setShowCreate(true)}
-            className="flex items-center gap-2 px-4 py-2 bg-app-primary text-white text-sm font-semibold rounded-xl hover:bg-app-primary-dark transition-colors"
+            className="flex items-center gap-2 px-3.5 py-2 bg-app-primary text-white text-sm font-semibold rounded-lg hover:bg-app-primary-dark transition-colors shadow-sm cursor-pointer"
           >
-            <Plus size={16} />
+            <Plus size={15} />
             Nueva clase
           </button>
         </div>
@@ -1420,10 +1423,13 @@ function ReplicateWeekModal({
               {error}
             </p>
           )}
-          <p className="text-xs text-gray-500">
-            Copiá las clases de una semana a otra. Se replican clases con estado
-            SCHEDULED y TAUGHT. Las que ya existan en destino se saltean.
-          </p>
+          <div className="bg-app-primary-light rounded-lg px-4 py-3">
+            <p className="text-[13px] text-app-neutral-dark font-medium">¿Cómo funciona?</p>
+            <p className="text-xs text-gray-500 mt-1 leading-relaxed">
+              Seleccioná la semana que querés copiar y la semana donde querés que aparezcan las clases.
+              Se copian las clases programadas y las ya dictadas. Si una clase ya existe en la semana destino, simplemente se ignora.
+            </p>
+          </div>
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
               Semana de origen (inicio)

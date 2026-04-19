@@ -67,19 +67,24 @@ export function AdminLayout() {
   const initial = displayName[0]?.toUpperCase() ?? "U";
 
   return (
-    <div className="flex min-h-screen bg-gray-50">
+    <div className="flex h-screen overflow-hidden bg-app-canvas">
       {/* Sidebar */}
-      <aside className="w-60 shrink-0 bg-app-neutral-dark flex flex-col">
-        <div className="px-6 py-5 border-b border-white/10">
-          <p className="text-white font-bold text-lg leading-tight">
-            {org?.name ?? "Practiq"}
-          </p>
-          <p className="text-white/50 text-xs mt-0.5">
-            Panel de administración
-          </p>
+      <aside className="w-[216px] shrink-0 bg-app-sidebar flex flex-col overflow-y-auto">
+        {/* Logo */}
+        <div className="px-5 pt-6 pb-5">
+          <div className="flex items-center gap-2.5">
+            <div className="w-7 h-7 rounded-lg bg-app-primary flex items-center justify-center shrink-0">
+              <span className="text-white text-[11px] font-bold tracking-tight">P</span>
+            </div>
+            <p className="text-white font-semibold text-sm tracking-tight truncate">
+              {org?.name ?? "Practiq"}
+            </p>
+          </div>
         </div>
 
-        <nav className="flex-1 px-3 py-4 space-y-0.5">
+        <div className="mx-4 h-px bg-white/[0.07] mb-3" />
+
+        <nav className="flex-1 px-3 space-y-0.5">
           {NAV_ITEMS.map(({ label, href, icon: Icon, end }) => (
             <NavLink
               key={href}
@@ -87,43 +92,47 @@ export function AdminLayout() {
               end={end}
               className={({ isActive }) =>
                 cn(
-                  "flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors",
+                  "flex items-center gap-3 px-3 py-2 rounded-lg text-[13px] font-medium transition-all duration-150",
                   isActive
-                    ? "bg-app-primary text-white"
-                    : "text-white/70 hover:bg-white/10 hover:text-white",
+                    ? "bg-app-primary/90 text-white shadow-sm"
+                    : "text-white/45 hover:text-white/85 hover:bg-white/[0.07]",
                 )
               }
             >
-              <Icon size={18} />
+              <Icon size={15} />
               {label}
             </NavLink>
           ))}
         </nav>
 
-        <div className="px-4 py-4 border-t border-white/10">
-          <div className="flex items-center gap-3 mb-3 px-1">
-            <div className="w-8 h-8 rounded-full bg-app-primary flex items-center justify-center text-white text-xs font-bold shrink-0">
+        {/* User footer */}
+        <div className="mx-4 h-px bg-white/[0.07] mt-3" />
+        <div className="px-3 py-4">
+          <div className="flex items-center gap-2.5 px-2 mb-1.5">
+            <div className="w-7 h-7 rounded-full bg-gradient-to-br from-app-primary to-app-primary-dark flex items-center justify-center text-white text-[11px] font-bold shrink-0 ring-2 ring-white/10">
               {initial}
             </div>
-            <div className="min-w-0">
-              <p className="text-white text-xs font-medium truncate">
+            <div className="min-w-0 flex-1">
+              <p className="text-white text-[12px] font-medium truncate leading-tight">
                 {displayName}
               </p>
-              <p className="text-white/50 text-xs truncate">{user?.email}</p>
+              <p className="text-white/35 text-[10px] truncate leading-tight mt-0.5">
+                {user?.email}
+              </p>
             </div>
           </div>
           <button
             onClick={logout}
-            className="flex items-center gap-2 w-full px-3 py-2 text-sm text-white/70 hover:text-white hover:bg-white/10 rounded-lg transition-colors"
+            className="flex items-center gap-2 w-full px-3 py-1.5 text-[12px] text-white/35 hover:text-white/70 hover:bg-white/[0.07] rounded-lg transition-colors cursor-pointer"
           >
-            <LogOut size={16} />
+            <LogOut size={13} />
             Cerrar sesión
           </button>
         </div>
       </aside>
 
       {/* Contenido principal */}
-      <main className="flex-1 min-w-0 overflow-auto">
+      <main className="flex-1 min-w-0 overflow-y-auto">
         <Outlet />
       </main>
     </div>

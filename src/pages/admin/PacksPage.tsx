@@ -92,14 +92,15 @@ export function PacksPage() {
     <div className="p-8">
       {/* Cabecera */}
       <div className="flex items-center justify-between mb-6">
-        <h1 className="text-2xl font-bold text-app-neutral-dark">
-          Packs prepagos
-        </h1>
+        <div>
+          <h1 className="text-xl font-bold text-app-neutral-dark tracking-tight">Packs prepagos</h1>
+          <p className="text-sm text-gray-400 mt-0.5">Paquetes de clases prepagos</p>
+        </div>
         <button
           onClick={() => setShowCreate(true)}
-          className="flex items-center gap-2 px-4 py-2 bg-app-primary text-white text-sm font-semibold rounded-xl hover:bg-app-primary-dark transition-colors"
+          className="flex items-center gap-2 px-3.5 py-2 bg-app-primary text-white text-sm font-semibold rounded-lg hover:bg-app-primary-dark transition-colors shadow-sm cursor-pointer"
         >
-          <Plus size={16} />
+          <Plus size={15} />
           Nuevo pack
         </button>
       </div>

@@ -491,14 +491,14 @@ export function SchedulesPage() {
       {/* Header */}
       <div className="flex items-center justify-between gap-4 flex-wrap">
         <div>
-          <h1 className="text-2xl font-bold text-app-neutral-dark">Horarios recurrentes</h1>
-          <p className="text-sm text-gray-500 mt-1">
+          <h1 className="text-xl font-bold text-app-neutral-dark tracking-tight">Horarios recurrentes</h1>
+          <p className="text-sm text-gray-400 mt-0.5">
             Plantillas de clases periódicas por alumno
           </p>
         </div>
         <button
           onClick={() => setModal({ type: 'create' })}
-          className="flex items-center gap-2 px-4 py-2 rounded-xl bg-app-primary text-white text-sm font-semibold hover:bg-app-primary-dark transition-colors"
+          className="flex items-center gap-2 px-3.5 py-2 rounded-lg bg-app-primary text-white text-sm font-semibold hover:bg-app-primary-dark transition-colors shadow-sm cursor-pointer"
         >
           <Plus size={16} />
           Nuevo horario

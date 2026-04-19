@@ -183,7 +183,10 @@ export function ChargesPage() {
     <div className="p-8">
       {/* Cabecera */}
       <div className="flex items-center justify-between mb-6">
-        <h1 className="text-2xl font-bold text-app-neutral-dark">Cargos</h1>
+        <div>
+          <h1 className="text-xl font-bold text-app-neutral-dark tracking-tight">Cargos</h1>
+          <p className="text-sm text-gray-400 mt-0.5">Cobros y estado financiero</p>
+        </div>
         <div className="flex items-center gap-3">
           <button
             onClick={() => void handleExport()}

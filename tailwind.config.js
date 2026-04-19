@@ -13,10 +13,12 @@ export default {
         'app-secondary': '#C4A87A',
         'app-neutral-dark': '#2C382A',
         'app-neutral-light': '#F5F3EE',
+        'app-sidebar': '#182016',
+        'app-canvas': '#ECEDE8',
         'app-white': '#FFFFFF',
       },
       fontFamily: {
-        sans: ['Inter', 'system-ui', 'sans-serif'],
+        sans: ['Plus Jakarta Sans', 'system-ui', 'sans-serif'],
       },
     },
   },

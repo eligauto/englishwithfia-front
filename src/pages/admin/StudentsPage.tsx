@@ -115,20 +115,23 @@ export function StudentsPage() {
     <div className="p-8">
       {/* Cabecera */}
       <div className="flex items-center justify-between mb-6">
-        <h1 className="text-2xl font-bold text-app-neutral-dark">Alumnos</h1>
+        <div>
+          <h1 className="text-xl font-bold text-app-neutral-dark tracking-tight">Alumnos</h1>
+          <p className="text-sm text-gray-400 mt-0.5">Gestión de tus alumnos</p>
+        </div>
         <button
           onClick={() => setModalStudent(null)}
-          className="flex items-center gap-2 px-4 py-2 bg-app-primary text-white text-sm font-semibold rounded-xl hover:bg-app-primary-dark transition-colors"
+          className="flex items-center gap-2 px-4 py-2 bg-app-primary text-white text-sm font-semibold rounded-lg hover:bg-app-primary-dark transition-colors shadow-sm cursor-pointer"
         >
-          <Plus size={16} />
+          <Plus size={15} />
           Nuevo alumno
         </button>
       </div>
 
       {/* Buscador */}
-      <div className="relative mb-6 max-w-sm">
+      <div className="relative mb-5 max-w-xs">
         <Search
-          size={15}
+          size={14}
           className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
         />
         <input
@@ -136,49 +139,51 @@ export function StudentsPage() {
           placeholder="Buscar por nombre o email…"
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          className="w-full pl-9 pr-4 py-2.5 text-sm border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-app-primary"
+          className="w-full pl-9 pr-4 py-2 text-sm border border-gray-200 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-app-primary/40 focus:border-app-primary transition-colors"
         />
       </div>
 
       {/* Estado: cargando */}
       {loading && (
         <div className="flex justify-center py-16">
-          <div className="w-8 h-8 border-4 border-app-primary border-t-transparent rounded-full animate-spin" />
+          <div className="w-7 h-7 border-[3px] border-app-primary border-t-transparent rounded-full animate-spin" />
         </div>
       )}
 
       {/* Estado: error */}
       {!loading && error && (
-        <p className="text-sm text-red-600 bg-red-50 px-4 py-3 rounded-xl">
+        <p className="text-sm text-red-600 bg-red-50 px-4 py-3 rounded-lg border border-red-100">
           {error}
         </p>
       )}
 
       {/* Estado: vacío */}
       {!loading && !error && visible.length === 0 && (
-        <p className="text-sm text-gray-500 py-12 text-center">
-          {search
-            ? "No hay alumnos que coincidan con la búsqueda."
-            : "Todavía no hay alumnos. ¡Creá el primero!"}
-        </p>
+        <div className="text-center py-16 bg-white rounded-xl border border-gray-100 shadow-sm">
+          <p className="text-sm text-gray-400">
+            {search
+              ? "No hay alumnos que coincidan con la búsqueda."
+              : "Todavía no hay alumnos. ¡Creá el primero!"}
+          </p>
+        </div>
       )}
 
       {/* Tabla */}
       {!loading && !error && visible.length > 0 && (
-        <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+        <div className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
           <table className="w-full text-sm">
-            <thead className="bg-gray-50 border-b border-gray-100">
+            <thead className="bg-gray-50/80 border-b border-gray-100">
               <tr>
-                <th className="text-left px-6 py-3 text-xs font-semibold text-gray-400 uppercase tracking-wider">
+                <th className="text-left px-6 py-3 text-[11px] font-semibold text-gray-400 uppercase tracking-wider">
                   Nombre
                 </th>
-                <th className="text-left px-6 py-3 text-xs font-semibold text-gray-400 uppercase tracking-wider">
+                <th className="text-left px-6 py-3 text-[11px] font-semibold text-gray-400 uppercase tracking-wider">
                   Email
                 </th>
-                <th className="text-left px-6 py-3 text-xs font-semibold text-gray-400 uppercase tracking-wider">
+                <th className="text-left px-6 py-3 text-[11px] font-semibold text-gray-400 uppercase tracking-wider">
                   Teléfono
                 </th>
-                <th className="text-left px-6 py-3 text-xs font-semibold text-gray-400 uppercase tracking-wider">
+                <th className="text-left px-6 py-3 text-[11px] font-semibold text-gray-400 uppercase tracking-wider">
                   Tarifa
                 </th>
                 <th className="px-6 py-3" />
@@ -188,55 +193,55 @@ export function StudentsPage() {
               {visible.map((student) => (
                 <tr
                   key={student.id}
-                  className="hover:bg-gray-50/60 transition-colors"
+                  className="hover:bg-app-primary-light/20 transition-colors"
                 >
-                  <td className="px-6 py-4 font-medium text-app-neutral-dark">
+                  <td className="px-6 py-3.5 font-semibold text-app-neutral-dark text-[13px]">
                     {student.fullName}
                   </td>
-                  <td className="px-6 py-4 text-gray-500">
+                  <td className="px-6 py-3.5 text-gray-500 text-[13px]">
                     {student.email ?? "—"}
                   </td>
-                  <td className="px-6 py-4 text-gray-500">
+                  <td className="px-6 py-3.5 text-gray-500 text-[13px]">
                     {student.phone ?? "—"}
                   </td>
-                  <td className="px-6 py-4 text-gray-700">
+                  <td className="px-6 py-3.5 text-gray-700 text-[13px] tabular-nums">
                     {student.currency} {Number(student.classRate).toFixed(2)}
                   </td>
-                  <td className="px-6 py-4">
+                  <td className="px-6 py-3.5">
                     <div className="flex items-center justify-end gap-1">
                       {student.meetingLink && (
                         <a
                           href={student.meetingLink}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="p-1.5 text-gray-400 hover:text-violet-500 hover:bg-violet-50 rounded-lg transition-colors"
+                          className="p-1.5 text-gray-400 hover:text-violet-500 hover:bg-violet-50 rounded-md transition-colors cursor-pointer"
                           aria-label="Unirse a la clase"
                           title="Unirse a la clase"
                         >
-                          <Video size={15} />
+                          <Video size={14} />
                         </a>
                       )}
                       <button
                         onClick={() => setPortalTarget(student)}
-                        className="p-1.5 text-gray-400 hover:text-blue-500 hover:bg-blue-50 rounded-lg transition-colors"
+                        className="p-1.5 text-gray-400 hover:text-sky-500 hover:bg-sky-50 rounded-md transition-colors cursor-pointer"
                         aria-label="Portal del alumno"
                         title="Portal del alumno"
                       >
-                        <Link size={15} />
+                        <Link size={14} />
                       </button>
                       <button
                         onClick={() => setModalStudent(student)}
-                        className="p-1.5 text-gray-400 hover:text-app-primary hover:bg-app-primary-light rounded-lg transition-colors"
+                        className="p-1.5 text-gray-400 hover:text-app-primary hover:bg-app-primary-light rounded-md transition-colors cursor-pointer"
                         aria-label="Editar alumno"
                       >
-                        <Pencil size={15} />
+                        <Pencil size={14} />
                       </button>
                       <button
                         onClick={() => handleDeactivate(student)}
-                        className="p-1.5 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors"
+                        className="p-1.5 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-md transition-colors cursor-pointer"
                         aria-label="Dar de baja"
                       >
-                        <UserX size={15} />
+                        <UserX size={14} />
                       </button>
                     </div>
                   </td>
